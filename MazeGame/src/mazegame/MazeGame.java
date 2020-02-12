@@ -1,9 +1,5 @@
-/*
- * Aston Turner created this.
- */
 package mazegame;
 
-import java.awt.Color;
 import javax.swing.JFrame; // Import Jframe class from graphics library
 import java.awt.Graphics;
 import java.awt.Canvas;
@@ -14,47 +10,42 @@ import java.lang.Runnable;
 import java.lang.Thread;
 import javax.imageio.ImageIO;
 
-/**
- *
- * @author Aston Turner <16052488 @ herts.ac.uk>
- */
 public class MazeGame extends JFrame implements Runnable {
     
     private Canvas view = new Canvas();
-    int windowWidth = 900;
-    int windowHeight = 900;
+    private int windowWidth = 1000;
+    private int windowHeight = 1000;
+    
+    
+    private int mazeWH = 870; //1160- 40
+    private int tileWH = 30;
+    private int tileBorder = 2;
+    
+    private int numOfRowCol = Math.floorDiv(mazeWH, tileWH);
+    
+    
     private Renderer renderer;
     BufferedImage test = loadImage("./Assets/GrassTile.png");
     
     public MazeGame() {
-        
-        
-        
+
         //setPreferredSize(new Dimension(windowWidth, windowHeight));
         //setBounds(0, 0, windowWidth, windowHeight); // x, y, width, height
         
-        
-
-        
-        
-        
-        
         add(view); // Adds graphics component to JFrame
-        setResizable(false);
+        //setResizable(false);
         pack();
-        
-        
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
         setLocationRelativeTo(null); // Spawns window in centre of screen
         setVisible(true); // Makes app window visible
         
         view.createBufferStrategy(2); // object for buffer strategy
-        
         renderer = new Renderer(windowWidth, windowHeight);
-        
     }
     
     public void update() {
+        //renderer.generateMaze(mazeWH, tileWH, tileBorder);
     }
     
     @Override
@@ -79,30 +70,9 @@ public class MazeGame extends JFrame implements Runnable {
         BufferStrategy buffStrat = view.getBufferStrategy();
         Graphics g  = buffStrat.getDrawGraphics();
         super.paint(g); // Override
-        
-        
-        
-//        
-//        renderer.renderImage(test, 0, 64, 2, 2);
-//        renderer.renderImage(test, 32, 32, 2, 2);
-//        renderer.renderImage(test, 64, 64, 2, 2);
-//        renderer.renderImage(test, 96, 96, 2, 2);
-        //renderer.renderImage(test, 32, 96, 2, 2);
-        
-        renderer.render(g);
-        //renderer.renderTiles(g);
-        //renderer.renderImage(test, 96, 96, 2, 2);
-        renderer.renderMaze(g);
-        
-        
-            
-//        /* Repaint the background each frame */
-//        g.setColor(Color.BLACK);
-//        g.fillRect(0, 0, getWidth(), getHeight());
-//            
-//            
-//        g.setColor(Color.GREEN);
-//        g.fillOval(x, 200, 50, 50);
+
+        renderer.render(g); // Renders background
+        renderer.renderMaze(g, numOfRowCol);
         
         g.dispose(); // clears graphics memory
         buffStrat.show(); // Buffer has been written to and is ready to be put on screen
@@ -110,10 +80,11 @@ public class MazeGame extends JFrame implements Runnable {
     
     public void run() {
         BufferStrategy buffStrat = view.getBufferStrategy();
-        renderer.generateMaze();
+        renderer.generateMaze(mazeWH, tileWH, tileBorder);
+        render();
         
         Long lastTime = System.nanoTime();
-        double nanoSecondConversion = 1000000000.0 / 60; // Updated 60 times per second
+        double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
         
         while(true) {
@@ -121,7 +92,7 @@ public class MazeGame extends JFrame implements Runnable {
             
             changeInSeconds += (now - lastTime) / nanoSecondConversion;            
             
-            while(changeInSeconds >= 1) {
+            while(changeInSeconds >= 200) {
                 update();
                 changeInSeconds = 0;
             }
@@ -134,7 +105,6 @@ public class MazeGame extends JFrame implements Runnable {
         MazeGame game = new MazeGame();
         Thread gameThread = new Thread(game); // Creates a new thread for execution
         gameThread.start(); // Calls run
-        
     }
     
 }

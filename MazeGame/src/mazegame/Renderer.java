@@ -1,25 +1,15 @@
-/*
- * Aston Turner created this.
- */
 package mazegame;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
-/**
- *
- * @author Aston Turner <16052488 @ herts.ac.uk>
- */
 public class Renderer {
     private BufferedImage view;
     private int[] pixels;
-    private Rectangle [][] tileArr;
-    //Tilemap t1;
-    //private Point pixelRow[];
-    
+    private Tile [][] tileArr;
+
     public int[] getPixels() {
         return pixels;
     }
@@ -36,12 +26,6 @@ public class Renderer {
     }
     
     public void render(Graphics g) {
-
-        
-//        for(int i = 0; i < pixels.length; i++) {
-//            pixels[i] = (int) (Math.random() * 0xFFFFFF);
-//        }
-        
         g.drawImage(view, 0, 0, view.getWidth(), view.getHeight(), null);
     }
     
@@ -59,40 +43,17 @@ public class Renderer {
         }
     }
     
-    public void generateMaze() {
-        Tile t1 = new Tile();
-        Rectangle [][] tileArr = t1.getTileArr();
-        Algo a1 = new Algo();
-        tileArr = a1.carvePassage(0, 0, tileArr);
-        
-        this.tileArr = tileArr;
+    public void generateMaze(int mazeWH, int tileWH, int tileBorder) {
+        RecursiveB a1 = new RecursiveB(mazeWH, tileWH, tileBorder);
+        tileArr = a1.startGeneration();
     }
     
-    public void renderMaze(Graphics g) {
-        for(int i = 0; i < 30; i++){
-            for (int x = 0; x < 30; x++) {
-                Rectangle r1 = tileArr[x][i];
+    public void renderMaze(Graphics g, int numOfRowCol) {
+        for(int i = 0; i < numOfRowCol; i++){    // No of rows/columns
+            for (int x = 0; x < numOfRowCol; x++) {  // No of rows/columns
+                Tile r1 = tileArr[x][i];
                     g.setColor(r1.getColor());
                     g.fillRect(r1.getX(), r1.getY(), r1.getSize(), r1.getSize());
-            }
-        }
-    }
-    
-    public void renderTiles(Graphics g) {
-        Tile t1 = new Tile();
-        Rectangle [][] tileArr = t1.getTileArr();
-
-        for(int i = 0; i < 30; i++){
-            for (int x = 0; x < 30; x++) {
-                Rectangle r1 = tileArr[x][i];
-                if (x%2 == 0 && i%2 == 0) {
-                    g.setColor(Color.GREEN);
-                    g.fillRect(r1.getX(), r1.getY(), r1.getSize(), r1.getSize());
-                } else {
-                    g.setColor(Color.black);
-                    g.drawRect(r1.getX(), r1.getY(), r1.getSize(), r1.getSize());
-                }
-                  
             }
         }
     }

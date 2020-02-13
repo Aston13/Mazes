@@ -57,4 +57,10 @@ public class Renderer {
             }
         }
     }
+    
+    public void renderPlayer(Graphics g, Player p1) {
+        g.setColor(Color.red);
+        g.fillOval(p1.getX(), p1.getY(), p1.getSize(), p1.getSize());
+ 
+    }
 }

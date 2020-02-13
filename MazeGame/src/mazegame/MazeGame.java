@@ -4,22 +4,27 @@ import javax.swing.JFrame; // Import Jframe class from graphics library
 import java.awt.Graphics;
 import java.awt.Canvas;
 import java.awt.Dimension;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.lang.Runnable;
 import java.lang.Thread;
 import javax.imageio.ImageIO;
 
-public class MazeGame extends JFrame implements Runnable {
+
+public class MazeGame extends JFrame implements Runnable, KeyListener {
     
     private Canvas view = new Canvas();
     private int windowWidth = 1000;
     private int windowHeight = 1000;
     
+    private Player p1;
+    
     
     private int mazeWH = 870; //1160- 40
     private int tileWH = 30;
-    private int tileBorder = 2;
+    private int tileBorder = 0;
     
     private int numOfRowCol = Math.floorDiv(mazeWH, tileWH);
     
@@ -46,6 +51,7 @@ public class MazeGame extends JFrame implements Runnable {
     
     public void update() {
         //renderer.generateMaze(mazeWH, tileWH, tileBorder);
+        
     }
     
     @Override
@@ -73,6 +79,8 @@ public class MazeGame extends JFrame implements Runnable {
 
         renderer.render(g); // Renders background
         renderer.renderMaze(g, numOfRowCol);
+        renderer.renderPlayer(g, p1);
+        
         
         g.dispose(); // clears graphics memory
         buffStrat.show(); // Buffer has been written to and is ready to be put on screen
@@ -81,8 +89,10 @@ public class MazeGame extends JFrame implements Runnable {
     public void run() {
         BufferStrategy buffStrat = view.getBufferStrategy();
         renderer.generateMaze(mazeWH, tileWH, tileBorder);
+        p1 = new Player(30,30,30);
+        addKeyListener(this);
         render();
-        
+
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
@@ -105,6 +115,34 @@ public class MazeGame extends JFrame implements Runnable {
         MazeGame game = new MazeGame();
         Thread gameThread = new Thread(game); // Creates a new thread for execution
         gameThread.start(); // Calls run
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_RIGHT){
+            int x = p1.getX();
+            p1.setX(x+10);
+        } else if (e.getKeyCode() == KeyEvent.VK_LEFT){
+            int x = p1.getX();
+            p1.setX(x-10);
+        } else if (e.getKeyCode() == KeyEvent.VK_UP){
+            int y = p1.getY();
+            p1.setY(y-10);
+        } else if (e.getKeyCode() == KeyEvent.VK_DOWN){
+            int y = p1.getY();
+            p1.setY(y+10);
+        }
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

@@ -1,6 +1,7 @@
 package mazegame;
 
 import java.awt.Color;
+import java.util.Random;
 
 public class Tile {
 
@@ -9,6 +10,11 @@ public class Tile {
     private int yPos;
     private Color c1;
     private boolean visited;
+    Random rand = new Random();
+    float r = rand.nextFloat()/4f;
+    float g = rand.nextFloat()/2f;
+    float b = rand.nextFloat();
+    Color randomColor = new Color(r, g, b);
     
     public Tile(int tileWH, int xPos, int yPos){
         this.tileWH = tileWH;
@@ -28,7 +34,13 @@ public class Tile {
     
     public void setVisited(boolean vis){
         visited = vis;
-        c1 = Color.CYAN;
+        
+        //setColor(randomColor.brighter().brighter());
+        setColor(Color.CYAN);
+    }
+    
+    public void setColor(Color c) {
+        c1 = c;
     }
     
     public Color getColor() {

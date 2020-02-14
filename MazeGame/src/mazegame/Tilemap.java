@@ -6,6 +6,8 @@ public class Tilemap {
     private Tile r1;
     private int yCount, xCount = 0;
     private int mazeWH;
+    
+    private int pyCount, pxCount;
     private int tileBorder = 0;
     private Tile tiles[][];    // No of rows/columns
     
@@ -39,7 +41,8 @@ public class Tilemap {
     
     public int[] getCurrentTile(int playerX, int playerY) {
         int currentTile[] = new int[2];
-        
+        pxCount = 0;
+        pyCount = 0;
         
         for(int y = 0; y < mazeWH; y+=tileWH) {  // Increments amount of tiles   
             for (int x = 0; x < mazeWH; x+=tileWH) {
@@ -47,17 +50,15 @@ public class Tilemap {
                 if ((playerY >= y) && (playerY <= y+tileWH)){
                     if ((playerX >= x) && (playerX <= x+tileWH)){
                         
-                        currentTile[0] = yCount;
-                        currentTile[1] = xCount;
+                        currentTile[0] = pyCount;
+                        currentTile[1] = pxCount;
                         return currentTile;
-                    }
-                    
+                    } 
                 }
-                xCount++;
-
+                pxCount++;
             }
-            xCount = 0;
-            yCount++;
+            pxCount = 0;
+            pyCount++;
         }
         return null;
     }

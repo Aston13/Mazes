@@ -56,19 +56,31 @@ public class Renderer {
         }
     }
     
-    public void checkCollisions(Player p1, int movementSpeed) {
-        
-        int x = p1.getX();
-        int y = p1.getY();
+    public int[] getCurrentTile(int pX, int pY, int pSize, int mazeWH, int tileWH, int tileBorder) { 
+        int x = pX+(pSize/2);
+        int y = pY+(pSize/2);
 
-        Tilemap tm1 = new Tilemap(870,30,0);
+        Tilemap tm1 = new Tilemap(mazeWH,tileWH,tileBorder);
         
         if ((tm1.getCurrentTile(x, y)) != null){
             int currentTile [] = tm1.getCurrentTile(x, y);
-            tileArr[currentTile[0]][currentTile[1]].setColor(Color.yellow);
+            //tileArr[currentTile[0]][currentTile[1]].setColor(Color.yellow);
+            return currentTile;
         }
-
+        return null;
+    }
+    
+    public boolean checkCollision(int current []) {
+        int currentX = current[0];
+        int currentY = current[1];
+    
+        if (!(tileArr[currentX][currentY]).isWall()){
+            // is not a wall
+            return true;
+            
+        }
         
+        return false;
     }
     
     public void renderPlayer(Graphics g, Player p1) {

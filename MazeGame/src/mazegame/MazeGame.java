@@ -53,20 +53,39 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     
     public void update() {
         //renderer.generateMaze(mazeWH, tileWH, tileBorder);
-
+        //int currentTile[] = renderer.getCurrentTile(p1, mazeWH, tileWH, tileBorder);
         
+        int halfP = p1.getSize()/2;
         
-
-            
-        
-        if (p1.getMoveN()) { 
-            p1.setY(p1.getY()-1);
-            renderer.checkCollisions(p1, -1);
+        if (p1.getMoveN()) {
+            int nextTile[] = renderer.getCurrentTile(p1.getX(),p1.getY()-(halfP + 1), p1.getSize(), mazeWH, tileWH, tileBorder);
+            if(renderer.checkCollision(nextTile)) {
+                p1.setY(p1.getY()-1);
+            }
         }
         
-        if (p1.getMoveE()) { p1.setX(p1.getX()+1);}
-        if (p1.getMoveS()) { p1.setY(p1.getY()+1);}
-        if (p1.getMoveW()) { p1.setX(p1.getX()-1);}
+        if (p1.getMoveE()) { 
+            int nextTile[] = renderer.getCurrentTile(p1.getX()+(halfP+1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
+            if(renderer.checkCollision(nextTile)) {
+                p1.setX(p1.getX()+1);
+            }
+        }
+        
+        
+        if (p1.getMoveS()) {
+            int nextTile[] = renderer.getCurrentTile(p1.getX(),p1.getY()+(halfP+1), p1.getSize(), mazeWH, tileWH, tileBorder);
+            if(renderer.checkCollision(nextTile)) {
+                p1.setY(p1.getY()+1);
+            }
+            
+        }
+        
+        if (p1.getMoveW()) { 
+            int nextTile[] = renderer.getCurrentTile(p1.getX()-(halfP-1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
+            if(renderer.checkCollision(nextTile)) {
+                p1.setX(p1.getX()-1);
+            }
+        }
     }
     
     @Override
@@ -104,7 +123,7 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     public void run() {
         BufferStrategy buffStrat = view.getBufferStrategy();
         renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        p1 = new Player(0,0,30);
+        p1 = new Player(45,45,30);
         addKeyListener(this);
         render();
 
@@ -133,13 +152,15 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     }
 
     @Override
+    
     public void keyTyped(KeyEvent e) {
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_UP){ p1.setMoveN(true); }
+        
+        if ((e.getKeyCode() == KeyEvent.VK_UP)){ p1.setMoveN(true);}
         else if (e.getKeyCode() == KeyEvent.VK_RIGHT){ p1.setMoveE(true); }
         else if (e.getKeyCode() == KeyEvent.VK_DOWN){ p1.setMoveS(true); }
         else if (e.getKeyCode() == KeyEvent.VK_LEFT){ p1.setMoveW(true); }

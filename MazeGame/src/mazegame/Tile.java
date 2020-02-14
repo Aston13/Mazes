@@ -10,7 +10,7 @@ public class Tile {
     private int yPos;
     private Color c1;
     private boolean visited;
-    private boolean solidWall;
+    private boolean wall;
     
     
     
@@ -26,7 +26,7 @@ public class Tile {
         this.yPos = yPos;
         this.c1 = Color.darkGray;
         visited = false;
-        solidWall = true;
+        wall = true;
     }
     
 
@@ -37,10 +37,14 @@ public class Tile {
     
     public void setVisited(boolean vis){
         visited = vis;
-        solidWall = false;
+        wall = false;
         
         //setColor(randomColor.brighter().brighter());
         setColor(Color.CYAN);
+    }
+    
+    public boolean isWall(){
+        return wall;
     }
     
     public void setColor(Color c) {

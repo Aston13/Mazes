@@ -20,6 +20,8 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     private int windowHeight = 1000;
     
     private Player p1;
+    int newX = 30;
+    int newY = 30;
     
     
     private int mazeWH = 870; //1160- 40
@@ -51,7 +53,20 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     
     public void update() {
         //renderer.generateMaze(mazeWH, tileWH, tileBorder);
+
         
+        
+
+            
+        
+        if (p1.getMoveN()) { 
+            p1.setY(p1.getY()-1);
+            renderer.checkCollisions(p1, -1);
+        }
+        
+        if (p1.getMoveE()) { p1.setX(p1.getX()+1);}
+        if (p1.getMoveS()) { p1.setY(p1.getY()+1);}
+        if (p1.getMoveW()) { p1.setX(p1.getX()-1);}
     }
     
     @Override
@@ -89,7 +104,7 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     public void run() {
         BufferStrategy buffStrat = view.getBufferStrategy();
         renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        p1 = new Player(30,30,30);
+        p1 = new Player(0,0,30);
         addKeyListener(this);
         render();
 
@@ -102,7 +117,7 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
             
             changeInSeconds += (now - lastTime) / nanoSecondConversion;            
             
-            while(changeInSeconds >= 200) {
+            while(changeInSeconds >= 1) {
                 update();
                 changeInSeconds = 0;
             }
@@ -119,30 +134,27 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_RIGHT){
-            int x = p1.getX();
-            p1.setX(x+10);
-        } else if (e.getKeyCode() == KeyEvent.VK_LEFT){
-            int x = p1.getX();
-            p1.setX(x-10);
-        } else if (e.getKeyCode() == KeyEvent.VK_UP){
-            int y = p1.getY();
-            p1.setY(y-10);
-        } else if (e.getKeyCode() == KeyEvent.VK_DOWN){
-            int y = p1.getY();
-            p1.setY(y+10);
-        }
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (e.getKeyCode() == KeyEvent.VK_UP){ p1.setMoveN(true); }
+        else if (e.getKeyCode() == KeyEvent.VK_RIGHT){ p1.setMoveE(true); }
+        else if (e.getKeyCode() == KeyEvent.VK_DOWN){ p1.setMoveS(true); }
+        else if (e.getKeyCode() == KeyEvent.VK_LEFT){ p1.setMoveW(true); }
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
+        if (e.getKeyCode() == KeyEvent.VK_UP){ p1.setMoveN(false); }
+        else if (e.getKeyCode() == KeyEvent.VK_RIGHT){ p1.setMoveE(false); }
+        else if (e.getKeyCode() == KeyEvent.VK_DOWN){ p1.setMoveS(false); }
+        else if (e.getKeyCode() == KeyEvent.VK_LEFT){ p1.setMoveW(false); }
+        
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

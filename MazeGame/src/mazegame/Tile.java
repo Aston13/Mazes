@@ -10,6 +10,10 @@ public class Tile {
     private int yPos;
     private Color c1;
     private boolean visited;
+    private boolean solidWall;
+    
+    
+    
     Random rand = new Random();
     float r = rand.nextFloat()/4f;
     float g = rand.nextFloat()/2f;
@@ -22,11 +26,10 @@ public class Tile {
         this.yPos = yPos;
         this.c1 = Color.darkGray;
         visited = false;
+        solidWall = true;
     }
     
-    public int getX() {
-        return xPos;
-    }
+
     
     public boolean hasBeenVisited(){
         return visited;
@@ -34,6 +37,7 @@ public class Tile {
     
     public void setVisited(boolean vis){
         visited = vis;
+        solidWall = false;
         
         //setColor(randomColor.brighter().brighter());
         setColor(Color.CYAN);
@@ -47,8 +51,20 @@ public class Tile {
         return c1;
     }
     
-    public int getY() {
+    public int getMinY() {
         return yPos;
+    }
+    
+    public int getMaxX(){
+        return xPos + tileWH;
+    }
+    
+    public int getMinX() {
+        return xPos;
+    }
+    
+    public int getMaxY(){
+        return yPos + tileWH;
     }
     
     public int getSize() {

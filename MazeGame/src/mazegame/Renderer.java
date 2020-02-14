@@ -17,8 +17,6 @@ public class Renderer {
     public Renderer(int screenHeight, int screenWidth) {
         
         // Create a BufferedImage that represents the view
-
-        //t1 = new Tilemap(screenHeight, screenWidth);
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
 
         // Create an array for pixels
@@ -44,8 +42,8 @@ public class Renderer {
     }
     
     public void generateMaze(int mazeWH, int tileWH, int tileBorder) {
-        RecursiveB a1 = new RecursiveB(mazeWH, tileWH, tileBorder);
-        tileArr = a1.startGeneration();
+        RecursiveB rb1 = new RecursiveB(mazeWH, tileWH, tileBorder);
+        tileArr = rb1.startGeneration();
     }
     
     public void renderMaze(Graphics g, int numOfRowCol) {
@@ -53,9 +51,24 @@ public class Renderer {
             for (int x = 0; x < numOfRowCol; x++) {  // No of rows/columns
                 Tile r1 = tileArr[x][i];
                     g.setColor(r1.getColor());
-                    g.fillRect(r1.getX(), r1.getY(), r1.getSize(), r1.getSize());
+                    g.fillRect(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize());
             }
         }
+    }
+    
+    public void checkCollisions(Player p1, int movementSpeed) {
+        
+        int x = p1.getX();
+        int y = p1.getY();
+
+        Tilemap tm1 = new Tilemap(870,30,0);
+        
+        if ((tm1.getCurrentTile(x, y)) != null){
+            int currentTile [] = tm1.getCurrentTile(x, y);
+            tileArr[currentTile[0]][currentTile[1]].setColor(Color.yellow);
+        }
+
+        
     }
     
     public void renderPlayer(Graphics g, Player p1) {

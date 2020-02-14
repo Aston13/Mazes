@@ -41,7 +41,7 @@ public class RecursiveB extends Tilemap {
         }
         
         if (visitedTiles.size() <= 1){
-            carvePassage(visitedTiles.pop().getX(), visitedTiles.pop().getY());
+            carvePassage(visitedTiles.pop().getMinX(), visitedTiles.pop().getMinY());
         } 
             return updateGrid;
     }

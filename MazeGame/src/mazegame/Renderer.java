@@ -56,15 +56,14 @@ public class Renderer {
         }
     }
     
-    public int[] getCurrentTile(int pX, int pY, int pSize, int mazeWH, int tileWH, int tileBorder) { 
+    public int[] getTile(int pX, int pY, int pSize, int mazeWH, int tileWH, int tileBorder) { 
         int x = pX+(pSize/2);
         int y = pY+(pSize/2);
 
         Tilemap tm1 = new Tilemap(mazeWH,tileWH,tileBorder);
         
         if ((tm1.getCurrentTile(x, y)) != null){
-            int currentTile [] = tm1.getCurrentTile(x, y);
-            //tileArr[currentTile[0]][currentTile[1]].setColor(Color.yellow);
+            int currentTile [] = tm1.getCurrentTile(x, y);  
             return currentTile;
         }
         return null;
@@ -76,6 +75,7 @@ public class Renderer {
     
         if (!(tileArr[currentX][currentY]).isWall()){
             // is not a wall
+            tileArr[currentX][currentY].setPlayerExplored(true);
             return true;
             
         }

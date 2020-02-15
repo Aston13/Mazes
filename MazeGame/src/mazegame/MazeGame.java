@@ -58,30 +58,25 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
         int halfP = p1.getSize()/2;
         
         if (p1.getMoveN()) {
-            int nextTile[] = renderer.getCurrentTile(p1.getX(),p1.getY()-(halfP + 1), p1.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(p1.getX(),p1.getY()-(halfP-1), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
                 p1.setY(p1.getY()-1);
             }
         }
-        
         if (p1.getMoveE()) { 
-            int nextTile[] = renderer.getCurrentTile(p1.getX()+(halfP+1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(p1.getX()+(halfP+1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
                 p1.setX(p1.getX()+1);
             }
         }
-        
-        
         if (p1.getMoveS()) {
-            int nextTile[] = renderer.getCurrentTile(p1.getX(),p1.getY()+(halfP+1), p1.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(p1.getX(),p1.getY()+(halfP+1), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
                 p1.setY(p1.getY()+1);
-            }
-            
+            } 
         }
-        
         if (p1.getMoveW()) { 
-            int nextTile[] = renderer.getCurrentTile(p1.getX()-(halfP-1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(p1.getX()-(halfP-1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
                 p1.setX(p1.getX()-1);
             }
@@ -123,7 +118,7 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     public void run() {
         BufferStrategy buffStrat = view.getBufferStrategy();
         renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        p1 = new Player(45,45,30);
+        p1 = new Player(45,45,tileWH/2);
         addKeyListener(this);
         render();
 

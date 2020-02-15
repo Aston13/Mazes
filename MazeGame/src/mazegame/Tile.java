@@ -11,8 +11,7 @@ public class Tile {
     private Color c1;
     private boolean visited;
     private boolean wall;
-    
-    
+    private boolean playerExplored;
     
     Random rand = new Random();
     float r = rand.nextFloat()/4f;
@@ -27,6 +26,7 @@ public class Tile {
         this.c1 = Color.darkGray;
         visited = false;
         wall = true;
+        playerExplored = false;
     }
     
 
@@ -41,6 +41,11 @@ public class Tile {
         
         //setColor(randomColor.brighter().brighter());
         setColor(Color.CYAN);
+    }
+    
+    public void setPlayerExplored(boolean hasExplored){
+        this.playerExplored = hasExplored;
+        this.setColor(Color.CYAN.darker().darker());
     }
     
     public boolean isWall(){

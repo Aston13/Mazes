@@ -23,7 +23,7 @@ public class Tile {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
-        this.c1 = Color.darkGray;
+        this.c1 = Color.cyan;
         visited = false;
         wall = true;
         playerExplored = false;
@@ -40,12 +40,12 @@ public class Tile {
         wall = false;
         
         //setColor(randomColor.brighter().brighter());
-        setColor(Color.CYAN);
+        setColor(Color.black);
     }
     
     public void setPlayerExplored(boolean hasExplored){
         this.playerExplored = hasExplored;
-        this.setColor(Color.CYAN.darker().darker());
+        this.setColor(Color.darkGray);
     }
     
     public boolean isWall(){

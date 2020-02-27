@@ -16,19 +16,19 @@ import javax.imageio.ImageIO;
 public class MazeGame extends JFrame implements Runnable, KeyListener {
     
     private Canvas view = new Canvas();
-    private int windowWidth = 1000;
-    private int windowHeight = 1000;
+    private int windowWidth = 654;
+    private int windowHeight = 675;
     
     private Player p1;
     int newX = 30;
     int newY = 30;
     
     
-    private int mazeWH = 870; //1160- 40
-    private int tileWH = 30;
-    private int tileBorder = 0;
+    private int mazeWH = 600;  // 638
+    private int tileWH = 22; // 22
+    private int tileBorder = 1;
     
-    private int numOfRowCol = Math.floorDiv(mazeWH, tileWH);
+    private int numOfRowCol;
     
     
     private Renderer renderer;
@@ -53,7 +53,6 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     
     public void update() {
         //renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        //int currentTile[] = renderer.getCurrentTile(p1, mazeWH, tileWH, tileBorder);
         
         int halfP = p1.getSize()/2;
         
@@ -117,9 +116,21 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     
     public void run() {
         BufferStrategy buffStrat = view.getBufferStrategy();
+        
+        if ((mazeWH/tileWH) % 2 == 0) {
+            System.out.println("even");
+            this.mazeWH = mazeWH - (tileWH+1);
+            this.numOfRowCol = Math.floorDiv(mazeWH, tileWH);
+        } else {
+            this.numOfRowCol = Math.floorDiv(mazeWH, tileWH);
+        }
+        
         renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        p1 = new Player(45,45,tileWH/2);
+        p1 = new Player((tileWH+(tileWH/2)),(tileWH+(tileWH/2)),tileWH/2);
         addKeyListener(this);
+
+        
+        
         render();
 
         Long lastTime = System.nanoTime();
@@ -155,20 +166,20 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         
-        if ((e.getKeyCode() == KeyEvent.VK_UP)){ p1.setMoveN(true);}
-        else if (e.getKeyCode() == KeyEvent.VK_RIGHT){ p1.setMoveE(true); }
-        else if (e.getKeyCode() == KeyEvent.VK_DOWN){ p1.setMoveS(true); }
-        else if (e.getKeyCode() == KeyEvent.VK_LEFT){ p1.setMoveW(true); }
+        if ((e.getKeyCode() == KeyEvent.VK_UP)||(e.getKeyCode() == KeyEvent.VK_W)){ p1.setMoveN(true);}
+        else if ((e.getKeyCode() == KeyEvent.VK_RIGHT)||(e.getKeyCode() == KeyEvent.VK_D)){ p1.setMoveE(true); }
+        else if ((e.getKeyCode() == KeyEvent.VK_DOWN)||(e.getKeyCode() == KeyEvent.VK_S)){ p1.setMoveS(true); }
+        else if ((e.getKeyCode() == KeyEvent.VK_LEFT)||(e.getKeyCode() == KeyEvent.VK_A)){ p1.setMoveW(true); }
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
         
-        if (e.getKeyCode() == KeyEvent.VK_UP){ p1.setMoveN(false); }
-        else if (e.getKeyCode() == KeyEvent.VK_RIGHT){ p1.setMoveE(false); }
-        else if (e.getKeyCode() == KeyEvent.VK_DOWN){ p1.setMoveS(false); }
-        else if (e.getKeyCode() == KeyEvent.VK_LEFT){ p1.setMoveW(false); }
+        if ((e.getKeyCode() == KeyEvent.VK_UP)||(e.getKeyCode() == KeyEvent.VK_W)){ p1.setMoveN(false); }
+        else if ((e.getKeyCode() == KeyEvent.VK_RIGHT)||(e.getKeyCode() == KeyEvent.VK_D)){ p1.setMoveE(false); }
+        else if ((e.getKeyCode() == KeyEvent.VK_DOWN)||(e.getKeyCode() == KeyEvent.VK_S)){ p1.setMoveS(false); }
+        else if ((e.getKeyCode() == KeyEvent.VK_LEFT)||(e.getKeyCode() == KeyEvent.VK_A)){ p1.setMoveW(false); }
         
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

@@ -18,7 +18,9 @@ public class Tilemap {
         
         double mz = new Double(mazeWH);
         double tz = new Double(tileWH);
-        double rowColSize = Math.ceil(mz/tz);
+        double rowColSize = 0.0;
+
+        rowColSize = Math.ceil(mz/tz);
         tiles = new Tile[(int)rowColSize][(int)rowColSize];
     }
     

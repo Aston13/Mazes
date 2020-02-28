@@ -6,15 +6,19 @@ public class Tilemap {
     private Tile r1;
     private int yCount, xCount = 0;
     private int mazeWH;
+    private int screenCenterH;
+    private int screenCenterW;
     
     private int pyCount, pxCount;
     private int tileBorder = 0;
     private Tile tiles[][];    // No of rows/columns
     
-    public Tilemap(int mazeWH, int tileWH, int tileBorder) {
+    public Tilemap(int mazeWH, int tileWH, int tileBorder, int screenWidth, int screenHeight) {
         this.tileWH = tileWH;
         this.mazeWH = mazeWH;
         this.tileBorder = tileWH-tileBorder;
+        this.screenCenterH = (screenHeight/2)-tileWH;
+        this.screenCenterW = (screenWidth/2)-tileWH;
         
         double mz = new Double(mazeWH);
         double tz = new Double(tileWH);
@@ -26,8 +30,8 @@ public class Tilemap {
     
     public Tile[][] getTileArr(){
         
-        for(int y = 0; y < mazeWH; y+=tileWH) {  // Increments amount of tiles   
-            for (int x = 0; x < mazeWH; x+=tileWH) {
+        for(int y = 0+screenCenterH; y < mazeWH+screenCenterH; y+=tileWH) {  // Increments amount of tiles   
+            for (int x = 0+screenCenterW; x < mazeWH+screenCenterW; x+=tileWH) {
                 
                 r1 = new Tile(tileBorder, x, y);
                 tiles[yCount][xCount] = r1;

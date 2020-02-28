@@ -14,10 +14,14 @@ public class RecursiveB extends Tilemap {
     
     private int maxSE = 0;
     private int minNW = 1;
+    
+    private int startingX;
+    private int startingY;
 
     
-    public RecursiveB (int mazeWH, int tileWH, int tileBorder) {
-        super(mazeWH, tileWH, tileBorder);
+    public RecursiveB (int mazeWH, int tileWH, int tileBorder, int screenWidth, 
+            int screenHeight) {
+        super(mazeWH, tileWH, tileBorder, screenWidth, screenHeight);
         updateGrid = super.getTileArr();
         this.tileWH = tileWH;
         if ((mazeWH/tileWH) % 2 == 0) {
@@ -25,10 +29,6 @@ public class RecursiveB extends Tilemap {
         } else {
             this.maxSE = (mazeWH/tileWH)-2;
         }
-        
-        
-        
-        
         
     }
 
@@ -41,13 +41,26 @@ public class RecursiveB extends Tilemap {
 //        startingYPos = (startingYPos*2)+1; // [1...27]
 //        updateGrid[startingYPos][startingXPos].setVisited(true);
         
-        int startingXPos = 1; // [0...13]
-        int startingYPos = 1; // [0...13]
-        updateGrid[startingYPos][startingXPos].setVisited(true);
-        visited = new Tile(0, startingXPos, startingYPos);
+
+        //System.out.println(maxSE);
+        startingX = 1; // [0...13]
+        startingY = 1; // [0...13]
+        
+        
+        
+        updateGrid[startingY][startingX].setVisited(true);
+        visited = new Tile(0, startingX, startingY);
         visitedTiles.push(visited);
         
-        return carvePassage(startingXPos, startingYPos);
+        return carvePassage(startingX, startingY);
+    }
+    
+    public int getStartingX() {
+        return startingX;
+    }
+    
+    public int getStartingY() {
+        return startingY;
     }
     
     public Tile[][] carvePassage(int x, int y) {

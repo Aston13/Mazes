@@ -16,16 +16,18 @@ import javax.imageio.ImageIO;
 public class MazeGame extends JFrame implements Runnable, KeyListener {
     
     private Canvas view = new Canvas();
-    private int windowWidth = 654;
-    private int windowHeight = 675;
+    private int windowWidth = 650;
+    private int windowHeight = windowWidth;
+    
+    private boolean gameInProgress = true;
     
     private Player p1;
     int newX = 30;
     int newY = 30;
     
     
-    private int mazeWH = 600;  // 638
-    private int tileWH = 22; // 22
+    private int mazeWH = 2000;  // 638
+    private int tileWH = 50; // 22
     private int tileBorder = 1;
     
     private int numOfRowCol;
@@ -59,25 +61,51 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
         if (p1.getMoveN()) {
             int nextTile[] = renderer.getTile(p1.getX(),p1.getY()-(halfP-1), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
+                
+                BufferStrategy buffStrat = view.getBufferStrategy();
+                Graphics g  = buffStrat.getDrawGraphics();
+                renderer.moveMazeY(g, numOfRowCol, 1);
                 p1.setY(p1.getY()-1);
+                
+                
+                
             }
         }
         if (p1.getMoveE()) { 
             int nextTile[] = renderer.getTile(p1.getX()+(halfP+1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
+                
+                BufferStrategy buffStrat = view.getBufferStrategy();
+                Graphics g  = buffStrat.getDrawGraphics();
+                renderer.moveMazeX(g, numOfRowCol, -1);
                 p1.setX(p1.getX()+1);
+                
+                
             }
         }
         if (p1.getMoveS()) {
             int nextTile[] = renderer.getTile(p1.getX(),p1.getY()+(halfP+1), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
+                
+                BufferStrategy buffStrat = view.getBufferStrategy();
+                Graphics g  = buffStrat.getDrawGraphics();
+                renderer.moveMazeY(g, numOfRowCol, -1);
                 p1.setY(p1.getY()+1);
+                
+                
             } 
         }
         if (p1.getMoveW()) { 
             int nextTile[] = renderer.getTile(p1.getX()-(halfP-1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
+                
+                
+                BufferStrategy buffStrat = view.getBufferStrategy();
+                Graphics g  = buffStrat.getDrawGraphics();
+                renderer.moveMazeX(g, numOfRowCol, 1);
                 p1.setX(p1.getX()-1);
+                
+                
             }
         }
     }
@@ -101,6 +129,8 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
 
     
     public void render() {
+        
+
         BufferStrategy buffStrat = view.getBufferStrategy();
         Graphics g  = buffStrat.getDrawGraphics();
         super.paint(g); // Override
@@ -117,6 +147,7 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
     public void run() {
         BufferStrategy buffStrat = view.getBufferStrategy();
         
+        
         if ((mazeWH/tileWH) % 2 == 0) {
             System.out.println("even");
             this.mazeWH = mazeWH - (tileWH+1);
@@ -126,18 +157,19 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
         }
         
         renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        p1 = new Player((tileWH+(tileWH/2)),(tileWH+(tileWH/2)),tileWH/2);
+        p1 = new Player(tileWH, tileWH, tileWH/2);
+        System.out.println(renderer.getStartingX());
+        
+
         addKeyListener(this);
 
-        
-        
         render();
 
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
         
-        while(true) {
+        while(gameInProgress) {
             Long now = System.nanoTime();
             
             changeInSeconds += (now - lastTime) / nanoSecondConversion;            
@@ -153,8 +185,10 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
 
     public static void main(String[] args) {
         MazeGame game = new MazeGame();
-        Thread gameThread = new Thread(game); // Creates a new thread for execution
-        gameThread.start(); // Calls run
+//        Thread gameThread = new Thread(game); // Creates a new thread for execution
+//        gameThread.start(); // Calls run
+        
+        game.run();
     }
 
     @Override

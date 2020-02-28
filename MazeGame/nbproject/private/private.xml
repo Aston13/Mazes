@@ -3,11 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/Renderer.java</file>
             <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/RecursiveB.java</file>
+            <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/UI.java</file>
             <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/MazeGame.java</file>
             <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/Tilemap.java</file>
             <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/Player.java</file>
-            <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/Renderer.java</file>
+            <file>file:/C:/Users/Aston/Documents/GitHub/Mazes/MazeGame/src/mazegame/Tile.java</file>
         </group>
     </open-files>
 </project-private>

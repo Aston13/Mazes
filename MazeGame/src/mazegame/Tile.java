@@ -72,6 +72,14 @@ public class Tile {
         return xPos;
     }
     
+    public void setMinX(int x) {
+        xPos = x;
+    }
+    
+    public void setMinY(int y) {
+        yPos = y;
+    }
+    
     public int getMaxY(){
         return yPos + tileWH;
     }

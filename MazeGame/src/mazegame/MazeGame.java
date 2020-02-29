@@ -1,136 +1,83 @@
 package mazegame;
 
-import javax.swing.JFrame; // Import Jframe class from graphics library
+import javax.swing.JFrame; // Import JFrame class from graphics library
 import java.awt.Graphics;
 import java.awt.Canvas;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
-import java.lang.Runnable;
-import java.lang.Thread;
-import javax.imageio.ImageIO;
 
 
-public class MazeGame extends JFrame implements Runnable, KeyListener {
+public class MazeGame extends JFrame implements KeyListener {
     
     private Canvas view = new Canvas();
-    private int windowWidth = 650;
-    private int windowHeight = windowWidth;
-    
+    private final int windowWidth;
+    private final int windowHeight;
     private boolean gameInProgress = true;
-    
     private Player p1;
-    int newX = 30;
-    int newY = 30;
-    
-    
-    private int mazeWH = 2000;  // 638
-    private int tileWH = 50; // 22
-    private int tileBorder = 1;
-    
+    private final UI ui;
+    private int mazeWH = 700;
+    private final int tileWH = 20;
+    private final int tileBorder = 1;
     private int numOfRowCol;
-    
-    
     private Renderer renderer;
-    BufferedImage test = loadImage("./Assets/GrassTile.png");
     
-    public MazeGame() {
-
-        //setPreferredSize(new Dimension(windowWidth, windowHeight));
-        //setBounds(0, 0, windowWidth, windowHeight); // x, y, width, height
+    public MazeGame(int windowHeight, int windowWidth, UI ui) {
+        this.windowWidth = windowWidth;
+        this.windowHeight = windowHeight;
+        this.ui = ui;
         
-        add(view); // Adds graphics component to JFrame
-        //setResizable(false);
-        pack();
-
+        add(ui.inGamePane());
+        setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        setLocationRelativeTo(null); // Spawns window in centre of screen
-        setVisible(true); // Makes app window visible
+
         
-        view.createBufferStrategy(2); // object for buffer strategy
         renderer = new Renderer(windowWidth, windowHeight);
     }
     
     public void update() {
-        //renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        
         int halfP = p1.getSize()/2;
         
         if (p1.getMoveN()) {
             int nextTile[] = renderer.getTile(p1.getX(),p1.getY()-(halfP-1), p1.getSize(), mazeWH, tileWH, tileBorder);
-            if(renderer.checkCollision(nextTile)) {
-                
+            if(renderer.checkCollision(nextTile)) { 
                 BufferStrategy buffStrat = view.getBufferStrategy();
                 Graphics g  = buffStrat.getDrawGraphics();
                 renderer.moveMazeY(g, numOfRowCol, 1);
-                p1.setY(p1.getY()-1);
-                
-                
-                
+                p1.setY(p1.getY()-1);  
             }
         }
         if (p1.getMoveE()) { 
             int nextTile[] = renderer.getTile(p1.getX()+(halfP+1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
-            if(renderer.checkCollision(nextTile)) {
-                
+            if(renderer.checkCollision(nextTile)) { 
                 BufferStrategy buffStrat = view.getBufferStrategy();
                 Graphics g  = buffStrat.getDrawGraphics();
                 renderer.moveMazeX(g, numOfRowCol, -1);
-                p1.setX(p1.getX()+1);
-                
-                
+                p1.setX(p1.getX()+1); 
             }
         }
         if (p1.getMoveS()) {
             int nextTile[] = renderer.getTile(p1.getX(),p1.getY()+(halfP+1), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
-                
                 BufferStrategy buffStrat = view.getBufferStrategy();
                 Graphics g  = buffStrat.getDrawGraphics();
                 renderer.moveMazeY(g, numOfRowCol, -1);
                 p1.setY(p1.getY()+1);
-                
-                
             } 
         }
         if (p1.getMoveW()) { 
             int nextTile[] = renderer.getTile(p1.getX()-(halfP-1),p1.getY(), p1.getSize(), mazeWH, tileWH, tileBorder);
             if(renderer.checkCollision(nextTile)) {
-                
-                
                 BufferStrategy buffStrat = view.getBufferStrategy();
                 Graphics g  = buffStrat.getDrawGraphics();
                 renderer.moveMazeX(g, numOfRowCol, 1);
-                p1.setX(p1.getX()-1);
-                
-                
+                p1.setX(p1.getX()-1); 
             }
         }
     }
     
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(windowWidth, windowHeight);
-    }
-    
-    private BufferedImage loadImage(String fileName) {
-        try {
-          BufferedImage image = ImageIO.read(MazeGame.class.getResource(fileName));
-          BufferedImage formattedImage =  new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
-          formattedImage.getGraphics().drawImage(image, 0, 0, null);
-          return formattedImage;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    
     public void render() {
-        
-
         BufferStrategy buffStrat = view.getBufferStrategy();
         Graphics g  = buffStrat.getDrawGraphics();
         super.paint(g); // Override
@@ -138,18 +85,24 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
         renderer.render(g); // Renders background
         renderer.renderMaze(g, numOfRowCol);
         renderer.renderPlayer(g, p1);
-        
-        
+
         g.dispose(); // clears graphics memory
         buffStrat.show(); // Buffer has been written to and is ready to be put on screen
     }
     
     public void run() {
-        BufferStrategy buffStrat = view.getBufferStrategy();
+        Long lastTime = System.nanoTime();
+        double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
+        double changeInSeconds = 0;
         
+        add(view); // Adds graphics component to JFrame
+        pack();
+        view.createBufferStrategy(2); // object for buffer strategy
+        setLocationRelativeTo(null); // Spawns window in centre of screen
+        setVisible(true); // Makes app window visible
+        addKeyListener(this);
         
         if ((mazeWH/tileWH) % 2 == 0) {
-            System.out.println("even");
             this.mazeWH = mazeWH - (tileWH+1);
             this.numOfRowCol = Math.floorDiv(mazeWH, tileWH);
         } else {
@@ -158,20 +111,10 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
         
         renderer.generateMaze(mazeWH, tileWH, tileBorder);
         p1 = new Player(tileWH, tileWH, tileWH/2);
-        System.out.println(renderer.getStartingX());
-        
-
-        addKeyListener(this);
-
         render();
 
-        Long lastTime = System.nanoTime();
-        double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
-        double changeInSeconds = 0;
-        
         while(gameInProgress) {
             Long now = System.nanoTime();
-            
             changeInSeconds += (now - lastTime) / nanoSecondConversion;            
             
             while(changeInSeconds >= 1) {
@@ -182,40 +125,29 @@ public class MazeGame extends JFrame implements Runnable, KeyListener {
             lastTime = now;
         }
     }
-
-    public static void main(String[] args) {
-        MazeGame game = new MazeGame();
-//        Thread gameThread = new Thread(game); // Creates a new thread for execution
-//        gameThread.start(); // Calls run
-        
-        game.run();
+    
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(windowWidth, windowHeight);
     }
 
     @Override
-    
     public void keyTyped(KeyEvent e) {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        
         if ((e.getKeyCode() == KeyEvent.VK_UP)||(e.getKeyCode() == KeyEvent.VK_W)){ p1.setMoveN(true);}
         else if ((e.getKeyCode() == KeyEvent.VK_RIGHT)||(e.getKeyCode() == KeyEvent.VK_D)){ p1.setMoveE(true); }
         else if ((e.getKeyCode() == KeyEvent.VK_DOWN)||(e.getKeyCode() == KeyEvent.VK_S)){ p1.setMoveS(true); }
         else if ((e.getKeyCode() == KeyEvent.VK_LEFT)||(e.getKeyCode() == KeyEvent.VK_A)){ p1.setMoveW(true); }
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        
         if ((e.getKeyCode() == KeyEvent.VK_UP)||(e.getKeyCode() == KeyEvent.VK_W)){ p1.setMoveN(false); }
         else if ((e.getKeyCode() == KeyEvent.VK_RIGHT)||(e.getKeyCode() == KeyEvent.VK_D)){ p1.setMoveE(false); }
         else if ((e.getKeyCode() == KeyEvent.VK_DOWN)||(e.getKeyCode() == KeyEvent.VK_S)){ p1.setMoveS(false); }
         else if ((e.getKeyCode() == KeyEvent.VK_LEFT)||(e.getKeyCode() == KeyEvent.VK_A)){ p1.setMoveW(false); }
-        
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
 }

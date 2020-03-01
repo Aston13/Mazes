@@ -9,18 +9,13 @@ public class Start {
     private static final StartMenu menu = new StartMenu(windowWidth,
             windowHeight, ui);
     
-    
-    
-    private static final StartCanvas doubleC =  new StartCanvas(windowWidth,
-            windowHeight, ui);
-    
     private static final KeyBinds kb =  new KeyBinds(windowWidth,
         windowHeight, ui);
     
     public static void main (String [] args){
         //menu.run();
         //game.run();
-        game.runStart();
+        game.runMenu();
         //doubleC.runMenu();
         //doubleC.runMaze();
         //kb.run();

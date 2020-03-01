@@ -16,6 +16,7 @@ import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
@@ -135,11 +136,13 @@ public class MazeGame extends JFrame implements Runnable {
         }
     }
     
-    public void runStart() {
+    public void runMenu() {
         setUpFrame();
         JButton play = ui.getPlayButton();
         JButton quit = ui.getQuitButton();
+        JLabel logo = ui.getLogo();
         
+        pane.add(logo);
         pane.add(play);
         pane.add(quit);
         pane.setLayout(null);

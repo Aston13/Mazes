@@ -1,43 +1,31 @@
 package mazegame;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.awt.Font;
 import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 public class UI {
-    private int windowWidth;
-    private int windowHeight;
-    private JPanel pane;
+    private final int windowWidth;
+    private final int windowHeight;
 
     public UI(int windowWidth, int windowHeight) {
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
     }
-
-    public JPanel inGamePane() {
-        pane = new JPanel();
-        pane.setLayout(null);
-        pane.setSize(windowWidth, windowWidth/15);
-        pane.setFocusable(false);
-        pane.setVisible(true);
-        pane.add(tileSizeLabel());
-
-        //add(pane);
-        return pane;
-    }
-
-    public JLabel tileSizeLabel() {
-        JLabel lbl = new JLabel();
-        lbl.setText("Tile Size: ");
-        lbl.setBounds(200,0,200,0);
-        lbl.setSize(200,200);
-        lbl.setOpaque(true);
-        lbl.setBackground(Color.GRAY);
-        lbl.setFocusable(false);
-        lbl.setVisible(true);
-        return lbl;
+    
+    public JLabel getLogo() {
+        JLabel l = new JLabel("Maze Runner", SwingConstants.CENTER);
+        
+        int width = windowWidth;
+        int height = 50;
+        int x = (windowWidth-width)/2;
+        int y = (windowWidth-height)/10;
+        l.setBounds(x, y*2, width, height);
+        l.setFont(new Font("Dialog", Font.PLAIN, 40));
+        l.setVisible(true);
+        return l;
     }
     
     public JButton getPlayButton() {
@@ -45,10 +33,12 @@ public class UI {
         int width = 100;
         int height = 50;
         int x = (windowWidth-width)/2;
-        int y = (windowWidth-height)/3;
-        b.setBounds(x, y, width, height);
+        int y = (windowWidth-height)/10;
+        b.setBounds(x, y*4, width, height);
 
-        b.setBackground(Color.MAGENTA);
+        b.setBackground(Color.DARK_GRAY);
+        b.setForeground(Color.WHITE);
+        
         b.setVisible(true);
         return b;
     }
@@ -58,10 +48,11 @@ public class UI {
         int width = 100;
         int height = 50;
         int x = (windowWidth-width)/2;
-        int y = (windowWidth-height)/2;
-        b.setBounds(x, y, width, height);
+        int y = (windowWidth-height)/10;
+        b.setBounds(x, y*5, width, height);
 
-        b.setBackground(Color.ORANGE);
+        b.setBackground(Color.DARK_GRAY);
+        b.setForeground(Color.WHITE);
         b.setVisible(true);
         return b;
     }

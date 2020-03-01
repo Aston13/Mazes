@@ -17,30 +17,22 @@ public class StartMenu extends JFrame implements ActionListener {
     private final UI ui;
     private JPanel pane = new JPanel();
     private JButton btn;
-    private final MazeGame game;
-    private JFrame jf;
     
     public StartMenu(int windowHeight, int windowWidth, UI ui) {
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.ui = ui;
-        jf = this;
-        
-        game = new MazeGame(windowWidth, windowHeight, ui);
-        
-        
+
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close  
     }
     
     public void run() {
         btn = ui.getPlayButton();
-        btn.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                //dispose();
-                //game.run();
-            }
-        });
+        btn.addActionListener(this);
+        btn.setActionCommand("Open");
+        
+
         
         
         
@@ -52,6 +44,14 @@ public class StartMenu extends JFrame implements ActionListener {
         
     }
     
+    public void runGame() {
+        UI ui2 = new UI(windowWidth, windowHeight);
+        MazeGame game =  new MazeGame(windowWidth,
+            windowHeight, ui2);
+        game.run();
+        
+    }
+    
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(windowWidth, windowHeight);
@@ -59,6 +59,15 @@ public class StartMenu extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        String cmd = e.getActionCommand();
+        if(cmd.equals("Open")){
+            dispose();
+            UI ui2 = new UI(windowWidth, windowHeight);
+            MazeGame game =  new MazeGame(windowWidth,
+            windowHeight, ui2);
+            game.run();
+        }
+        
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

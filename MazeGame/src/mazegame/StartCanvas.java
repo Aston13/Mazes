@@ -1,17 +1,23 @@
 package mazegame;
 
+import java.awt.BorderLayout;
 import javax.swing.JFrame; // Import JFrame class from graphics library
 import java.awt.Graphics;
 import java.awt.Canvas;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
 
-public class MazeGame extends JFrame implements KeyListener {
+public class StartCanvas extends JFrame implements KeyListener, ActionListener {
     
-    private final Canvas view = new Canvas();
+    private final Canvas mazeView = new Canvas();
+    private final JPanel startView = new JPanel();
     private final int windowWidth;
     private final int windowHeight;
     private boolean gameInProgress = true;
@@ -24,19 +30,20 @@ public class MazeGame extends JFrame implements KeyListener {
     private final Renderer renderer;
     
     
-    public MazeGame(int windowHeight, int windowWidth, UI ui) {
+    public StartCanvas(int windowHeight, int windowWidth, UI ui) {
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.ui = ui;
         renderer = new Renderer(windowWidth, windowHeight);
         addKeyListener(this);
-        view.addKeyListener(this);
+        mazeView.addKeyListener(this);
+        startView.addKeyListener(this);
         setFocusable(true);
     }
     
     public void update() {
         int halfP = p1.getSize()/2;
-        BufferStrategy buffStrat = view.getBufferStrategy();
+        BufferStrategy buffStrat = mazeView.getBufferStrategy();
         Graphics g  = buffStrat.getDrawGraphics();
         
         if (p1.getMoveN()) {
@@ -70,7 +77,7 @@ public class MazeGame extends JFrame implements KeyListener {
     }
     
     public void render() {
-        BufferStrategy buffStrat = view.getBufferStrategy();
+        BufferStrategy buffStrat = mazeView.getBufferStrategy();
         Graphics g  = buffStrat.getDrawGraphics();
         super.paint(g); // Override
 
@@ -82,7 +89,7 @@ public class MazeGame extends JFrame implements KeyListener {
         buffStrat.show(); // Buffer has been written to and is ready to be put on screen
     }
     
-    public void run() {
+    public void runMaze() {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
@@ -90,9 +97,9 @@ public class MazeGame extends JFrame implements KeyListener {
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
         
-        add(view); // Adds graphics component to JFrame
+        add(mazeView); // Adds graphics component to JFrame
         pack();
-        view.createBufferStrategy(2); // object for buffer strategy
+        mazeView.createBufferStrategy(2); // object for buffer strategy
         setLocationRelativeTo(null); // Spawns window in centre of screen
         setVisible(true); // Makes app window visible
         
@@ -120,6 +127,21 @@ public class MazeGame extends JFrame implements KeyListener {
         }
     }
     
+    public void runMenu() {
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+        
+        JButton btn = ui.getPlayButton();
+        btn.addActionListener(this);
+        btn.setActionCommand("Open");
+        
+        startView.add(btn, BorderLayout.CENTER);
+        add(startView); // Adds graphics component to JFrame
+        pack();
+        setLocationRelativeTo(null); // Spawns window in centre of screen
+        setVisible(true); // Makes app window visible
+    }
+    
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(windowWidth, windowHeight);
@@ -144,4 +166,16 @@ public class MazeGame extends JFrame implements KeyListener {
         else if ((e.getKeyCode() == KeyEvent.VK_DOWN)||(e.getKeyCode() == KeyEvent.VK_S)){ p1.setMoveS(false); }
         else if ((e.getKeyCode() == KeyEvent.VK_LEFT)||(e.getKeyCode() == KeyEvent.VK_A)){ p1.setMoveW(false); }
     }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String cmd = e.getActionCommand();
+        if(cmd.equals("Open")){
+            this.remove(startView);
+            this.dispose();
+            runMaze();
+
+        }
+    }
 }
+

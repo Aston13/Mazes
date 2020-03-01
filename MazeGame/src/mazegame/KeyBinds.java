@@ -4,12 +4,22 @@ import javax.swing.JFrame; // Import JFrame class from graphics library
 import java.awt.Graphics;
 import java.awt.Canvas;
 import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import static java.awt.event.KeyEvent.VK_UP;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 
-public class MazeGame extends JFrame implements KeyListener {
+public class KeyBinds extends JFrame implements KeyListener {
     
     private final Canvas view = new Canvas();
     private final int windowWidth;
@@ -22,16 +32,54 @@ public class MazeGame extends JFrame implements KeyListener {
     private final int tileBorder = 1;
     private int numOfRowCol;
     private final Renderer renderer;
+    JPanel pane = new JPanel(new GridLayout());
     
     
-    public MazeGame(int windowHeight, int windowWidth, UI ui) {
+    
+    public KeyBinds(int windowHeight, int windowWidth, UI ui) {
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.ui = ui;
         renderer = new Renderer(windowWidth, windowHeight);
-        addKeyListener(this);
-        view.addKeyListener(this);
-        setFocusable(true);
+ 
+        setResizable(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+        setContentPane(pane);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+        
+        
+
+
+        
+        pane.add(view);
+        view.createBufferStrategy(2);
+        
+        addKeyBinding(pane, KeyEvent.VK_UP, "Move North", false, (evt) -> {p1.setMoveN(true);});
+        addKeyBinding(pane, KeyEvent.VK_RIGHT, "Move East", false, (evt) -> {p1.setMoveE(true);});
+        addKeyBinding(pane, KeyEvent.VK_DOWN, "Move South", false, (evt) -> {p1.setMoveS(true);});
+        addKeyBinding(pane, KeyEvent.VK_LEFT, "Move West", false, (evt) -> {p1.setMoveW(true);});
+        
+        addKeyBinding(pane, KeyEvent.VK_UP, "Stop North", true, (evt) -> {p1.setMoveN(false);});
+        addKeyBinding(pane, KeyEvent.VK_RIGHT, "Stop East", true, (evt) -> {p1.setMoveE(false);});
+        addKeyBinding(pane, KeyEvent.VK_DOWN, "Stop South", true, (evt) -> {p1.setMoveS(false);});
+        addKeyBinding(pane, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {p1.setMoveW(false);});
+        
+    }
+    
+    public void addKeyBinding(JComponent comp, int keyCode, String id, Boolean onRelease, ActionListener al) {
+        InputMap inMap = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actMap = comp.getActionMap();
+        
+        inMap.put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), id);
+
+        actMap.put(id, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                al.actionPerformed(e);
+            }
+        });  
     }
     
     public void update() {
@@ -86,15 +134,7 @@ public class MazeGame extends JFrame implements KeyListener {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
-        add(ui.inGamePane());
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        
-        add(view); // Adds graphics component to JFrame
-        pack();
-        view.createBufferStrategy(2); // object for buffer strategy
-        setLocationRelativeTo(null); // Spawns window in centre of screen
-        setVisible(true); // Makes app window visible
+
         
         if ((mazeWH/tileWH) % 2 == 0) {
             this.mazeWH = mazeWH - (tileWH+1);

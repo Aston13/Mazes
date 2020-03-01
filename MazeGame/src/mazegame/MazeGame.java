@@ -43,7 +43,7 @@ public class MazeGame extends JFrame implements Runnable {
     }
     
     public void setUpFrame() {
-        setNESWKeys(pane);
+        
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
         setContentPane(pane);
@@ -105,6 +105,7 @@ public class MazeGame extends JFrame implements Runnable {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
+        setNESWKeys(pane);
 
         setUpFrame();
         pane.add(gameView);
@@ -137,8 +138,12 @@ public class MazeGame extends JFrame implements Runnable {
     public void runStart() {
         setUpFrame();
         JButton play = ui.getPlayButton();
-        pane.add(play);
+        JButton quit = ui.getQuitButton();
         
+        pane.add(play);
+        pane.add(quit);
+        pane.setLayout(null);
+
         play.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -148,6 +153,13 @@ public class MazeGame extends JFrame implements Runnable {
                 
                 Thread newGameThread = new Thread(newGame);
                 newGameThread.start();
+            }
+        });
+        
+        quit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
             }
         });
     }

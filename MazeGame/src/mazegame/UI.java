@@ -42,9 +42,26 @@ public class UI {
     
     public JButton getPlayButton() {
         JButton b = new JButton("Play");
-        b.setBounds(windowWidth/2, windowHeight/2, 100, 100);
+        int width = 100;
+        int height = 50;
+        int x = (windowWidth-width)/2;
+        int y = (windowWidth-height)/3;
+        b.setBounds(x, y, width, height);
 
-        b.setBackground(Color.magenta);
+        b.setBackground(Color.MAGENTA);
+        b.setVisible(true);
+        return b;
+    }
+    
+    public JButton getQuitButton() {
+        JButton b = new JButton("Quit");
+        int width = 100;
+        int height = 50;
+        int x = (windowWidth-width)/2;
+        int y = (windowWidth-height)/2;
+        b.setBounds(x, y, width, height);
+
+        b.setBackground(Color.ORANGE);
         b.setVisible(true);
         return b;
     }

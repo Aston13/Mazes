@@ -103,7 +103,9 @@ public class Renderer {
         int currentY = current[1];
     
         if (!(tileArr[currentX][currentY]).isWall()){
-            if (tileArr[currentX][currentY].getPlayerExplored() == false) {
+            if (tileArr[currentX][currentY].isExitPortal()){
+                System.out.println("Game Won");
+            } else if (tileArr[currentX][currentY].getPlayerExplored() == false) {
                 tileArr[currentX][currentY].setPlayerExplored(true);
                 visitedTiles++;
             }
@@ -111,4 +113,6 @@ public class Renderer {
         }
         return false; // Is a wall.
     }
+    
+    
 }

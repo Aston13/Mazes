@@ -12,6 +12,7 @@ public class Tile {
     private boolean visited;
     private boolean wall;
     private boolean playerExplored;
+    private boolean exitPortal;
     
     Random rand = new Random();
     float r = rand.nextFloat()/4f;
@@ -24,11 +25,20 @@ public class Tile {
         this.xPos = xPos;
         this.yPos = yPos;
         this.c1 = Color.cyan;
+        exitPortal = false;
         visited = false;
         wall = true;
         playerExplored = false;
     }
     
+    public void setExitPortal(boolean ex) {
+        c1 = Color.GREEN;
+        exitPortal = ex;
+    }
+    
+    public boolean isExitPortal() {
+        return exitPortal;
+    }
 
     
     public boolean hasBeenVisited(){

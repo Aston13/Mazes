@@ -52,7 +52,7 @@ public class RecursiveB extends Tilemap {
         visited = new Tile(0, startingX, startingY);
         visitedTiles.push(visited);
         
-        return carvePassage(startingX, startingY);
+        return setRandomWinningTile(carvePassage(startingX, startingY));
     }
     
     public int getStartingX() {
@@ -73,6 +73,23 @@ public class RecursiveB extends Tilemap {
             carvePassage(visitedTiles.pop().getMinX(), visitedTiles.pop().getMinY());
         } 
             return updateGrid;
+    }
+    
+    public Tile[][] setRandomWinningTile(Tile[][] tileSet) {
+        int colLen = tileSet[0].length-1;
+        int rowLen = tileSet[1].length-1;
+        
+        int randCol = new Random().nextInt(colLen + 1);
+        int randRow = new Random().nextInt(rowLen + 1);
+
+        Tile tile = tileSet[randCol][randRow];
+        if (!tile.isWall()) {
+            tile.setExitPortal(true);
+            tileSet[randCol][randRow] = tile;
+        } else {
+            setRandomWinningTile(tileSet);
+        }
+        return tileSet;
     }
    
     

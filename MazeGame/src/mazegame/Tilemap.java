@@ -44,7 +44,7 @@ public class Tilemap {
         
         return tiles;
     }
-    
+ 
     public int[] getCurrentTile(int playerX, int playerY) {
         int currentTile[] = new int[2];
         pxCount = 0;
@@ -54,8 +54,7 @@ public class Tilemap {
             for (int x = 0; x < mazeWH; x+=tileWH) {
                 
                 if ((playerY >= y) && (playerY <= y+tileWH)){
-                    if ((playerX >= x) && (playerX <= x+tileWH)){
-                        
+                    if ((playerX >= x) && (playerX <= x+tileWH)){ 
                         currentTile[0] = pyCount;
                         currentTile[1] = pxCount;
                         return currentTile;

@@ -19,9 +19,10 @@ public class Start {
     
     public static void main (String [] args){
         //menu.run();
-        //.game.run();
+        //game.run();
+        game.runStart();
         //doubleC.runMenu();
         //doubleC.runMaze();
-        kb.run();
+        //kb.run();
     }
 }

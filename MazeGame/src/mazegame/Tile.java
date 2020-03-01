@@ -44,8 +44,12 @@ public class Tile {
     }
     
     public void setPlayerExplored(boolean hasExplored){
-        this.playerExplored = hasExplored;
-        this.setColor(Color.darkGray);
+        playerExplored = hasExplored;
+        setColor(Color.darkGray);
+    }
+    
+    public boolean getPlayerExplored(){
+        return playerExplored;
     }
     
     public boolean isWall(){

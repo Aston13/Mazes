@@ -42,7 +42,7 @@ public class UI {
     
     public JButton getPlayButton() {
         JButton b = new JButton("Play");
-        //b.setBounds(windowWidth/2, windowHeight/2, 100, 100);
+        b.setBounds(windowWidth/2, windowHeight/2, 100, 100);
 
         b.setBackground(Color.magenta);
         b.setVisible(true);

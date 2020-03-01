@@ -8,8 +8,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import static java.awt.event.KeyEvent.VK_UP;
-import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
@@ -18,8 +16,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
-
-public class KeyBinds extends JFrame implements KeyListener {
+public class KeyBinds extends JFrame {
     
     private final Canvas view = new Canvas();
     private final int windowWidth;
@@ -32,54 +29,13 @@ public class KeyBinds extends JFrame implements KeyListener {
     private final int tileBorder = 1;
     private int numOfRowCol;
     private final Renderer renderer;
-    JPanel pane = new JPanel(new GridLayout());
-    
-    
+    private JPanel pane = new JPanel(new GridLayout());
     
     public KeyBinds(int windowHeight, int windowWidth, UI ui) {
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.ui = ui;
         renderer = new Renderer(windowWidth, windowHeight);
- 
-        setResizable(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        setContentPane(pane);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
-        
-        
-
-
-        
-        pane.add(view);
-        view.createBufferStrategy(2);
-        
-        addKeyBinding(pane, KeyEvent.VK_UP, "Move North", false, (evt) -> {p1.setMoveN(true);});
-        addKeyBinding(pane, KeyEvent.VK_RIGHT, "Move East", false, (evt) -> {p1.setMoveE(true);});
-        addKeyBinding(pane, KeyEvent.VK_DOWN, "Move South", false, (evt) -> {p1.setMoveS(true);});
-        addKeyBinding(pane, KeyEvent.VK_LEFT, "Move West", false, (evt) -> {p1.setMoveW(true);});
-        
-        addKeyBinding(pane, KeyEvent.VK_UP, "Stop North", true, (evt) -> {p1.setMoveN(false);});
-        addKeyBinding(pane, KeyEvent.VK_RIGHT, "Stop East", true, (evt) -> {p1.setMoveE(false);});
-        addKeyBinding(pane, KeyEvent.VK_DOWN, "Stop South", true, (evt) -> {p1.setMoveS(false);});
-        addKeyBinding(pane, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {p1.setMoveW(false);});
-        
-    }
-    
-    public void addKeyBinding(JComponent comp, int keyCode, String id, Boolean onRelease, ActionListener al) {
-        InputMap inMap = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actMap = comp.getActionMap();
-        
-        inMap.put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), id);
-
-        actMap.put(id, new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                al.actionPerformed(e);
-            }
-        });  
     }
     
     public void update() {
@@ -134,6 +90,17 @@ public class KeyBinds extends JFrame implements KeyListener {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
+        
+        setResizable(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+        setContentPane(pane);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+
+        pane.add(view);
+        view.createBufferStrategy(2);
+        setNESWKeys(pane); 
 
         
         if ((mazeWH/tileWH) % 2 == 0) {
@@ -160,28 +127,33 @@ public class KeyBinds extends JFrame implements KeyListener {
         }
     }
     
+    public void setNESWKeys(JComponent comp) {
+        addKeyBinding(comp, KeyEvent.VK_UP, "Move North", false, (evt) -> {p1.setMoveN(true);});
+        addKeyBinding(comp, KeyEvent.VK_RIGHT, "Move East", false, (evt) -> {p1.setMoveE(true);});
+        addKeyBinding(comp, KeyEvent.VK_DOWN, "Move South", false, (evt) -> {p1.setMoveS(true);});
+        addKeyBinding(comp, KeyEvent.VK_LEFT, "Move West", false, (evt) -> {p1.setMoveW(true);});
+        
+        addKeyBinding(comp, KeyEvent.VK_UP, "Stop North", true, (evt) -> {p1.setMoveN(false);});
+        addKeyBinding(comp, KeyEvent.VK_RIGHT, "Stop East", true, (evt) -> {p1.setMoveE(false);});
+        addKeyBinding(comp, KeyEvent.VK_DOWN, "Stop South", true, (evt) -> {p1.setMoveS(false);});
+        addKeyBinding(comp, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {p1.setMoveW(false);});
+    }
+    
+    public void addKeyBinding(JComponent comp, int keyCode, String id, Boolean onRelease, ActionListener al) {
+        InputMap inMap = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actMap = comp.getActionMap();
+        inMap.put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), id);
+
+        actMap.put(id, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                al.actionPerformed(e);
+            }
+        });  
+    }
+    
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(windowWidth, windowHeight);
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if ((e.getKeyCode() == KeyEvent.VK_UP)||(e.getKeyCode() == KeyEvent.VK_W)){ p1.setMoveN(true);}
-        else if ((e.getKeyCode() == KeyEvent.VK_RIGHT)||(e.getKeyCode() == KeyEvent.VK_D)){ p1.setMoveE(true); }
-        else if ((e.getKeyCode() == KeyEvent.VK_DOWN)||(e.getKeyCode() == KeyEvent.VK_S)){ p1.setMoveS(true); }
-        else if ((e.getKeyCode() == KeyEvent.VK_LEFT)||(e.getKeyCode() == KeyEvent.VK_A)){ p1.setMoveW(true); }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-        if ((e.getKeyCode() == KeyEvent.VK_UP)||(e.getKeyCode() == KeyEvent.VK_W)){ p1.setMoveN(false); }
-        else if ((e.getKeyCode() == KeyEvent.VK_RIGHT)||(e.getKeyCode() == KeyEvent.VK_D)){ p1.setMoveE(false); }
-        else if ((e.getKeyCode() == KeyEvent.VK_DOWN)||(e.getKeyCode() == KeyEvent.VK_S)){ p1.setMoveS(false); }
-        else if ((e.getKeyCode() == KeyEvent.VK_LEFT)||(e.getKeyCode() == KeyEvent.VK_A)){ p1.setMoveW(false); }
     }
 }

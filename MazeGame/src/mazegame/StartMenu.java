@@ -31,24 +31,12 @@ public class StartMenu extends JFrame implements ActionListener {
         btn = ui.getPlayButton();
         btn.addActionListener(this);
         btn.setActionCommand("Open");
-        
 
-        
-        
-        
         pane.add(btn, BorderLayout.CENTER);
         pack();
         add(pane);
         setLocationRelativeTo(null); // Spawns window in centre of screen
         setVisible(true); // Makes app window visible
-        
-    }
-    
-    public void runGame() {
-        UI ui2 = new UI(windowWidth, windowHeight);
-        MazeGame game =  new MazeGame(windowWidth,
-            windowHeight, ui2);
-        game.run();
         
     }
     
@@ -63,9 +51,10 @@ public class StartMenu extends JFrame implements ActionListener {
         if(cmd.equals("Open")){
             dispose();
             UI ui2 = new UI(windowWidth, windowHeight);
-            MazeGame game =  new MazeGame(windowWidth,
-            windowHeight, ui2);
-            game.run();
+            new MazeGame(windowWidth,
+            windowHeight, ui2).run();
+            
+            
         }
         
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.

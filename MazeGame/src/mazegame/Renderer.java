@@ -14,6 +14,8 @@ public class Renderer {
     private final int screenHeight;
     private int startingX;
     private int startingY;
+    
+    private int visitedTiles = 0;
 
     public int[] getPixels() {
         return pixels;
@@ -56,6 +58,14 @@ public class Renderer {
         g.fillOval(startingX, startingY, p1.getSize(), p1.getSize());
     }
     
+    public void renderHUD(Graphics g, Player p1) {
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(0, 0, screenWidth, 50);
+        g.setColor(Color.WHITE);
+        g.drawString("Moves Taken: " +  visitedTiles, 25, 25);
+        
+    }
+    
     public void moveMazeX(Graphics g, int numOfRowCol, int dir) {
         for(int i = 0; i < numOfRowCol; i++){    // No of rows/columns
             for (int x = 0; x < numOfRowCol; x++) {  // No of rows/columns
@@ -93,7 +103,10 @@ public class Renderer {
         int currentY = current[1];
     
         if (!(tileArr[currentX][currentY]).isWall()){
-            tileArr[currentX][currentY].setPlayerExplored(true);
+            if (tileArr[currentX][currentY].getPlayerExplored() == false) {
+                tileArr[currentX][currentY].setPlayerExplored(true);
+                visitedTiles++;
+            }
             return true; // Is not a wall.
         }
         return false; // Is a wall.

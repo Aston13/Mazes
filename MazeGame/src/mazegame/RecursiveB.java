@@ -7,13 +7,13 @@ public class RecursiveB extends Tilemap {
     
     private int newXPos;
     private int newYPos;
-    private Tile [][] updateGrid;
-    Stack<Tile> visitedTiles = new Stack<Tile>();
+    private final Tile [][] updateGrid;
+    Stack<Tile> visitedTiles = new Stack<>();
     private Tile visited;
-    private int tileWH;
+    private final int tileWH;
     
     private int maxSE = 0;
-    private int minNW = 1;
+    private final int minNW;
     
     private int startingX;
     private int startingY;
@@ -22,6 +22,7 @@ public class RecursiveB extends Tilemap {
     public RecursiveB (int mazeWH, int tileWH, int tileBorder, int screenWidth, 
             int screenHeight) {
         super(mazeWH, tileWH, tileBorder, screenWidth, screenHeight);
+        this.minNW = 1;
         updateGrid = super.getTileArr();
         this.tileWH = tileWH;
         if ((mazeWH/tileWH) % 2 == 0) {

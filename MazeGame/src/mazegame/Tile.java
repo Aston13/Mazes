@@ -40,7 +40,6 @@ public class Tile {
         return exitPortal;
     }
 
-    
     public boolean hasBeenVisited(){
         return visited;
     }

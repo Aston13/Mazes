@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.Arrays;
 
 public class Renderer {
     private final BufferedImage view;
@@ -14,7 +15,6 @@ public class Renderer {
     private final int screenHeight;
     private int startingX;
     private int startingY;
-    
     private int visitedTiles = 0;
 
     public int[] getPixels() {
@@ -32,7 +32,9 @@ public class Renderer {
         pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
     }
     
-    public void render(Graphics g) {
+    public void renderBackground(Graphics g) {
+        
+        // Sets background colour to black.
         g.drawImage(view, 0, 0, view.getWidth(), view.getHeight(), null);
     }
     
@@ -43,12 +45,14 @@ public class Renderer {
         startingY = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
     }
     
-    public void renderMaze(Graphics g, int numOfRowCol) {
+    public void renderMaze(Graphics g, int numOfRowCol, int tileWH) {
         for(int i = 0; i < numOfRowCol; i++){    // No of rows/columns
             for (int x = 0; x < numOfRowCol; x++) {  // No of rows/columns
                 Tile r1 = tileArr[x][i];
+                if((r1.getMinX() > -tileWH) && (r1.getMaxX() < screenWidth+tileWH) && (r1.getMinY() > -tileWH) && (r1.getMaxY() < screenHeight+tileWH)) {
                     g.setColor(r1.getColor());
-                    g.fillRect(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize());
+                    g.fillRect(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize());  
+                }
             }
         }
     }
@@ -86,25 +90,35 @@ public class Renderer {
         }
     }
     
-    public int[] getTile(int pX, int pY, int pSize, int mazeWH, int tileWH, int tileBorder) { 
-        Tilemap tm1 = new Tilemap(mazeWH,tileWH,tileBorder, screenWidth, screenHeight);
+    public int[] getTile(int pX, int pY, int pSize, int mazeWH, int tileWH, int tileBorder) {
+        
+        Tilemap tm1 = new Tilemap(mazeWH, tileWH, tileBorder, screenWidth, screenHeight);
         int x = pX+(pSize/2);
         int y = pY+(pSize/2);
         
         if ((tm1.getCurrentTile(x, y)) != null) {
-            int currentTile [] = tm1.getCurrentTile(x, y);  
+            int currentTile [] = tm1.getCurrentTile(x, y);
             return currentTile;
         }
         return null;
     }
     
-    public boolean checkCollision(int current []) {
+    public boolean checkCollision(int current [], MazeGame game) {
         int currentX = current[0];
         int currentY = current[1];
     
         if (!(tileArr[currentX][currentY]).isWall()){
             if (tileArr[currentX][currentY].isExitPortal()){
                 System.out.println("Game Won");
+                
+                game.setGameState(false);
+//                game.dispose();
+//                
+//                MazeGame newGame =  new MazeGame(400, 400, new UI(400,400));
+//                Thread newGameThread = new Thread(newGame);
+//                newGame.setGameState(true);
+//                newGameThread.start();
+
             } else if (tileArr[currentX][currentY].getPlayerExplored() == false) {
                 tileArr[currentX][currentY].setPlayerExplored(true);
                 visitedTiles++;
@@ -112,7 +126,5 @@ public class Renderer {
             return true; // Is not a wall.
         }
         return false; // Is a wall.
-    }
-    
-    
+    }  
 }

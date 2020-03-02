@@ -16,15 +16,17 @@ public class UI {
     }
     
     public JLabel getLogo() {
-        JLabel l = new JLabel("Maze Runner", SwingConstants.CENTER);
-        
+        JLabel l = new JLabel("Maze", SwingConstants.CENTER);
         int width = windowWidth;
         int height = 50;
         int x = (windowWidth-width)/2;
         int y = (windowWidth-height)/10;
+        
         l.setBounds(x, y*2, width, height);
         l.setFont(new Font("Dialog", Font.PLAIN, 40));
+        l.setForeground(Color.CYAN);
         l.setVisible(true);
+        
         return l;
     }
     
@@ -34,12 +36,13 @@ public class UI {
         int height = 50;
         int x = (windowWidth-width)/2;
         int y = (windowWidth-height)/10;
+        
         b.setBounds(x, y*4, width, height);
-
         b.setBackground(Color.DARK_GRAY);
         b.setForeground(Color.WHITE);
-        
+        b.setFocusPainted(false);
         b.setVisible(true);
+        
         return b;
     }
     
@@ -49,11 +52,13 @@ public class UI {
         int height = 50;
         int x = (windowWidth-width)/2;
         int y = (windowWidth-height)/10;
+        
         b.setBounds(x, y*5, width, height);
-
         b.setBackground(Color.DARK_GRAY);
         b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
         b.setVisible(true);
+        
         return b;
     }
 }

@@ -62,11 +62,12 @@ public class Renderer {
         g.fillOval(startingX, startingY, p1.getSize(), p1.getSize());
     }
     
-    public void renderHUD(Graphics g, Player p1) {
+    public void renderHUD(Graphics g, Player p1, int level) {
         g.setColor(Color.DARK_GRAY);
         g.fillRect(0, 0, screenWidth, 50);
         g.setColor(Color.WHITE);
         g.drawString("Moves Taken: " +  visitedTiles, 25, 25);
+        g.drawString("Level: " + level, 25, 40);
         
     }
     

@@ -21,18 +21,19 @@ import javax.swing.KeyStroke;
 
 public class MazeGame extends JFrame implements Runnable {
     
-    private final Canvas gameView = new Canvas();
+    private Canvas gameView = new Canvas();
     private final int windowWidth;
     private final int windowHeight;
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private int mazeWH = 350; // 2640/20 (132x132 = 17424 tiles) Highest before stackoverflow
+    private int mazeWH = 180; // 2640/20 (132x132 = 17424 tiles) Highest before stackoverflow
     private final int tileWH = 20;
     private final int tileBorder = 0;
     private int numOfRowCol;
-    private final Renderer renderer;
-    private final JPanel pane = new JPanel(new GridLayout());
+    private Renderer renderer;
+    private JPanel pane = new JPanel(new GridLayout());
+    private int levelCount = 1;
     
     public MazeGame (int windowHeight, int windowWidth, UI ui) {
         this.windowWidth = windowWidth;
@@ -106,7 +107,7 @@ public class MazeGame extends JFrame implements Runnable {
         renderer.renderBackground(g); // Renders background
         renderer.renderMaze(g, numOfRowCol, tileWH);
         renderer.renderPlayer(g, player);
-        renderer.renderHUD(g, player);
+        renderer.renderHUD(g, player, levelCount);
 
         g.dispose(); // clears graphics memory
         buffStrat.show(); // Buffer has been written to and is ready to be put on screen
@@ -147,18 +148,57 @@ public class MazeGame extends JFrame implements Runnable {
             lastTime = now;
         }
         
-        dispose();
-        MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, mazeWH+100);
-        Thread newGameThread = new Thread(newGame);
-        newGame.setGameState(true);
-        newGameThread.start();
+//        dispose();
+//        MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, mazeWH+100);
+//        Thread newGameThread = new Thread(newGame);
+//        newGame.setGameState(true);
+//        newGameThread.start();
+
+        runTransitionScreen();
+    }
+    
+    public void runTransitionScreen() {
+        JPanel panel = new JPanel(new GridLayout());
+        
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+        setContentPane(panel);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+        
+        JLabel complete = ui.getLogo("Completed Level " + levelCount);
+        JButton next = ui.getTopButton("Next Level");
+        JButton quit = ui.getMidButton("Quit");
+        panel.add(complete);
+        panel.add(next);
+        panel.add(quit);
+        panel.setLayout(null);
+        panel.setBackground(Color.BLACK);
+        panel.setVisible(true);
+        
+        next.addActionListener((ActionEvent e) -> {
+            dispose();
+            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, mazeWH);
+            Thread newGameThread = new Thread(newGame);
+            newGame.setGameState(true);
+            newGame.increaseLevel(levelCount, 100);
+            newGameThread.start();
+        });
+        
+        quit.addActionListener((e) -> {dispose();});
+    }
+    
+    public void increaseLevel(int level, int mazeInc) {
+        levelCount += level;
+        mazeWH += mazeInc;
     }
     
     public void runMenu() {
         setUpFrame();
-        JButton play = ui.getPlayButton();
-        JButton quit = ui.getQuitButton();
-        JLabel logo = ui.getLogo();
+        JButton play = ui.getTopButton("Play");
+        JButton quit = ui.getMidButton("Quit");
+        JLabel logo = ui.getLogo("Maze");
         
         pane.add(logo);
         pane.add(play);

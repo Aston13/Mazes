@@ -15,8 +15,8 @@ public class UI {
         this.windowHeight = windowHeight;
     }
     
-    public JLabel getLogo() {
-        JLabel l = new JLabel("Maze", SwingConstants.CENTER);
+    public JLabel getLogo(String text) {
+        JLabel l = new JLabel(text, SwingConstants.CENTER);
         int width = windowWidth;
         int height = 50;
         int x = (windowWidth-width)/2;
@@ -30,8 +30,8 @@ public class UI {
         return l;
     }
     
-    public JButton getPlayButton() {
-        JButton b = new JButton("Play");
+    public JButton getTopButton(String text) {
+        JButton b = new JButton(text);
         int width = 100;
         int height = 50;
         int x = (windowWidth-width)/2;
@@ -46,8 +46,8 @@ public class UI {
         return b;
     }
     
-    public JButton getQuitButton() {
-        JButton b = new JButton("Quit");
+    public JButton getMidButton(String text) {
+        JButton b = new JButton(text);
         int width = 100;
         int height = 50;
         int x = (windowWidth-width)/2;

@@ -1,6 +1,7 @@
 package mazegame;
 
 import java.awt.Color;
+import java.awt.Shape;
 import java.util.Random;
 
 public class Tile {
@@ -54,7 +55,7 @@ public class Tile {
     
     public void setPlayerExplored(boolean hasExplored){
         playerExplored = hasExplored;
-        setColor(Color.darkGray);
+        //setColor(Color.darkGray);
     }
     
     public boolean getPlayerExplored(){

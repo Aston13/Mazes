@@ -29,11 +29,12 @@ public class MazeGame extends JFrame implements Runnable {
     private final UI ui;
     private int mazeWH = 180; // 2640/20 (132x132 = 17424 tiles) Highest before stackoverflow
     private final int tileWH = 20;
-    private final int tileBorder = 0;
+    private final int tileBorder = 1;
     private int numOfRowCol;
     private Renderer renderer;
     private JPanel pane = new JPanel(new GridLayout());
     private int levelCount = 1;
+    private Thread thread;
     
     public MazeGame (int windowHeight, int windowWidth, UI ui) {
         this.windowWidth = windowWidth;
@@ -147,12 +148,6 @@ public class MazeGame extends JFrame implements Runnable {
             render();
             lastTime = now;
         }
-        
-//        dispose();
-//        MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, mazeWH+100);
-//        Thread newGameThread = new Thread(newGame);
-//        newGame.setGameState(true);
-//        newGameThread.start();
 
         runTransitionScreen();
     }
@@ -178,20 +173,18 @@ public class MazeGame extends JFrame implements Runnable {
         panel.setVisible(true);
         
         next.addActionListener((ActionEvent e) -> {
-            dispose();
-            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, mazeWH);
-            Thread newGameThread = new Thread(newGame);
-            newGame.setGameState(true);
-            newGame.increaseLevel(levelCount, 100);
-            newGameThread.start();
+            thread = new Thread(this);
+            increaseLevel();
+            thread.start();
         });
         
         quit.addActionListener((e) -> {dispose();});
     }
     
-    public void increaseLevel(int level, int mazeInc) {
-        levelCount += level;
-        mazeWH += mazeInc;
+    public void increaseLevel() {
+        levelCount += 1;
+        mazeWH += 100;
+        setGameState(true);
     }
     
     public void runMenu() {

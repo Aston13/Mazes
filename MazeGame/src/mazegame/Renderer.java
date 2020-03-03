@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.util.Arrays;
 
 public class Renderer {
     private final BufferedImage view;
@@ -45,13 +44,36 @@ public class Renderer {
         startingY = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
     }
     
+    private int count = 0;
+    Color c2 = Color.GREEN;
+    
     public void renderMaze(Graphics g, int numOfRowCol, int tileWH) {
+        
         for(int i = 0; i < numOfRowCol; i++){    // No of rows/columns
             for (int x = 0; x < numOfRowCol; x++) {  // No of rows/columns
                 Tile r1 = tileArr[x][i];
                 if((r1.getMinX() > -tileWH) && (r1.getMaxX() < screenWidth+tileWH) && (r1.getMinY() > -tileWH) && (r1.getMaxY() < screenHeight+tileWH)) {
+                    if(r1.isExitPortal()){
+                        count++;
+                        
+                        if (count % 100 == 0){
+                            if (count < 500){
+                            c2 = c2.darker();
+                            } else if (count > 500){
+                                c2 = c2.brighter();
+                            }
+                        } 
+                        
+                        if (count == 1000){
+                            count = 0;
+                        }
+                        
+                        g.setColor(c2);
+                        g.fillOval(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize());
+                    } else {
                     g.setColor(r1.getColor());
-                    g.fillRect(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize());  
+                    g.fillRect(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize()); 
+                    }
                 }
             }
         }
@@ -110,15 +132,8 @@ public class Renderer {
     
         if (!(tileArr[currentX][currentY]).isWall()){
             if (tileArr[currentX][currentY].isExitPortal()){
-                System.out.println("Game Won");
-                
+                System.out.println("Game Won");                
                 game.setGameState(false);
-//                game.dispose();
-//                
-//                MazeGame newGame =  new MazeGame(400, 400, new UI(400,400));
-//                Thread newGameThread = new Thread(newGame);
-//                newGame.setGameState(true);
-//                newGameThread.start();
 
             } else if (tileArr[currentX][currentY].getPlayerExplored() == false) {
                 tileArr[currentX][currentY].setPlayerExplored(true);

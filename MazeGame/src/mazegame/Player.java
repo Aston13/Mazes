@@ -16,8 +16,6 @@ public class Player {
         this.size = size;
     }
     
-
-
     public void setX(int x) {
         this.x = x;
     }

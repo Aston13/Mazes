@@ -3,46 +3,53 @@ package mazegame;
 public class Tilemap {
     
     private int tileWH;
-    private Tile r1;
+    private Tile tile;
     private int yCount, xCount = 0;
-    private int mazeWH;
-    private int screenCenterH;
-    private int screenCenterW;
-    
+    private int rowColAmount;
+    private int xCoord, yCoord = 0;
     private int pyCount, pxCount;
     private int tileBorder = 0;
     private Tile tiles[][];    // No of rows/columns
     
-    public Tilemap(int mazeWH, int tileWH, int tileBorder, int screenWidth, int screenHeight) {
+    public Tilemap(int tileWH, int tileBorder, int rowColAmount) {
         this.tileWH = tileWH;
-        this.mazeWH = mazeWH;
         this.tileBorder = tileWH-tileBorder;
-        this.screenCenterH = (screenHeight/2)-tileWH;
-        this.screenCenterW = (screenWidth/2)-tileWH;
-        
-        double mz = new Double(mazeWH);
-        double tz = new Double(tileWH);
-        double rowColSize = 0.0;
-
-        rowColSize = Math.ceil(mz/tz);
-        tiles = new Tile[(int)rowColSize][(int)rowColSize];
+        this.rowColAmount = rowColAmount;
+        tiles = new Tile[rowColAmount][rowColAmount];
     }
     
     public Tile[][] getTileArr(){
         
-        for(int y = 0+screenCenterH; y < mazeWH+screenCenterH; y+=tileWH) {  // Increments amount of tiles   
-            for (int x = 0+screenCenterW; x < mazeWH+screenCenterW; x+=tileWH) {
-                
-                r1 = new Tile(tileBorder, x, y);
-                tiles[yCount][xCount] = r1;
+        for(int y = 0; y < rowColAmount; y+=1) {  // Increments amount of tiles   
+            for (int x = 0; x < rowColAmount; x+=1) {
+                tile = new Tile(tileBorder, xCoord, yCoord);
+                tiles[yCount][xCount] = tile;
                 xCount++;
+                xCoord += tileWH;
+                
             }
-            
+            xCoord = 0;
             xCount = 0;
             yCount++;
+            yCoord += tileWH;
         }
         
         return tiles;
+    }
+    
+    public int getPassageCount(Tile tiles[][]) {
+        int passages = 0;
+        Tile tile;
+        
+        for(int x = 0; x < tiles.length; x++) {
+            for(int y = 0; y < tiles.length; y++) {
+                tile = tiles[x][y];
+                if (!tile.isWall()){
+                    passages++;
+                }
+            }
+        }
+        return passages;
     }
  
     public int[] getCurrentTile(int playerX, int playerY) {
@@ -50,8 +57,8 @@ public class Tilemap {
         pxCount = 0;
         pyCount = 0;
         
-        for(int y = 0; y < mazeWH; y+=tileWH) {  // Increments amount of tiles   
-            for (int x = 0; x < mazeWH; x+=tileWH) {
+        for(int y = 0; y < rowColAmount*tileWH; y+=tileWH) {  // Increments amount of tiles   
+            for (int x = 0; x < rowColAmount*tileWH; x+=tileWH) {
                 
                 if ((playerY >= y) && (playerY <= y+tileWH)){
                     if ((playerX >= x) && (playerX <= x+tileWH)){ 
@@ -66,10 +73,6 @@ public class Tilemap {
             pyCount++;
         }
         return null;
-    }
-    
-    public int getMazeWH() {
-        return mazeWH;
     }
     
     public int getTileWH() {

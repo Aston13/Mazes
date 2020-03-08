@@ -27,29 +27,20 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private int mazeWH = 180; // 2640/20 (132x132 = 17424 tiles) Highest before stackoverflow
     private final int tileWH = 20;
     private final int tileBorder = 1;
-    private int numOfRowCol;
     private Renderer renderer;
     private JPanel pane = new JPanel(new GridLayout());
     private int levelCount = 1;
     private Thread thread;
+    private int rowColAmount;
     
-    public MazeGame (int windowHeight, int windowWidth, UI ui) {
+    public MazeGame (int windowHeight, int windowWidth, UI ui, int rowColAmount) {
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.ui = ui;
-        renderer = new Renderer(windowWidth, windowHeight);
-    }
-    
-    public MazeGame (int windowHeight, int windowWidth, UI ui,
-            int mazeWH) {
-        this.windowWidth = windowWidth;
-        this.windowHeight = windowHeight;
-        this.ui = ui;
-        this.mazeWH = mazeWH;
-        renderer = new Renderer(windowWidth, windowHeight);
+        if (rowColAmount % 2 == 0) {rowColAmount+=1;}
+        this.rowColAmount = rowColAmount;
     }
     
     public void setUpFrame() {
@@ -71,42 +62,42 @@ public class MazeGame extends JFrame implements Runnable {
         Graphics g  = buffStrat.getDrawGraphics();
         
         if (player.getMoveN()) {
-            int nextTile[] = renderer.getTile(player.getX(), player.getY()-(halfP-1), player.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(player.getX(), player.getY()-(halfP-1), player.getSize(), tileWH, tileBorder);
             if(renderer.checkCollision(nextTile, this)) { 
-                renderer.moveMazeY(g, numOfRowCol, 1);
+                renderer.moveMazeY(g, rowColAmount, 1);
                 player.setY(player.getY()-1);  
             }
         }
         if (player.getMoveE()) { 
-            int nextTile[] = renderer.getTile(player.getX()+(halfP+1), player.getY(), player.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(player.getX()+(halfP+1), player.getY(), player.getSize(), tileWH, tileBorder);
             if(renderer.checkCollision(nextTile, this)) { 
-                renderer.moveMazeX(g, numOfRowCol, -1);
+                renderer.moveMazeX(g, rowColAmount, -1);
                 player.setX(player.getX()+1); 
             }
         }
         if (player.getMoveS()) {
-            int nextTile[] = renderer.getTile(player.getX(), player.getY()+(halfP+1), player.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(player.getX(), player.getY()+(halfP+1), player.getSize(), tileWH, tileBorder);
             if(renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeY(g, numOfRowCol, -1);
+                renderer.moveMazeY(g, rowColAmount, -1);
                 player.setY(player.getY()+1);
             } 
         }
         if (player.getMoveW()) { 
-            int nextTile[] = renderer.getTile(player.getX()-(halfP-1), player.getY(), player.getSize(), mazeWH, tileWH, tileBorder);
+            int nextTile[] = renderer.getTile(player.getX()-(halfP-1), player.getY(), player.getSize(), tileWH, tileBorder);
             if(renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeX(g, numOfRowCol, 1);
+                renderer.moveMazeX(g, rowColAmount, 1);
                 player.setX(player.getX()-1); 
             }
         }
     }
     
-    public void render() {
+    public void render() throws NullPointerException {
         BufferStrategy buffStrat = gameView.getBufferStrategy();
         Graphics g  = buffStrat.getDrawGraphics();
         super.paint(g); // Override
 
         renderer.renderBackground(g); // Renders background
-        renderer.renderMaze(g, numOfRowCol, tileWH);
+        renderer.renderMaze(g, tileWH);
         renderer.renderPlayer(g, player);
         renderer.renderHUD(g, player, levelCount);
 
@@ -119,22 +110,18 @@ public class MazeGame extends JFrame implements Runnable {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
         double changeInSeconds = 0;
+        renderer = new Renderer(windowWidth, windowHeight, rowColAmount);
         setNESWKeys(pane);
 
         setUpFrame();
         pane.add(gameView);
         gameView.createBufferStrategy(2);
+
+        renderer.generateMaze(tileWH, tileBorder);
+        renderer.centerMaze();
+        player = new Player(renderer.getStartingX(), renderer.getStartingY(), tileWH);
         
-        numOfRowCol = Math.floorDiv(mazeWH, tileWH);
-//        if ((mazeWH/tileWH) % 2 == 0) {
-//            mazeWH = mazeWH - (tileWH+1);
-//            numOfRowCol = Math.floorDiv(mazeWH, tileWH);
-//        } else {
-//            numOfRowCol = Math.floorDiv(mazeWH, tileWH);
-//        }
         
-        renderer.generateMaze(mazeWH, tileWH, tileBorder);
-        player = new Player(tileWH, tileWH, tileWH);
         render();
 
         while(gameInProgress) {
@@ -183,7 +170,7 @@ public class MazeGame extends JFrame implements Runnable {
     
     public void increaseLevel() {
         levelCount += 1;
-        mazeWH += 100;
+        rowColAmount += 2;
         setGameState(true);
     }
     
@@ -201,7 +188,7 @@ public class MazeGame extends JFrame implements Runnable {
 
         play.addActionListener((e) -> {
             dispose();
-            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui);
+            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
             Thread newGameThread = new Thread(newGame);
             newGame.setGameState(true);
             newGameThread.start();

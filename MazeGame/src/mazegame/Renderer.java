@@ -15,14 +15,16 @@ public class Renderer {
     private int startingX;
     private int startingY;
     private int visitedTiles = 0;
+    private int rowColAmount;
 
     public int[] getPixels() {
         return pixels;
     }
     
-    public Renderer(int screenHeight, int screenWidth) {
+    public Renderer(int screenHeight, int screenWidth, int rowColAmount) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+        this.rowColAmount = rowColAmount;
         
         // Create a BufferedImage that represents the view
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
@@ -37,42 +39,50 @@ public class Renderer {
         g.drawImage(view, 0, 0, view.getWidth(), view.getHeight(), null);
     }
     
-    public void generateMaze(int mazeWH, int tileWH, int tileBorder) {
-        rb1 = new RecursiveB(mazeWH, tileWH, tileBorder, screenWidth, screenHeight);
+    public void generateMaze(int tileWH, int tileBorder) {
+        rb1 = new RecursiveB(tileWH, tileBorder, rowColAmount);
         tileArr = rb1.startGeneration();
-        startingX = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
+        startingX = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinX();
         startingY = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
     }
     
-    private int count = 0;
+    public void centerMaze() {
+        Tile centerTile = tileArr[rb1.getStartingX()][rb1.getStartingY()];
+        int centerTileX = centerTile.getMinX();
+        int centerTileY = centerTile.getMinY();
+        int centerX = screenWidth/2;
+        int centerY = screenHeight/2;
+        int startingCenterDifferenceX = 0;
+        int startingCenterDifferenceY = 0;
+        
+        startingCenterDifferenceX = centerX-centerTileX;
+        startingCenterDifferenceY = centerY-centerTileY;
+        
+        for(int i = 0; i < rowColAmount; i++){    // No of rows/columns
+            for (int x = 0; x < rowColAmount; x++) {  // No of rows/columns 
+                Tile tile = tileArr[x][i];
+                tile.setMinX(tile.getMinX()+startingCenterDifferenceX);
+                tile.setMinY(tile.getMinY()+startingCenterDifferenceY);
+            }
+        }
+    }
+    
     Color c2 = Color.GREEN;
     
-    public void renderMaze(Graphics g, int numOfRowCol, int tileWH) {
+    public void renderMaze(Graphics g, int tileWH) {
         
-        for(int i = 0; i < numOfRowCol; i++){    // No of rows/columns
-            for (int x = 0; x < numOfRowCol; x++) {  // No of rows/columns
-                Tile r1 = tileArr[x][i];
-                if((r1.getMinX() > -tileWH) && (r1.getMaxX() < screenWidth+tileWH) && (r1.getMinY() > -tileWH) && (r1.getMaxY() < screenHeight+tileWH)) {
-                    if(r1.isExitPortal()){
-                        count++;
+        for(int i = 0; i < rowColAmount; i++){    // No of rows/columns
+            for (int x = 0; x < rowColAmount; x++) {  // No of rows/columns
+                Tile tile = tileArr[x][i];
+                if((tile.getMinX() > -tileWH) && (tile.getMaxX() < screenWidth+tileWH) && (tile.getMinY() > -tileWH) && (tile.getMaxY() < screenHeight+tileWH)) {
+                    if(tile.isExitPortal()){
                         
-                        if (count % 100 == 0){
-                            if (count < 500){
-                            c2 = c2.darker();
-                            } else if (count > 500){
-                                c2 = c2.brighter();
-                            }
-                        } 
-                        
-                        if (count == 1000){
-                            count = 0;
-                        }
-                        
+                         
                         g.setColor(c2);
-                        g.fillOval(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize());
+                        g.fillOval(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
                     } else {
-                    g.setColor(r1.getColor());
-                    g.fillRect(r1.getMinX(), r1.getMinY(), r1.getSize(), r1.getSize()); 
+                        g.setColor(tile.getColor());
+                        g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize()); 
                     }
                 }
             }
@@ -81,7 +91,7 @@ public class Renderer {
     
     public void renderPlayer(Graphics g, Player p1) {
         g.setColor(Color.red);
-        g.fillOval(startingX, startingY, p1.getSize(), p1.getSize());
+        g.fillOval(screenWidth/2, screenHeight/2, p1.getSize(), p1.getSize());
     }
     
     public void renderHUD(Graphics g, Player p1, int level) {
@@ -113,9 +123,9 @@ public class Renderer {
         }
     }
     
-    public int[] getTile(int pX, int pY, int pSize, int mazeWH, int tileWH, int tileBorder) {
+    public int[] getTile(int pX, int pY, int pSize, int tileWH, int tileBorder) {
         
-        Tilemap tm1 = new Tilemap(mazeWH, tileWH, tileBorder, screenWidth, screenHeight);
+        Tilemap tm1 = new Tilemap(tileWH, tileBorder, rowColAmount);
         int x = pX+(pSize/2);
         int y = pY+(pSize/2);
         
@@ -131,8 +141,7 @@ public class Renderer {
         int currentY = current[1];
     
         if (!(tileArr[currentX][currentY]).isWall()){
-            if (tileArr[currentX][currentY].isExitPortal()){
-                System.out.println("Game Won");                
+            if (tileArr[currentX][currentY].isExitPortal()){            
                 game.setGameState(false);
 
             } else if (tileArr[currentX][currentY].getPlayerExplored() == false) {
@@ -142,5 +151,13 @@ public class Renderer {
             return true; // Is not a wall.
         }
         return false; // Is a wall.
-    }  
+    }
+    
+    public int getStartingX() {
+        return startingX;
+    }
+    
+    public int getStartingY() {
+        return startingY;
+    }
 }

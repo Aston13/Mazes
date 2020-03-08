@@ -10,50 +10,50 @@ public class RecursiveB extends Tilemap {
     private final Tile [][] updateGrid;
     Stack<Tile> visitedTiles = new Stack<>();
     private Tile visited;
-    private final int tileWH;
-    
+    private final int rowColAmount;
     private int maxSE = 0;
     private final int minNW;
-    
+    private final int[] directions = {1, 2, 3, 4}; // NESW
     private int startingX;
     private int startingY;
 
     
-    public RecursiveB (int mazeWH, int tileWH, int tileBorder, int screenWidth, 
-            int screenHeight) {
-        super(mazeWH, tileWH, tileBorder, screenWidth, screenHeight);
+    public RecursiveB (int tileWH, int tileBorder, int rowColAmount) {
+        super(tileWH, tileBorder, rowColAmount);
         this.minNW = 1;
+        this.rowColAmount = rowColAmount;
         updateGrid = super.getTileArr();
-        this.tileWH = tileWH;
-        if ((mazeWH/tileWH) % 2 == 0) {
-            this.maxSE = (mazeWH/tileWH)-3;
-        } else {
-            this.maxSE = (mazeWH/tileWH)-2;
-        }
-        
+        maxSE = rowColAmount - 2;  
     }
 
-    int[] directions = {1, 2, 3, 4}; // NESW
+    
 
     public Tile[][] startGeneration() {
-//        int startingXPos = new Random().nextInt(13+0); // [0...13]
-//        int startingYPos = new Random().nextInt(13+0); // [0...13]
-//        startingXPos = (startingXPos*2)+1; // [1...27]
-//        startingYPos = (startingYPos*2)+1; // [1...27]
-//        updateGrid[startingYPos][startingXPos].setVisited(true);
         
-
-        //System.out.println(maxSE);
-        startingX = 1; // [0...13]
-        startingY = 1; // [0...13]
-        
-        
-        
+        startingX = getRandomStartingCoord();
+        startingY = getRandomStartingCoord();
         updateGrid[startingY][startingX].setVisited(true);
         visited = new Tile(0, startingX, startingY);
         visitedTiles.push(visited);
         
-        return setRandomWinningTile(carvePassage(startingX, startingY));
+        Tile[][] tiles = setRandomWinningTile(carvePassage(startingX, startingY));
+        System.out.println(super.getPassageCount(tiles));
+        return tiles;
+    }
+    
+    public int getRandomStartingCoord() {
+        
+        /* Ex. Maze size 0-11 has valid cells 1-9 (and odd numbers only) */
+        int endRange = rowColAmount - 2;
+	int randomCoord = new Random().nextInt((endRange) + 1); // Ex. [1-9]
+        if (randomCoord%2 == 0) { 
+            System.out.println("even: " + randomCoord);
+            randomCoord += 1;
+        }
+        
+        System.out.println("new: " + randomCoord);
+        
+        return randomCoord;
     }
     
     public int getStartingX() {
@@ -73,8 +73,13 @@ public class RecursiveB extends Tilemap {
         if (visitedTiles.size() <= 1) {
             carvePassage(visitedTiles.pop().getMinX(), visitedTiles.pop().getMinY());
         } 
-            return updateGrid;
+        
+        return updateGrid;
     }
+    
+//    public Tile[][] setEndTile(Tile[][] tileSet) {
+//        
+//    }
     
     public Tile[][] setRandomWinningTile(Tile[][] tileSet) {
         int colLen = tileSet[0].length-1;
@@ -114,7 +119,7 @@ public class RecursiveB extends Tilemap {
             case 1:
                 if ((y <= minNW)||(updateGrid[y-2][x].hasBeenVisited() == true)) {
                 } else { 
-                    visited = new Tile(30, x, y);
+                    visited = new Tile(0, x, y);
                     visitedTiles.push(visited);
                     
                     updateGrid[y-2][x].setVisited(true);
@@ -128,7 +133,7 @@ public class RecursiveB extends Tilemap {
             case 2:
                 if ((x >= maxSE) || (updateGrid[y][x+2].hasBeenVisited() == true)) {
                 } else {
-                    visited = new Tile(30, x, y);
+                    visited = new Tile(0, x, y);
                     visitedTiles.push(visited);
                     
                     updateGrid[y][x+2].setVisited(true);
@@ -142,7 +147,7 @@ public class RecursiveB extends Tilemap {
             case 3:
                 if ((y >= maxSE)||(updateGrid[y+2][x].hasBeenVisited() == true)) {
                 } else {
-                    visited = new Tile(30, x, y);
+                    visited = new Tile(0, x, y);
                     visitedTiles.push(visited);
 
                     updateGrid[y+2][x].setVisited(true);
@@ -156,7 +161,7 @@ public class RecursiveB extends Tilemap {
             case 4:
                 if ((x <= minNW)||(updateGrid[y][x-2].hasBeenVisited() == true)){
                 } else {
-                    visited = new Tile(30, x, y);
+                    visited = new Tile(0, x, y);
                     visitedTiles.push(visited);
                     updateGrid[y][x-2].setVisited(true);
                     updateGrid[y][x-1].setVisited(true);

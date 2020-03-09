@@ -2,14 +2,14 @@ package mazegame;
 
 public class Tilemap {
     
-    private int tileWH;
+    private final int tileWH;
     private Tile tile;
     private int yCount, xCount = 0;
-    private int rowColAmount;
+    private final int rowColAmount;
     private int xCoord, yCoord = 0;
     private int pyCount, pxCount;
     private int tileBorder = 0;
-    private Tile tiles[][];    // No of rows/columns
+    private final Tile tiles[][];    // No of rows/columns
     
     public Tilemap(int tileWH, int tileBorder, int rowColAmount) {
         this.tileWH = tileWH;
@@ -39,12 +39,12 @@ public class Tilemap {
     
     public int getPassageCount(Tile tiles[][]) {
         int passages = 0;
-        Tile tile;
+        Tile t;
         
-        for(int x = 0; x < tiles.length; x++) {
-            for(int y = 0; y < tiles.length; y++) {
-                tile = tiles[x][y];
-                if (!tile.isWall()){
+        for (Tile[] tile1 : tiles) {
+            for (int y = 0; y < tiles.length; y++) {
+                t = tile1[y];
+                if (!t.isWall()){
                     passages++;
                 }
             }

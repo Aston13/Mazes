@@ -1,12 +1,11 @@
 package mazegame;
 
 import java.awt.Color;
-import java.awt.Shape;
 import java.util.Random;
 
 public class Tile {
 
-    private int tileWH;
+    private final int tileWH;
     private int xPos;
     private int yPos;
     private Color c1;
@@ -14,6 +13,9 @@ public class Tile {
     private boolean wall;
     private boolean playerExplored;
     private boolean exitPortal;
+    private boolean exitCheck;
+    private int rowNo;
+    private int colNo;
     
     Random rand = new Random();
     float r = rand.nextFloat()/4f;
@@ -26,6 +28,7 @@ public class Tile {
         this.xPos = xPos;
         this.yPos = yPos;
         this.c1 = Color.cyan;
+        exitCheck = false;
         exitPortal = false;
         visited = false;
         wall = true;
@@ -43,6 +46,30 @@ public class Tile {
 
     public boolean hasBeenVisited(){
         return visited;
+    }
+    
+    public boolean getCheckedExitPath() {
+        return exitCheck;
+    }
+    public void setCheckedExitPath(boolean checked) {
+        exitCheck = checked;
+        setColor(Color.ORANGE);
+    }
+    
+    public int getRowNo () {
+        return rowNo;
+    }
+    
+    public int getColNo() {
+        return colNo;
+    }
+    
+    public void setRowNo (int no) {
+        rowNo = no;
+    }
+    
+    public void setColNo(int no) {
+        colNo = no;
     }
     
     public void setVisited(boolean vis){

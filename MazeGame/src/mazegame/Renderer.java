@@ -9,13 +9,13 @@ public class Renderer {
     private final BufferedImage view;
     private final int[] pixels;
     private Tile [][] tileArr;
-    private RecursiveB rb1;
+    private RecursiveBacktracker rb1;
     private final int screenWidth;
     private final int screenHeight;
     private int startingX;
     private int startingY;
     private int visitedTiles = 0;
-    private int rowColAmount;
+    private final int rowColAmount;
 
     public int[] getPixels() {
         return pixels;
@@ -40,7 +40,7 @@ public class Renderer {
     }
     
     public void generateMaze(int tileWH, int tileBorder) {
-        rb1 = new RecursiveB(tileWH, tileBorder, rowColAmount);
+        rb1 = new RecursiveBacktracker(tileWH, tileBorder, rowColAmount);
         tileArr = rb1.startGeneration();
         startingX = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinX();
         startingY = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
@@ -52,8 +52,8 @@ public class Renderer {
         int centerTileY = centerTile.getMinY();
         int centerX = screenWidth/2;
         int centerY = screenHeight/2;
-        int startingCenterDifferenceX = 0;
-        int startingCenterDifferenceY = 0;
+        int startingCenterDifferenceX;
+        int startingCenterDifferenceY;
         
         startingCenterDifferenceX = centerX-centerTileX;
         startingCenterDifferenceY = centerY-centerTileY;

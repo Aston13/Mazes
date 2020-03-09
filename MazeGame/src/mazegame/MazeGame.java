@@ -21,7 +21,7 @@ import javax.swing.KeyStroke;
 
 public class MazeGame extends JFrame implements Runnable {
     
-    private Canvas gameView = new Canvas();
+    private final Canvas gameView = new Canvas();
     private final int windowWidth;
     private final int windowHeight;
     private boolean gameInProgress = false;
@@ -30,7 +30,7 @@ public class MazeGame extends JFrame implements Runnable {
     private final int tileWH = 20;
     private final int tileBorder = 1;
     private Renderer renderer;
-    private JPanel pane = new JPanel(new GridLayout());
+    private final JPanel pane = new JPanel(new GridLayout());
     private int levelCount = 1;
     private Thread thread;
     private int rowColAmount;
@@ -150,8 +150,8 @@ public class MazeGame extends JFrame implements Runnable {
         setVisible(true);
         
         JLabel complete = ui.getLogo("Completed Level " + levelCount);
-        JButton next = ui.getTopButton("Next Level");
-        JButton quit = ui.getMidButton("Quit");
+        JButton next = ui.getTopButton("Next Level [Space]");
+        JButton quit = ui.getMidButton("Quit [Esc]");
         panel.add(complete);
         panel.add(next);
         panel.add(quit);
@@ -159,12 +159,19 @@ public class MazeGame extends JFrame implements Runnable {
         panel.setBackground(Color.BLACK);
         panel.setVisible(true);
         
+        addKeyBinding(panel, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
+            thread = new Thread(this);
+            increaseLevel();
+            thread.start();
+        });
+        
         next.addActionListener((ActionEvent e) -> {
             thread = new Thread(this);
             increaseLevel();
             thread.start();
         });
         
+        addKeyBinding(panel, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {dispose();});
         quit.addActionListener((e) -> {dispose();});
     }
     
@@ -176,8 +183,8 @@ public class MazeGame extends JFrame implements Runnable {
     
     public void runMenu() {
         setUpFrame();
-        JButton play = ui.getTopButton("Play");
-        JButton quit = ui.getMidButton("Quit");
+        JButton play = ui.getTopButton("Play [Space]");
+        JButton quit = ui.getMidButton("Quit [Esc]");
         JLabel logo = ui.getLogo("Maze");
         
         pane.add(logo);
@@ -186,6 +193,18 @@ public class MazeGame extends JFrame implements Runnable {
         pane.setLayout(null);
         pane.setBackground(Color.BLACK);
 
+        addKeyBinding(pane, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
+            dispose();
+            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
+            Thread newGameThread = new Thread(newGame);
+            newGame.setGameState(true);
+            newGameThread.start();
+        });
+        
+        addKeyBinding(pane, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
+            dispose();
+        });
+        
         play.addActionListener((e) -> {
             dispose();
             MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
@@ -207,6 +226,8 @@ public class MazeGame extends JFrame implements Runnable {
         addKeyBinding(comp, KeyEvent.VK_RIGHT, "Stop East", true, (evt) -> {player.setMoveE(false);});
         addKeyBinding(comp, KeyEvent.VK_DOWN, "Stop South", true, (evt) -> {player.setMoveS(false);});
         addKeyBinding(comp, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {player.setMoveW(false);});
+        
+        addKeyBinding(comp, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {System.exit(0);});
     }
     
     public void addKeyBinding(JComponent comp, int keyCode, String id, Boolean onRelease, ActionListener al) {

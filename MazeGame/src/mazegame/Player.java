@@ -4,7 +4,7 @@ public class Player {
     
     private int x;
     private int y;
-    private int size;
+    private final int size;
     private boolean moveN = false;
     private boolean moveE = false;
     private boolean moveS = false;

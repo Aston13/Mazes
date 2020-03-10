@@ -49,11 +49,8 @@ public class RecursiveBacktracker extends Tilemap {
         int endRange = rowColAmount - 2;
 	int randomCoord = new Random().nextInt((endRange) + 1); // Ex. [1-9]
         if (randomCoord%2 == 0) { 
-            System.out.println("even: " + randomCoord);
             randomCoord += 1;
         }
-        
-        System.out.println("new: " + randomCoord);
         
         return randomCoord;
     }
@@ -78,30 +75,11 @@ public class RecursiveBacktracker extends Tilemap {
         return updateGrid;
     }
     
-
-    
-//    public Tile[][] setRandomWinningTile(Tile[][] tileSet) {
-//        int colLen = tileSet[0].length-1;
-//        int rowLen = tileSet[1].length-1;
-//        
-//        int randCol = new Random().nextInt(colLen + 1);
-//        int randRow = new Random().nextInt(rowLen + 1);
-//
-//        Tile tile = tileSet[randCol][randRow];
-//        if (!tile.isWall()) {
-//            tile.setExitPortal(true);
-//            tileSet[randCol][randRow] = tile;
-//        } else {
-//            setRandomWinningTile(tileSet);
-//        }
-//        return tileSet;
-//    }
     
     
     public Tile[][] setWinningTile(Tile[][] tileSet) {
         
         visitedTiles.clear();
-        System.out.println("stack size: " + visitedTiles.size());
          
         Tile tile = tileSet[startingX][startingY];
         tile.setRowNo(startingX);
@@ -129,13 +107,10 @@ public class RecursiveBacktracker extends Tilemap {
         }
         
         int pathCount = super.getPassageCount(exitTileSet);
-        System.out.println("Exit length: " + exitPathLength);
         if (exitPathLength > pathCount/2) {
             
             visitedTiles.push(furthestReached);
-            System.out.println("set exit");
             furthestReached.setExitPortal(true);
-            System.out.println("set exit true");
             visitedTiles.clear();
             return true;
         }
@@ -177,7 +152,6 @@ public class RecursiveBacktracker extends Tilemap {
             }
             
             if(i == directions.length-1){
-                System.out.println("crash");
                 Tile t;
 
                 if (visitedTiles.size() == 1) {

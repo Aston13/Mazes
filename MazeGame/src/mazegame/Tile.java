@@ -1,7 +1,12 @@
 package mazegame;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 public class Tile {
 
@@ -23,7 +28,7 @@ public class Tile {
     float b = rand.nextFloat();
     Color randomColor = new Color(r, g, b);
     
-    public Tile(int tileWH, int xPos, int yPos){
+    public Tile(int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
@@ -33,6 +38,7 @@ public class Tile {
         visited = false;
         wall = true;
         playerExplored = false;
+        
     }
     
     public void setExitPortal(boolean ex) {
@@ -53,7 +59,7 @@ public class Tile {
     }
     public void setCheckedExitPath(boolean checked) {
         exitCheck = checked;
-        setColor(Color.ORANGE);
+        //setColor(Color.ORANGE);
     }
     
     public int getRowNo () {
@@ -78,7 +84,9 @@ public class Tile {
         
         //setColor(randomColor.brighter().brighter());
         setColor(Color.black);
+        
     }
+    
     
     public void setPlayerExplored(boolean hasExplored){
         playerExplored = hasExplored;

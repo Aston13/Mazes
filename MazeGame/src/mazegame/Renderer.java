@@ -4,6 +4,10 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 public class Renderer {
     private final BufferedImage view;
@@ -16,15 +20,20 @@ public class Renderer {
     private int startingY;
     private int visitedTiles = 0;
     private final int rowColAmount;
+    private BufferedImage wallImage = null;
+    private BufferedImage passageImage = null;
 
     public int[] getPixels() {
         return pixels;
     }
     
-    public Renderer(int screenHeight, int screenWidth, int rowColAmount) {
+    public Renderer(int screenHeight, int screenWidth, int rowColAmount) throws IOException {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.rowColAmount = rowColAmount;
+        ImageIO.setUseCache(false);
+        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\DirtTile.png"));
+        wallImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
         
         // Create a BufferedImage that represents the view
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
@@ -34,7 +43,6 @@ public class Renderer {
     }
     
     public void renderBackground(Graphics g) {
-        
         // Sets background colour to black.
         g.drawImage(view, 0, 0, view.getWidth(), view.getHeight(), null);
     }
@@ -76,13 +84,14 @@ public class Renderer {
                 Tile tile = tileArr[x][i];
                 if((tile.getMinX() > -tileWH) && (tile.getMaxX() < screenWidth+tileWH) && (tile.getMinY() > -tileWH) && (tile.getMaxY() < screenHeight+tileWH)) {
                     if(tile.isExitPortal()){
-                        
-                         
                         g.setColor(c2);
                         g.fillOval(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
+                    } else if (tile.isWall()) {
+                        //g.setColor(tile.getColor());
+                        //g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
+                        g.drawImage(wallImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     } else {
-                        g.setColor(tile.getColor());
-                        g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize()); 
+                        g.drawImage(passageImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     }
                 }
             }

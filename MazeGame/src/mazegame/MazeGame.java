@@ -10,6 +10,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
@@ -27,8 +30,8 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private final int tileWH = 20;
-    private final int tileBorder = 1;
+    private final int tileWH = 50;
+    private final int tileBorder = 0;
     private Renderer renderer;
     private final JPanel pane = new JPanel(new GridLayout());
     private int levelCount = 1;
@@ -108,9 +111,13 @@ public class MazeGame extends JFrame implements Runnable {
     @Override
     public void run() {
         Long lastTime = System.nanoTime();
-        double nanoSecondConversion = 100000000.0 / 60; // Updated 60 times per second
+        double nanoSecondConversion = 100000000.0 / 200; // Updated 60 times per second
         double changeInSeconds = 0;
-        renderer = new Renderer(windowWidth, windowHeight, rowColAmount);
+        try {
+            renderer = new Renderer(windowWidth, windowHeight, rowColAmount);
+        } catch (IOException ex) {
+            Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
+        }
         setNESWKeys(pane);
 
         setUpFrame();
@@ -141,6 +148,7 @@ public class MazeGame extends JFrame implements Runnable {
     
     public void runTransitionScreen() {
         JPanel panel = new JPanel(new GridLayout());
+        thread = new Thread(this);
         
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
@@ -160,13 +168,11 @@ public class MazeGame extends JFrame implements Runnable {
         panel.setVisible(true);
         
         addKeyBinding(panel, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
-            thread = new Thread(this);
             increaseLevel();
             thread.start();
         });
         
         next.addActionListener((ActionEvent e) -> {
-            thread = new Thread(this);
             increaseLevel();
             thread.start();
         });

@@ -5,8 +5,6 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 public class Renderer {
@@ -84,6 +82,7 @@ public class Renderer {
                 Tile tile = tileArr[x][i];
                 if((tile.getMinX() > -tileWH) && (tile.getMaxX() < screenWidth+tileWH) && (tile.getMinY() > -tileWH) && (tile.getMaxY() < screenHeight+tileWH)) {
                     if(tile.isExitPortal()){
+                        g.drawImage(passageImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                         g.setColor(c2);
                         g.fillOval(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
                     } else if (tile.isWall()) {
@@ -91,6 +90,8 @@ public class Renderer {
                         //g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
                         g.drawImage(wallImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     } else {
+                        //g.setColor(tile.getColor());
+                        //g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
                         g.drawImage(passageImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     }
                 }
@@ -152,7 +153,6 @@ public class Renderer {
         if (!(tileArr[currentX][currentY]).isWall()){
             if (tileArr[currentX][currentY].isExitPortal()){            
                 game.setGameState(false);
-
             } else if (tileArr[currentX][currentY].getPlayerExplored() == false) {
                 tileArr[currentX][currentY].setPlayerExplored(true);
                 visitedTiles++;

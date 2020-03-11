@@ -59,7 +59,7 @@ public class Tile {
     }
     public void setCheckedExitPath(boolean checked) {
         exitCheck = checked;
-        //setColor(Color.ORANGE);
+        setColor(Color.ORANGE);
     }
     
     public int getRowNo () {

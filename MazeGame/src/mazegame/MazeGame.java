@@ -10,9 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
@@ -30,7 +27,7 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private final int tileWH = 50;
+    private final int tileWH = 150;
     private final int tileBorder = 0;
     private Renderer renderer;
     private final JPanel pane = new JPanel(new GridLayout());
@@ -116,11 +113,8 @@ public class MazeGame extends JFrame implements Runnable {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / fps; // Updated <fps> times per second
         double changeInSeconds = 0;
-        try {
-            renderer = new Renderer(windowWidth, windowHeight, rowColAmount);
-        } catch (IOException ex) {
-            Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        renderer = new Renderer(windowWidth, windowHeight, rowColAmount);
+      
         setNESWKeys(pane);
 
         setUpFrame();

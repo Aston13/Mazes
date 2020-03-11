@@ -22,7 +22,7 @@ public class Tilemap {
         
         for(int y = 0; y < rowColAmount; y+=1) {  // Increments amount of tiles   
             for (int x = 0; x < rowColAmount; x+=1) {
-                tile = new Tile(tileBorder, xCoord, yCoord);
+                tile = new TileWall(tileBorder, xCoord, yCoord);
                 tiles[yCount][xCount] = tile;
                 xCount++;
                 xCoord += tileWH;
@@ -44,7 +44,7 @@ public class Tilemap {
         for (Tile[] tile1 : tiles) {
             for (int y = 0; y < tiles.length; y++) {
                 t = tile1[y];
-                if (!t.isWall()){
+                if (t instanceof TilePassage){
                     passages++;
                 }
             }

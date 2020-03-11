@@ -11,7 +11,7 @@ public class RecursiveBacktracker extends Tilemap {
     private final Tile [][] updateGrid;
     private Tile [][] exitTileSet;
     Stack<Tile> visitedTiles = new Stack<>();
-    private Tile visited;
+    private TilePassage visited;
     private final int rowColAmount;
     private int maxSE = 0;
     private final int minNW;
@@ -19,9 +19,9 @@ public class RecursiveBacktracker extends Tilemap {
     private int startingX;
     private int startingY;
     private int exitPathLength;
-    private boolean loop = true;
     private int biggestStack = 1;
-    private Tile furthestReached = new Tile(0,1,1);
+    private TileExit furthestReached;
+    private int tileWH;
 
     
     public RecursiveBacktracker (int tileWH, int tileBorder, int rowColAmount) {
@@ -30,14 +30,15 @@ public class RecursiveBacktracker extends Tilemap {
         this.rowColAmount = rowColAmount;
         exitPathLength = 1;
         updateGrid = super.getTileArr();
-        maxSE = rowColAmount - 2;  
+        maxSE = rowColAmount - 2;
+        this.tileWH = tileWH;
     }
 
     public Tile[][] startGeneration() {
         startingX = getRandomStartingCoord();
         startingY = getRandomStartingCoord();
-        updateGrid[startingY][startingX].setVisited(true);
-        visited = new Tile(0, startingX, startingY);
+        //updateGrid[startingY][startingX] = new TilePassage(tileWH, startingY, startingX);
+        visited = new TilePassage(0, startingX, startingY);
         visitedTiles.push(visited);
         Tile[][] tiles = setWinningTile(carvePassage(startingX, startingY));
         return tiles;
@@ -74,14 +75,12 @@ public class RecursiveBacktracker extends Tilemap {
         }
         return updateGrid;
     }
-    
-    
-    
+   
     public Tile[][] setWinningTile(Tile[][] tileSet) {
         
         visitedTiles.clear();
          
-        Tile tile = tileSet[startingX][startingY];
+        TilePassage tile = (TilePassage)tileSet[startingX][startingY];
         tile.setRowNo(startingX);
         tile.setColNo(startingY);
         
@@ -92,25 +91,31 @@ public class RecursiveBacktracker extends Tilemap {
         // X-2 == North
         // Y-2 == West
         // Y+2 == East
-
-        exitTileSet[startingX][startingY].setCheckedExitPath(true);
+        
+        TilePassage tp = (TilePassage) exitTileSet[startingX][startingY];
+        tp.setCheckedExitPath(true);
+        exitTileSet[startingX][startingY] = tp;
+        
         setExitPath(startingX, startingY);
         return exitTileSet;
     }
     
     public boolean setExitPath(int cX, int cY) {
-        
+        int pathCount = super.getPassageCount(exitTileSet);
         
         if (visitedTiles.size() > biggestStack){
             biggestStack = visitedTiles.size();
-            furthestReached = visitedTiles.peek();
+            
+            TilePassage e = (TilePassage) visitedTiles.peek();
+            furthestReached = new TileExit(e.getSize(), e.getMinX(), e.getMinY());
+            furthestReached.setRowNo(e.getRowNo());
+            furthestReached.setColNo(e.getColNo());
+            
         }
         
-        int pathCount = super.getPassageCount(exitTileSet);
         if (exitPathLength > pathCount/2) {
-            
             visitedTiles.push(furthestReached);
-            furthestReached.setExitPortal(true);
+            exitTileSet[furthestReached.getRowNo()][furthestReached.getColNo()] = furthestReached;
             visitedTiles.clear();
             return true;
         }
@@ -118,12 +123,9 @@ public class RecursiveBacktracker extends Tilemap {
         shuffleDirection(directions);
         int direction = directions[1];
         
-        
         for (int i = 0; i < directions.length; i++) {
             direction = directions[i];
-       
 
-        
             // Checks if the cell in direction[i] is a path cell.
             if(checkPath(direction, cX, cY)) {
                 if (direction == 1){
@@ -131,13 +133,11 @@ public class RecursiveBacktracker extends Tilemap {
                         cX = cX-1;
                         setExitPath(cX, cY);
                         break;
-
                 } else if (direction == 2) {
                     // East
                         cY = cY+1;
                         setExitPath(cX, cY);
                         break;
-
                 } else if (direction == 3) {
                     // South
                         cX = cX+1;
@@ -154,98 +154,91 @@ public class RecursiveBacktracker extends Tilemap {
             if(i == directions.length-1){
                 Tile t;
 
-                if (visitedTiles.size() == 1) {
-                    t = visitedTiles.peek();
-                } else {
-                    t = visitedTiles.pop();
-                }
-                setExitPath(t.getRowNo(), t.getColNo());
+                if (visitedTiles.size() == 1) { t = visitedTiles.peek();
+                } else { t = visitedTiles.pop();}
+                
+                TilePassage tp = (TilePassage) t;
+                setExitPath(tp.getRowNo(), tp.getColNo());
             }
         }
-    
-        
-//        else if (exitPathLength < 10) {
-//            // Reached a dead-end. Retain cells visited count.
-//            // Pop to previous visited cell in stack and check for alternate routes.
-//            Tile t2;
-//            if (visitedTiles.size() == 1) {
-//                t2 = visitedTiles.peek();
-//            } else {
-//                t2 = visitedTiles.pop();
-//                t2.setColor(Color.yellow);
-//            }
-//            
-//            cX = t2.getRowNo();
-//            cY = t2.getColNo();
-//            setExitPath(cX, cY);
-//        }
-
         return false;
     }
+    
     public boolean checkPath(int dir, int cX, int cY) {
-        
-        Tile t;
-        if (dir == 1) {
-                 //North -- Check tile is in a valid range and hasn't been visited already.
+        TilePassage t;
+        switch (dir) {
+            case 1:
+                // North -- Check tile is in a valid range and hasn't been visited already.
                 if ((cX-1 >= minNW)) {
-                    if (!exitTileSet[cX-1][cY].getCheckedExitPath()){
-                        if (!exitTileSet[cX-1][cY].isWall()){
-                            exitTileSet[cX-1][cY].setCheckedExitPath(true);
+                    if (exitTileSet[cX-1][cY] instanceof TilePassage) {
+                        TilePassage tp =  (TilePassage) exitTileSet[cX-1][cY];
+                        if (!tp.getCheckedExitPath()) {
+                            tp.setCheckedExitPath(true);
+                            exitTileSet[cX-1][cY] = tp;
                             exitPathLength++;
-                            t = exitTileSet[cX-1][cY];
+                            t = (TilePassage) exitTileSet[cX-1][cY];
                             t.setColNo(cY);
                             t.setRowNo(cX-1);
                             visitedTiles.push(t);
                             return true;
                         }
                     }
-                }
-        } else if (dir == 2) {
+                }   break;
+            case 2:
                 // East
                 if (cY+1 <= maxSE) {
-                    if (!exitTileSet[cX][cY+1].getCheckedExitPath()) {
-                        if (!exitTileSet[cX][cY+1].isWall()){
-                            exitTileSet[cX][cY+1].setCheckedExitPath(true);
+                    if (exitTileSet[cX][cY+1] instanceof TilePassage) {
+                        TilePassage tp =  (TilePassage) exitTileSet[cX][cY+1];
+                        if (!tp.getCheckedExitPath()) {
+                            tp.setCheckedExitPath(true);
+                            exitTileSet[cX][cY+1] = tp;
                             exitPathLength++;
-                            t = exitTileSet[cX][cY+1];
+                            t = (TilePassage) exitTileSet[cX][cY+1];
                             t.setColNo(cY+1);
                             t.setRowNo(cX);
                             visitedTiles.push(t);
                             return true;
-                        }
+                        } 
                     }
-                }   
-        } else if (dir == 3) {
+                }   break;
+            case 3:
                 // South
                 if (cX+1 <= maxSE) {
-                    if (!exitTileSet[cX+1][cY].getCheckedExitPath()) {
-                        if (!exitTileSet[cX+1][cY].isWall()){
-                            exitTileSet[cX+1][cY].setCheckedExitPath(true);
+                    
+                    if (exitTileSet[cX+1][cY] instanceof TilePassage) {
+                        TilePassage tp = (TilePassage) exitTileSet[cX+1][cY];
+                        if (!tp.getCheckedExitPath()) {
+                            tp.setCheckedExitPath(true);
+                            exitTileSet[cX+1][cY] = tp;
                             exitPathLength++;
-                            t = exitTileSet[cX+1][cY];
+                            t = (TilePassage) exitTileSet[cX+1][cY];
                             t.setColNo(cY);
                             t.setRowNo(cX+1);
                             visitedTiles.push(t);
                             return true;
                         }
                     }
-                }
-        } else if (dir == 4) {
+                }   break;
+            case 4:
                 // West
                 if (cY-1 >= minNW) {
-                    if (!exitTileSet[cX][cY-1].getCheckedExitPath()) {
-                        if (!exitTileSet[cX][cY-1].isWall()){
-                            exitTileSet[cX][cY-1].setCheckedExitPath(true);
+                    if (exitTileSet[cX][cY-1] instanceof TilePassage) {
+                        TilePassage tp =  (TilePassage) exitTileSet[cX][cY-1];
+                        if (!tp.getCheckedExitPath()) {
+                            tp.setCheckedExitPath(true);
+                            exitTileSet[cX][cY-1] = tp;
                             exitPathLength++;
-                            t = exitTileSet[cX][cY-1];
+                            t = (TilePassage) exitTileSet[cX][cY-1];
                             t.setColNo(cY-1);
                             t.setRowNo(cX);
                             visitedTiles.push(t);
                             return true;
                         }
                     }
-                } 
-        } 
+                }   break;
+            default:
+                break; 
+        }
         return false;   
     }
     
@@ -267,11 +260,16 @@ public class RecursiveBacktracker extends Tilemap {
             
             // North
             case 1:
-                if (!((y <= minNW)||(updateGrid[y-2][x].hasBeenVisited() == true))) {
-                    visited = new Tile(0, x, y);
+                if (!((y <= minNW)||(updateGrid[y-2][x] instanceof TilePassage))) {
+                    visited = new TilePassage(0, x, y);
                     visitedTiles.push(visited);
-                    updateGrid[y-2][x].setVisited(true);
-                    updateGrid[y-1][x].setVisited(true);
+                    
+                    updateGrid[y-2][x] = new TilePassage(tileWH, 
+                            updateGrid[y-2][x].getMinX(), updateGrid[y-2][x].getMinY());
+                    
+                    updateGrid[y-1][x] = new TilePassage(tileWH, 
+                            updateGrid[y-1][x].getMinX(), updateGrid[y-1][x].getMinY());
+                    
                     newYPos = y-2;
                     newXPos = x;
                     carvePassage(newXPos,newYPos);
@@ -279,11 +277,16 @@ public class RecursiveBacktracker extends Tilemap {
 
             // East
             case 2:
-                if (!((x >= maxSE) || (updateGrid[y][x+2].hasBeenVisited() == true))) {
-                    visited = new Tile(0, x, y);
+                if (!((x >= maxSE) || (updateGrid[y][x+2] instanceof TilePassage))) {
+                    visited = new TilePassage(0, x, y);
                     visitedTiles.push(visited);
-                    updateGrid[y][x+2].setVisited(true);
-                    updateGrid[y][x+1].setVisited(true); 
+                    
+                    updateGrid[y][x+2] = new TilePassage(tileWH, 
+                            updateGrid[y][x+2].getMinX(), updateGrid[y][x+2].getMinY());
+                    
+                    updateGrid[y][x+1] = new TilePassage(tileWH, 
+                            updateGrid[y][x+1].getMinX(), updateGrid[y][x+1].getMinY());
+                    
                     newYPos = y;
                     newXPos = x+2;
                     carvePassage(newXPos,newYPos);
@@ -291,11 +294,16 @@ public class RecursiveBacktracker extends Tilemap {
                 
             // South
             case 3:
-                if (!((y >= maxSE)||(updateGrid[y+2][x].hasBeenVisited() == true))) {
-                    visited = new Tile(0, x, y);
+                if (!((y >= maxSE)||(updateGrid[y+2][x] instanceof TilePassage))) {
+                    visited = new TilePassage(0, x, y);
                     visitedTiles.push(visited);
-                    updateGrid[y+2][x].setVisited(true);
-                    updateGrid[y+1][x].setVisited(true);
+                    
+                    updateGrid[y+2][x] = new TilePassage(tileWH, 
+                            updateGrid[y+2][x].getMinX(), updateGrid[y+2][x].getMinY());
+                    
+                    updateGrid[y+1][x] = new TilePassage(tileWH, 
+                            updateGrid[y+1][x].getMinX(), updateGrid[y+1][x].getMinY());
+                    
                     newYPos = y+2;
                     newXPos = x;
                     carvePassage(newXPos,newYPos);
@@ -303,11 +311,16 @@ public class RecursiveBacktracker extends Tilemap {
                 
             // West
             case 4:
-                if (!((x <= minNW)||(updateGrid[y][x-2].hasBeenVisited() == true))) {
-                    visited = new Tile(0, x, y);
+                if (!((x <= minNW)||(updateGrid[y][x-2] instanceof TilePassage))) {
+                    visited = new TilePassage(0, x, y);
                     visitedTiles.push(visited);
-                    updateGrid[y][x-2].setVisited(true);
-                    updateGrid[y][x-1].setVisited(true);
+                    
+                    updateGrid[y][x-2] = new TilePassage(tileWH, 
+                            updateGrid[y][x-2].getMinX(), updateGrid[y][x-2].getMinY());
+                    
+                    updateGrid[y][x-1] = new TilePassage(tileWH, 
+                            updateGrid[y][x-1].getMinX(), updateGrid[y][x-1].getMinY());
+                    
                     newYPos = y;
                     newXPos = x-2;
                     carvePassage(newXPos,newYPos);

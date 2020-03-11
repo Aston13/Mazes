@@ -5,6 +5,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 public class Renderer {
@@ -20,24 +22,32 @@ public class Renderer {
     private final int rowColAmount;
     private BufferedImage wallImage = null;
     private BufferedImage passageImage = null;
+    private BufferedImage exitImage = null;
+    private BufferedImage keyImage = null;
 
     public int[] getPixels() {
         return pixels;
     }
     
-    public Renderer(int screenHeight, int screenWidth, int rowColAmount) throws IOException {
+    public Renderer(int screenHeight, int screenWidth, int rowColAmount)  {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.rowColAmount = rowColAmount;
-        ImageIO.setUseCache(false);
-        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\DirtTile.png"));
-        wallImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
+        try { preloadImages();} catch (IOException e) {e.printStackTrace();}
         
         // Create a BufferedImage that represents the view
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
 
         // Create an array for pixels
         pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
+    }
+    
+    public void preloadImages() throws IOException {
+        ImageIO.setUseCache(false);
+        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\DirtTile.png"));
+        wallImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
+        exitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
+        keyImage = ImageIO.read(getClass().getResourceAsStream("Assets\\DirtTileKey.png")); 
     }
     
     public void renderBackground(Graphics g) {
@@ -81,21 +91,27 @@ public class Renderer {
             for (int x = 0; x < rowColAmount; x++) {  // No of rows/columns
                 Tile tile = tileArr[x][i];
                 if((tile.getMinX() > -tileWH) && (tile.getMaxX() < screenWidth+tileWH) && (tile.getMinY() > -tileWH) && (tile.getMaxY() < screenHeight+tileWH)) {
-                    if(tile.isExitPortal()){
-                        g.drawImage(passageImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
-                        g.setColor(c2);
-                        g.fillOval(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
-                    } else if (tile.isWall()) {
-                        //g.setColor(tile.getColor());
-                        //g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
-                        g.drawImage(wallImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
-                    } else {
-                        //g.setColor(tile.getColor());
-                        //g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
-                        g.drawImage(passageImage, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
-                    }
+                    BufferedImage img = getImage(tile.getImageString());
+                    g.drawImage(img, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    //g.setColor(tile.getColor());
+                    //g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
                 }
             }
+        }
+    }
+    
+    public BufferedImage getImage(String imageName) {
+        switch (imageName){
+            case("Passage"):
+                return passageImage;
+            case("Wall"):
+                return wallImage;
+            case("Exit"):
+                return exitImage;
+            case("Key"):
+                return keyImage;
+            default:
+                return null;
         }
     }
     
@@ -150,13 +166,15 @@ public class Renderer {
         int currentX = current[0];
         int currentY = current[1];
     
-        if (!(tileArr[currentX][currentY]).isWall()){
-            if (tileArr[currentX][currentY].isExitPortal()){            
+        if (!(tileArr[currentX][currentY] instanceof TileWall)){
+            if (tileArr[currentX][currentY] instanceof TileExit){            
                 game.setGameState(false);
-            } else if (tileArr[currentX][currentY].getPlayerExplored() == false) {
-                tileArr[currentX][currentY].setPlayerExplored(true);
-                visitedTiles++;
-            }
+            } 
+//            else if (tileArr[currentX][currentY] instanceof TilePassage) {
+//                TilePassage e = (TilePassage) tileArr[currentX][currentY];
+//                e.setPlayerExplored(true);
+//                visitedTiles++;
+//            }
             return true; // Is not a wall.
         }
         return false; // Is a wall.

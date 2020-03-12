@@ -27,7 +27,7 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private final int tileWH = 150;
+    private final int tileWH = 100;
     private final int tileBorder = 0;
     private Renderer renderer;
     private final JPanel pane = new JPanel(new GridLayout());
@@ -62,7 +62,7 @@ public class MazeGame extends JFrame implements Runnable {
         int halfP = player.getSize()/2;
         int fullP = player.getSize();
         BufferStrategy buffStrat = gameView.getBufferStrategy();
-        Graphics g  = buffStrat.getDrawGraphics();
+        Graphics g = buffStrat.getDrawGraphics();
         
         if (player.getMoveN()) {
             int nextTile[] = renderer.getTile(player.getX(), player.getY()-(halfP+1), player.getSize(), tileWH, tileBorder);
@@ -92,6 +92,7 @@ public class MazeGame extends JFrame implements Runnable {
                 player.setX(player.getX()-movementSpeed); 
             }
         }
+        g.dispose();
     }
     
     public void render() {
@@ -113,13 +114,13 @@ public class MazeGame extends JFrame implements Runnable {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / fps; // Updated <fps> times per second
         double changeInSeconds = 0;
-        renderer = new Renderer(windowWidth, windowHeight, rowColAmount);
+        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, tileWH);
       
         setNESWKeys(pane);
 
         setUpFrame();
         pane.add(gameView);
-        gameView.createBufferStrategy(2);
+        gameView.createBufferStrategy(3);
 
         renderer.generateMaze(tileWH, tileBorder);
         renderer.centerMaze();

@@ -1,12 +1,12 @@
 package mazegame;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 public class Renderer {
@@ -16,23 +16,38 @@ public class Renderer {
     private RecursiveBacktracker rb1;
     private final int screenWidth;
     private final int screenHeight;
+    private final int screenWidthHalf;
+    private final int screenHeightHalf;
+    
     private int startingX;
     private int startingY;
-    private int visitedTiles = 0;
     private final int rowColAmount;
     private BufferedImage wallImage = null;
     private BufferedImage passageImage = null;
-    private BufferedImage exitImage = null;
     private BufferedImage keyImage = null;
+    private BufferedImage lockedExitImage = null;
+    private BufferedImage unlockedExitImage = null;
+    private String playerMessage = "";
+    private int tileWidth;
+    private boolean displayMsg;
+    private static final int DURATION = 5000;
+    private long activatedAt = Long.MAX_VALUE;
+    private int keyCount;
+    private int keysRequired;
 
     public int[] getPixels() {
         return pixels;
     }
     
-    public Renderer(int screenHeight, int screenWidth, int rowColAmount)  {
+    public Renderer(int screenHeight, int screenWidth, int rowColAmount, int tileWH)  {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
+        this.tileWidth = tileWH;
+        screenWidthHalf = screenWidth/2;
+        screenHeightHalf = screenHeight/2;
         this.rowColAmount = rowColAmount;
+        keyCount = 0;
+        keysRequired = (rowColAmount/10)*2;
         try { preloadImages();} catch (IOException e) {e.printStackTrace();}
         
         // Create a BufferedImage that represents the view
@@ -44,15 +59,16 @@ public class Renderer {
     
     public void preloadImages() throws IOException {
         ImageIO.setUseCache(false);
-        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\DirtTile.png"));
+        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\StoneTile.png"));
         wallImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
-        exitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
         keyImage = ImageIO.read(getClass().getResourceAsStream("Assets\\DirtTileKey.png")); 
+        lockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
+        unlockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitUnlocked.png"));
     }
     
     public void renderBackground(Graphics g) {
         // Sets background colour to black.
-        g.drawImage(view, 0, 0, view.getWidth(), view.getHeight(), null);
+        g.drawImage(view, 0, 0, screenWidth, screenHeight, null);
     }
     
     public void generateMaze(int tileWH, int tileBorder) {
@@ -93,8 +109,14 @@ public class Renderer {
                 if((tile.getMinX() > -tileWH) && (tile.getMaxX() < screenWidth+tileWH) && (tile.getMinY() > -tileWH) && (tile.getMaxY() < screenHeight+tileWH)) {
                     BufferedImage img = getImage(tile.getImageString());
                     g.drawImage(img, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    if (tile instanceof TileExit){
+                        if (keyCount >= keysRequired) {
+                            ((TileExit)tile).setAccessible(true);
+                        }
+                    }
+                    
                     //g.setColor(tile.getColor());
-                    //g.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
+                    //Sg.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
                 }
             }
         }
@@ -106,8 +128,10 @@ public class Renderer {
                 return passageImage;
             case("Wall"):
                 return wallImage;
-            case("Exit"):
-                return exitImage;
+            case("Locked Exit"):
+                return lockedExitImage;
+            case("Open Exit"):
+                return unlockedExitImage;  
             case("Key"):
                 return keyImage;
             default:
@@ -115,16 +139,13 @@ public class Renderer {
         }
     }
     
-    public void renderPlayer(Graphics g, Player p1) {
-        g.setColor(Color.red);
-        g.fillOval(screenWidth/2, screenHeight/2, p1.getSize(), p1.getSize());
-    }
-    
     public void renderHUD(Graphics g, Player p1, int level) {
         g.setColor(Color.DARK_GRAY);
         g.fillRect(0, 0, screenWidth, 50);
         g.setColor(Color.WHITE);
-        g.drawString("Moves Taken: " +  visitedTiles, 25, 25);
+                    Font overheadFont = (new Font("Serif", Font.PLAIN, 15));
+            g.setFont(overheadFont);
+        g.drawString("Keys: " +  String.valueOf(keyCount) + "/" + String.valueOf(keysRequired), 25, 20);
         g.drawString("Level: " + level, 25, 40);
         
     }
@@ -152,8 +173,8 @@ public class Renderer {
     public int[] getTile(int pX, int pY, int pSize, int tileWH, int tileBorder) {
         
         Tilemap tm1 = new Tilemap(tileWH, tileBorder, rowColAmount);
-        int x = pX+(pSize/2);
-        int y = pY+(pSize/2);
+        int x = pX +(pSize/2);
+        int y = pY +(pSize/2);
         
         if ((tm1.getCurrentTile(x, y)) != null) {
             int currentTile [] = tm1.getCurrentTile(x, y);
@@ -163,21 +184,55 @@ public class Renderer {
     }
     
     public boolean checkCollision(int current [], MazeGame game) {
-        int currentX = current[0];
-        int currentY = current[1];
-    
-        if (!(tileArr[currentX][currentY] instanceof TileWall)){
-            if (tileArr[currentX][currentY] instanceof TileExit){            
+        Tile t = tileArr[current[0]][current[1]];
+        
+        if (t instanceof TileWall) {
+            return false;
+        } else if (t instanceof TileExit) {
+            if (((TileExit)t).getAccessible()) {
                 game.setGameState(false);
-            } 
-//            else if (tileArr[currentX][currentY] instanceof TilePassage) {
-//                TilePassage e = (TilePassage) tileArr[currentX][currentY];
-//                e.setPlayerExplored(true);
-//                visitedTiles++;
-//            }
-            return true; // Is not a wall.
+            } else {
+                playerMessage = "The door is locked. Find " + (keysRequired-keyCount) + " more keys.";
+                activatedAt = System.currentTimeMillis();
+                setPlayerMessage(true);
+            }
+        } else {
+            if (((TilePassage)t).hasItem()) {
+                ((TilePassage)t).setItem(false);
+                keyCount++;
+                
+            }
         }
-        return false; // Is a wall.
+        return true;
+    }
+    
+    public void renderPlayer(Graphics g, Player p1) {
+        
+        
+        g.setColor(p1.getColor());
+        g.fillOval(screenWidthHalf, screenHeightHalf, p1.getSize(), p1.getSize());
+        if (displayMessage()) {
+
+            
+            
+            g.setColor(Color.WHITE);
+            Font overheadFont = (new Font("Serif", Font.PLAIN, 20));
+            g.setFont(overheadFont);
+                        FontMetrics fm = g.getFontMetrics();
+            int halfTxtWidth = (fm.stringWidth(playerMessage)/2);
+
+            
+            g.drawString(playerMessage, (screenWidthHalf-halfTxtWidth)+tileWidth/2, screenHeightHalf);
+        }
+    }
+
+    public void setPlayerMessage(boolean displayMsg) {
+        this.displayMsg =  displayMsg;
+    }
+    
+    public boolean displayMessage() {
+        long activeFor = System.currentTimeMillis() - activatedAt;
+        return activeFor >= 0 && activeFor <= DURATION;
     }
     
     public int getStartingX() {

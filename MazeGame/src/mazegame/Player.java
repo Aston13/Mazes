@@ -1,10 +1,13 @@
 package mazegame;
 
+import java.awt.Color;
+
 public class Player {
     
     private int x;
     private int y;
     private final int size;
+    private Color c1;
     private boolean moveN = false;
     private boolean moveE = false;
     private boolean moveS = false;
@@ -14,6 +17,11 @@ public class Player {
         this.x = x;
         this.y = y;
         this.size = size;
+        c1 = Color.PINK;
+    }
+    
+    public Color getColor(){
+        return c1;
     }
     
     public void setX(int x) {
@@ -55,8 +63,6 @@ public class Player {
     public void setMoveW(boolean moveW) {
         this.moveW = moveW;
     }
-    
-    
     
     public void setXY(int x, int y) {
         this.x = x;

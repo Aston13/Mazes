@@ -1,6 +1,7 @@
 package mazegame;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Stack;
 import java.util.Random;
 
@@ -37,11 +38,38 @@ public class RecursiveBacktracker extends Tilemap {
     public Tile[][] startGeneration() {
         startingX = getRandomStartingCoord();
         startingY = getRandomStartingCoord();
-        //updateGrid[startingY][startingX] = new TilePassage(tileWH, startingY, startingX);
+        updateGrid[startingY][startingX] = new TilePassage(tileWH, updateGrid[startingY][startingX].getMinX(), updateGrid[startingY][startingX].getMinY());
+
         visited = new TilePassage(0, startingX, startingY);
         visitedTiles.push(visited);
         Tile[][] tiles = setWinningTile(carvePassage(startingX, startingY));
-        return tiles;
+        return addKeys(tiles);
+    }
+    
+    public Tile[][] addKeys(Tile [][] allTiles) {
+        int keysRequired = (rowColAmount/10)*4;
+        int keysAdded = 0;
+        ArrayList<TilePassage> paths = new ArrayList<>();
+        
+        for (int i = 1; i < allTiles.length-1; i++) {
+            for (int j = 1; j < allTiles.length-1; j++) {
+                if (allTiles[i][j] instanceof TilePassage) {
+                    paths.add((TilePassage)allTiles[i][j]);
+                }
+            }
+        }
+        
+        while (keysAdded < keysRequired) {
+            int rndPath = new Random().nextInt(paths.size());
+            TilePassage path = paths.get(rndPath);
+            
+            if (!path.hasItem()){
+                path.setItem(true);
+                keysAdded++;
+            }     
+        }
+       
+        return allTiles;
     }
     
     public int getRandomStartingCoord() {
@@ -70,9 +98,10 @@ public class RecursiveBacktracker extends Tilemap {
             isCellValid(x,y,directions[i]);
             // Check junctions here?
         }
-        if (visitedTiles.size() == 1) {
-            carvePassage(visitedTiles.pop().getMinX(), visitedTiles.pop().getMinY());
-        }
+        
+//        if (visitedTiles.size() == 1) {
+//            carvePassage(visitedTiles.pop().getMinX(), visitedTiles.pop().getMinY());
+//        }
         return updateGrid;
     }
    
@@ -101,7 +130,8 @@ public class RecursiveBacktracker extends Tilemap {
     }
     
     public boolean setExitPath(int cX, int cY) {
-        int pathCount = super.getPassageCount(exitTileSet);
+        long pathCount = super.getPassageCount(exitTileSet);
+        
         
         if (visitedTiles.size() > biggestStack){
             biggestStack = visitedTiles.size();
@@ -244,9 +274,9 @@ public class RecursiveBacktracker extends Tilemap {
     
     private void shuffleDirection(int[] array) {
         int index;
-        Random random = new Random();
+        Random rand = new Random();
         for (int i = 0; i < array.length; i++) {
-            index = random.nextInt(i + 1);
+            index = rand.nextInt(i + 1);
             if (index != i) {
                 array[index] ^= array[i];
                 array[i] ^= array[index];
@@ -261,7 +291,9 @@ public class RecursiveBacktracker extends Tilemap {
             // North
             case 1:
                 if (!((y <= minNW)||(updateGrid[y-2][x] instanceof TilePassage))) {
+                    
                     visited = new TilePassage(0, x, y);
+                    
                     visitedTiles.push(visited);
                     
                     updateGrid[y-2][x] = new TilePassage(tileWH, 

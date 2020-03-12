@@ -6,7 +6,7 @@ public class Start {
     
     private static final UI ui = new UI(WINDOW_WIDTH);
     private static final MazeGame game =  new MazeGame(WINDOW_WIDTH,
-            WINDOW_HEIGHT, ui, 10);
+            WINDOW_HEIGHT, ui, 80);
 
     public static void main (String [] args){
         //game.run();

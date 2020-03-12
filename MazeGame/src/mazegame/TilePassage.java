@@ -12,14 +12,33 @@ public class TilePassage implements Tile {
     private int yPos;
     private boolean playerExplored;
     private boolean exitCheck;
+    private boolean item;
+    private String imgString;
 
     public TilePassage (int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
-        c1 = Color.BLACK;
+        setItem(false);
+        c1 = Color.WHITE;
         playerExplored = false;
         exitCheck = false;
+    }
+    
+    public void setItem (boolean item) {
+        this.item = item;
+        
+        if (item) {
+            imgString = "Key";
+            setColor(Color.darkGray);
+        } else {
+            imgString = "Passage";
+            setColor(Color.black);
+        }
+    }
+    
+    public boolean hasItem () {
+        return item;
     }
     
     public boolean getCheckedExitPath() {
@@ -103,6 +122,6 @@ public class TilePassage implements Tile {
 
     @Override
     public String getImageString() {
-        return "Passage";
+        return imgString;
     }
 }

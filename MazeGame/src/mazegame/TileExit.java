@@ -10,12 +10,30 @@ public class TileExit implements Tile {
     private int yPos;
     private int rowNo;
     private int colNo;
+    private boolean accessible;
+    private String imgStr;
 
     public TileExit (int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
-        c1 = Color.GREEN;
+        setAccessible(false);
+    }
+    
+    public void setAccessible(boolean access) {
+        accessible = access;
+        if (access == true) {
+            imgStr = "Open Exit";
+            setColor(Color.GREEN);
+        } else {
+            imgStr = "Locked Exit";
+            
+            setColor(Color.RED);
+        }
+    }
+    
+    public boolean getAccessible() {
+        return accessible;
     }
     
     public int getRowNo() {
@@ -81,6 +99,6 @@ public class TileExit implements Tile {
 
     @Override
     public String getImageString() {
-        return "Exit";
+        return imgStr;
     }
 }

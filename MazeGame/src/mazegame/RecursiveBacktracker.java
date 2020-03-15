@@ -43,7 +43,9 @@ public class RecursiveBacktracker extends Tilemap {
         visited = new TilePassage(0, startingX, startingY);
         visitedTiles.push(visited);
         Tile[][] tiles = setWinningTile(carvePassage(startingX, startingY));
-        return addKeys(tiles);
+        tiles = addKeys(tiles);
+        tiles = addWallIds(tiles);
+        return tiles;
     }
     
     public Tile[][] addKeys(Tile [][] allTiles) {
@@ -98,10 +100,7 @@ public class RecursiveBacktracker extends Tilemap {
             isCellValid(x,y,directions[i]);
             // Check junctions here?
         }
-        
-//        if (visitedTiles.size() == 1) {
-//            carvePassage(visitedTiles.pop().getMinX(), visitedTiles.pop().getMinY());
-//        }
+
         return updateGrid;
     }
    
@@ -290,10 +289,11 @@ public class RecursiveBacktracker extends Tilemap {
             
             // North
             case 1:
+                
+                // If northern cell is within maze range and is not already a passage.
                 if (!((y <= minNW)||(updateGrid[y-2][x] instanceof TilePassage))) {
                     
                     visited = new TilePassage(0, x, y);
-                    
                     visitedTiles.push(visited);
                     
                     updateGrid[y-2][x] = new TilePassage(tileWH, 
@@ -358,5 +358,48 @@ public class RecursiveBacktracker extends Tilemap {
                     carvePassage(newXPos,newYPos);
                 }
         }
-    } 
+    }
+    
+    public Tile[][] addWallIds(Tile[][] tileSet) {
+        int neighbours;
+        
+        for (int i = 0; i < tileSet.length; i++) {
+            
+            for (int j = 0; j < tileSet.length; j++) {
+                if ((tileSet[i][j]) instanceof TileWall) { // If current tile is a wall
+                    neighbours = 0000;
+                    
+                   if (((i-1) >= 0 && (i-1) <= tileSet.length) && ((tileSet[i-1][j]) instanceof TilePassage)) { // Check if north tile is a passage
+                        neighbours += Integer.parseInt("1000",2);
+                        
+                    }
+                   
+                    if (((j+1) >= 0 && (j+1) < tileSet.length) && ((tileSet[i][j+1]) instanceof TilePassage)) { // Check if east tile is a passage
+                        neighbours += Integer.parseInt("0100",2);
+                    }
+                    
+                    if (((i+1) >= 0 && (i+1) < tileSet.length) && ((tileSet[i+1][j]) instanceof TilePassage)) { // Check if south tile is a passage
+                        neighbours += Integer.parseInt("0010",2);
+                    }
+                    
+                    if (((j-1) >= 0 && (j-1) <= tileSet.length) && ((tileSet[i][j-1]) instanceof TilePassage)) { // Check if west tile is a passage
+                        neighbours += Integer.parseInt("0001",2);
+                    }
+
+                   
+                    TileWall t = (TileWall)tileSet[i][j];
+                    
+                    String binaryString = Integer.toBinaryString(neighbours);
+                    while (binaryString.length() < 4) {
+                        binaryString = "0" + binaryString;
+                    }
+                    t.setPassageNeighbours(binaryString);
+                    tileSet[i][j] = t;
+                }
+            }
+        }
+        
+        return tileSet;
+    }
+    
 }

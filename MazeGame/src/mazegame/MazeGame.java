@@ -27,7 +27,7 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private final int tileWH = 100;
+    private final int tileWH = 50;
     private final int tileBorder = 0;
     private Renderer renderer;
     private final JPanel pane = new JPanel(new GridLayout());

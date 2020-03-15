@@ -9,12 +9,23 @@ public class TileWall implements Tile {
     private Color c1;
     private int xPos;
     private int yPos;
+    private String neighbours; // NESW
+    private String imgString = "passage";
 
     public TileWall (int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
+        neighbours = "0000"; // NESW
         c1 = Color.CYAN;
+    }
+    
+    public void setPassageNeighbours(String bits) {
+        neighbours = bits;
+    }
+    
+    public String getPassageNeighbours() {
+        return neighbours;
     }
 
     @Override
@@ -64,6 +75,6 @@ public class TileWall implements Tile {
 
     @Override
     public String getImageString() {
-        return "Wall";
+        return imgString + "_" + neighbours;
     }
 }

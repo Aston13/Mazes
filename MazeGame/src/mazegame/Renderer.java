@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
+import java.util.HashMap;
 import javax.imageio.ImageIO;
 
 public class Renderer {
@@ -27,6 +28,25 @@ public class Renderer {
     private BufferedImage keyImage = null;
     private BufferedImage lockedExitImage = null;
     private BufferedImage unlockedExitImage = null;
+    private HashMap<String, BufferedImage> preloadedImages = new HashMap();
+    
+    private BufferedImage passage_0000  = null;
+    private BufferedImage passage_0001  = null;
+    private BufferedImage passage_0010  = null;
+    private BufferedImage passage_0011 = null;
+    private BufferedImage passage_0100 = null;
+    private BufferedImage passage_0101 = null;
+    private BufferedImage passage_0110 = null;
+    private BufferedImage passage_0111 = null;
+    private BufferedImage passage_1000 = null;
+    private BufferedImage passage_1001 = null;
+    private BufferedImage passage_1010 = null;
+    private BufferedImage passage_1011 = null;
+    private BufferedImage passage_1100 = null;
+    private BufferedImage passage_1101 = null;
+    private BufferedImage passage_1110 = null;
+    private BufferedImage passage_1111 = null;
+    
     private String playerMessage = "";
     private int tileWidth;
     private boolean displayMsg;
@@ -61,9 +81,57 @@ public class Renderer {
         ImageIO.setUseCache(false);
         passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\StoneTile.png"));
         wallImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
-        keyImage = ImageIO.read(getClass().getResourceAsStream("Assets\\DirtTileKey.png")); 
+        keyImage = ImageIO.read(getClass().getResourceAsStream("Assets\\KeyOnly.png")); 
         lockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
         unlockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitUnlocked.png"));
+        
+        
+        //Wall with passage in direction NESW | 0000
+        
+        passage_0000 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0000.png"));
+        passage_0001 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0001.png"));
+        passage_0010 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0010.png"));
+        passage_0011 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0011.png"));
+        passage_0100 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0100.png"));
+        passage_0101 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0101.png"));
+        passage_0110 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0110.png"));
+        passage_0111 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0111.png"));
+        passage_1000 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1000.png"));
+        passage_1001 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1001.png"));
+        passage_1010 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1010.png"));
+        passage_1011 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1011.png"));
+        passage_1100 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1100.png"));
+        passage_1101 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1101.png"));
+        passage_1110 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1110.png"));
+        passage_1111 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1111.png"));
+        
+        preloadedImages.put("Passage", passageImage);
+        preloadedImages.put("wall", wallImage);
+        preloadedImages.put("Key", keyImage);
+        preloadedImages.put("Locked Exit", lockedExitImage);
+        preloadedImages.put("Open Exit", unlockedExitImage);
+        
+        preloadedImages.put("passage_0000", passage_0000);
+        preloadedImages.put("passage_0001", passage_0001);
+        preloadedImages.put("passage_0010", passage_0010);
+        preloadedImages.put("passage_0011", passage_0011);
+        preloadedImages.put("passage_0100", passage_0100);
+        preloadedImages.put("passage_0101", passage_0101);
+        preloadedImages.put("passage_0110", passage_0110);
+        preloadedImages.put("passage_0111", passage_0111);
+        preloadedImages.put("passage_1000", passage_1000);
+        preloadedImages.put("passage_1001", passage_1001);
+        preloadedImages.put("passage_1010", passage_1010);
+        preloadedImages.put("passage_1011", passage_1011);
+        preloadedImages.put("passage_1100", passage_1100);
+        preloadedImages.put("passage_1101", passage_1101);
+        preloadedImages.put("passage_1110", passage_1110);
+        preloadedImages.put("passage_1111", passage_1111);
+                
+        
+        
+        
+        
     }
     
     public void renderBackground(Graphics g) {
@@ -107,8 +175,16 @@ public class Renderer {
             for (int x = 0; x < rowColAmount; x++) {  // No of rows/columns
                 Tile tile = tileArr[x][i];
                 if((tile.getMinX() > -tileWH) && (tile.getMaxX() < screenWidth+tileWH) && (tile.getMinY() > -tileWH) && (tile.getMaxY() < screenHeight+tileWH)) {
+                   
+                    
                     BufferedImage img = getImage(tile.getImageString());
+                    if(tile.getImageString() == "Key"){
+                        g.drawImage(getImage("Key"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    }
+                     g.drawImage(getImage("Passage"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    
                     g.drawImage(img, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    
                     if (tile instanceof TileExit){
                         if (keyCount >= keysRequired) {
                             ((TileExit)tile).setAccessible(true);
@@ -123,20 +199,10 @@ public class Renderer {
     }
     
     public BufferedImage getImage(String imageName) {
-        switch (imageName){
-            case("Passage"):
-                return passageImage;
-            case("Wall"):
-                return wallImage;
-            case("Locked Exit"):
-                return lockedExitImage;
-            case("Open Exit"):
-                return unlockedExitImage;  
-            case("Key"):
-                return keyImage;
-            default:
-                return null;
+        if(preloadedImages.containsKey(imageName)){
+            return preloadedImages.get(imageName);
         }
+        return null;
     }
     
     public void renderHUD(Graphics g, Player p1, int level) {

@@ -27,7 +27,7 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private final int tileWH = 50;
+    private final int tileWH = 100;
     private final int tileBorder = 0;
     private Renderer renderer;
     private final JPanel pane = new JPanel(new GridLayout());
@@ -99,21 +99,29 @@ public class MazeGame extends JFrame implements Runnable {
         BufferStrategy buffStrat = gameView.getBufferStrategy();
         Graphics g  = buffStrat.getDrawGraphics();
         super.paint(g); // Override
-
+        
+        
+        
         renderer.renderBackground(g); // Renders background
         renderer.renderMaze(g, tileWH);
-        renderer.renderPlayer(g, player);
+        renderer.renderPlayer(g, player, tileWH);
         renderer.renderHUD(g, player, levelCount);
 
         g.dispose(); // clears graphics memory
         buffStrat.show(); // Buffer has been written to and is ready to be put on screen
     }
     
+    public void updatePlayer() {
+        renderer.updatePlayerFrame();
+    }
+    
+    
     @Override
     public void run() {
         Long lastTime = System.nanoTime();
         double nanoSecondConversion = 100000000.0 / fps; // Updated <fps> times per second
         double changeInSeconds = 0;
+        double changeInSeconds2 = 0;
         renderer = new Renderer(windowWidth, windowHeight, rowColAmount, tileWH);
       
         setNESWKeys(pane);
@@ -131,12 +139,20 @@ public class MazeGame extends JFrame implements Runnable {
 
         while(gameInProgress) {
             Long now = System.nanoTime();
-            changeInSeconds += (now - lastTime) / nanoSecondConversion;            
+            changeInSeconds += (now - lastTime) / nanoSecondConversion;
+            changeInSeconds2 += (now - lastTime) / nanoSecondConversion; 
             
             while(changeInSeconds >= 1) {
                 update();
+                
                 changeInSeconds = 0;
             }
+            
+            while(changeInSeconds2 >= 10) {
+                updatePlayer();
+                changeInSeconds2 = 0;
+            }
+            
             render();
             lastTime = now;
         }

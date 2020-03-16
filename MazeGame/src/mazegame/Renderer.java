@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Stack;
 import javax.imageio.ImageIO;
 
 public class Renderer {
@@ -47,6 +48,36 @@ public class Renderer {
     private BufferedImage passage_1110 = null;
     private BufferedImage passage_1111 = null;
     
+    BufferedImage dogEast0 = null;
+    BufferedImage dogEast1 = null;
+    BufferedImage dogEast2 = null;
+    BufferedImage dogEast3 = null;
+    BufferedImage dogEast4 = null;
+    BufferedImage dogEast5 = null;
+    BufferedImage dogEast6 = null;
+    
+    BufferedImage dogWest0 = null;
+    BufferedImage dogWest1 = null;
+    BufferedImage dogWest2 = null;
+    BufferedImage dogWest3 = null;
+    BufferedImage dogWest4 = null;
+    BufferedImage dogWest5 = null;
+    BufferedImage dogWest6 = null;
+    
+    BufferedImage dogNorth0 = null;
+    BufferedImage dogNorth1 = null;
+    BufferedImage dogNorth2 = null;
+    BufferedImage dogNorth3 = null;
+    BufferedImage dogNorth4 = null;
+    BufferedImage dogNorth5 = null;
+    
+    BufferedImage dogSouth0 = null;
+    BufferedImage dogSouth1 = null;
+    BufferedImage dogSouth2 = null;
+    BufferedImage dogSouth3 = null;
+    BufferedImage dogSouth4 = null;
+    BufferedImage dogSouth5 = null;
+    
     private String playerMessage = "";
     private int tileWidth;
     private boolean displayMsg;
@@ -54,6 +85,9 @@ public class Renderer {
     private long activatedAt = Long.MAX_VALUE;
     private int keyCount;
     private int keysRequired;
+    
+    private BufferedImage playerImg = null;
+    Stack<BufferedImage> nextAnimation = new Stack<>();
 
     public int[] getPixels() {
         return pixels;
@@ -69,6 +103,7 @@ public class Renderer {
         keyCount = 0;
         keysRequired = (rowColAmount/10)*2;
         try { preloadImages();} catch (IOException e) {e.printStackTrace();}
+        playerImg = dogEast0;
         
         // Create a BufferedImage that represents the view
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
@@ -79,11 +114,43 @@ public class Renderer {
     
     public void preloadImages() throws IOException {
         ImageIO.setUseCache(false);
-        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\StoneTile.png"));
+        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
         wallImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
         keyImage = ImageIO.read(getClass().getResourceAsStream("Assets\\KeyOnly.png")); 
         lockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
         unlockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitUnlocked.png"));
+        
+        dogEast0 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_0.png"));
+        dogEast1 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_1.png"));
+        dogEast2 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_2.png"));
+        dogEast3 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_3.png"));
+        dogEast4 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_4.png"));
+        dogEast5 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_5.png"));
+        dogEast6 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_6.png"));
+        
+        dogWest0 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_0.png"));
+        dogWest1 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_1.png"));
+        dogWest2 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_2.png"));
+        dogWest3 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_3.png"));
+        dogWest4 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_4.png"));
+        dogWest5 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_5.png"));
+        dogWest6 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_6.png"));
+        
+        dogSouth0 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_0.png"));
+        dogSouth1 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_1.png"));
+        dogSouth2 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_2.png"));
+        dogSouth3 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_3.png"));
+        dogSouth4 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_4.png"));
+        dogSouth5 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_5.png"));
+        
+        dogNorth0 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_0.png"));
+        dogNorth1 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_1.png"));
+        dogNorth2 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_2.png"));
+        dogNorth3 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_3.png"));
+        dogNorth4 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_4.png"));
+        dogNorth5 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_5.png"));
+        
+        
         
         
         //Wall with passage in direction NESW | 0000
@@ -224,6 +291,33 @@ public class Renderer {
                     r1.setMinX(currentX+dir);
             }
         }
+        
+        
+        
+        //String dog = "dogEast";
+        //g.drawImage(dogEast_0, screenWidthHalf, screenHeightHalf, null);
+        if (nextAnimation.size() <= 10) {
+            if(dir < 0) {
+                    nextAnimation.push(dogEast0);
+                    nextAnimation.push(dogEast1);
+                    nextAnimation.push(dogEast2);
+                    nextAnimation.push(dogEast3);
+                    nextAnimation.push(dogEast4);
+                    nextAnimation.push(dogEast5);
+                    nextAnimation.push(dogEast6);
+            } else {
+                    nextAnimation.push(dogWest0);
+                    nextAnimation.push(dogWest1);
+                    nextAnimation.push(dogWest2);
+                    nextAnimation.push(dogWest3);
+                    nextAnimation.push(dogWest4);
+                    nextAnimation.push(dogWest5);
+                    nextAnimation.push(dogWest6);
+            }
+        }
+        
+        
+        
     }
     
     public void moveMazeY(Graphics g, int numOfRowCol, int dir) {
@@ -232,6 +326,24 @@ public class Renderer {
                 Tile r1 = tileArr[x][i];
                     int currentY = r1.getMinY();
                     r1.setMinY(currentY+dir);
+            }
+        }
+        
+        if (nextAnimation.size() <= 10) {
+            if(dir > 0) {
+                    nextAnimation.push(dogNorth0);
+                    nextAnimation.push(dogNorth1);
+                    nextAnimation.push(dogNorth2);
+                    nextAnimation.push(dogNorth3);
+                    nextAnimation.push(dogNorth4);
+                    nextAnimation.push(dogNorth5);
+            } else {
+                    nextAnimation.push(dogSouth0);
+                    nextAnimation.push(dogSouth1);
+                    nextAnimation.push(dogSouth2);
+                    nextAnimation.push(dogSouth3);
+                    nextAnimation.push(dogSouth4);
+                    nextAnimation.push(dogSouth5);
             }
         }
     }
@@ -272,15 +384,24 @@ public class Renderer {
         return true;
     }
     
-    public void renderPlayer(Graphics g, Player p1) {
+    public void updatePlayerFrame() {
+        if(nextAnimation.size() > 1) {
+            playerImg = nextAnimation.pop();
+        }
+    }
+    
+    public void renderPlayer(Graphics g, Player p1, int size) {
         
         
-        g.setColor(p1.getColor());
-        g.fillOval(screenWidthHalf, screenHeightHalf, p1.getSize(), p1.getSize());
-        if (displayMessage()) {
+//        g.setColor(p1.getColor());
+//        g.fillOval(screenWidthHalf, screenHeightHalf, p1.getSize(), p1.getSize());
 
-            
-            
+        
+
+
+        g.drawImage(playerImg, screenWidthHalf, screenHeightHalf, size, size, null);
+
+        if (displayMessage()) {
             g.setColor(Color.WHITE);
             Font overheadFont = (new Font("Serif", Font.PLAIN, 20));
             g.setFont(overheadFont);

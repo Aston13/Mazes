@@ -1,6 +1,7 @@
 package mazegame;
 
 import java.awt.Color;
+import java.util.Random;
 
 public class TileExit implements Tile {
     
@@ -12,12 +13,14 @@ public class TileExit implements Tile {
     private int colNo;
     private boolean accessible;
     private String imgStr;
+    private String passageId;
 
     public TileExit (int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
         setAccessible(false);
+        passageId = String.valueOf(new Random().nextInt(4));
     }
     
     public void setAccessible(boolean access) {
@@ -100,5 +103,10 @@ public class TileExit implements Tile {
     @Override
     public String getImageString() {
         return imgStr;
+    }
+
+    @Override
+    public String getPassageImageId() {
+        return passageId;
     }
 }

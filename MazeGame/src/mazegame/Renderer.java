@@ -7,9 +7,8 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Random;
 import java.util.Stack;
-import javax.imageio.ImageIO;
 
 public class Renderer {
     private final BufferedImage view;
@@ -20,63 +19,12 @@ public class Renderer {
     private final int screenHeight;
     private final int screenWidthHalf;
     private final int screenHeightHalf;
+    private Random rand = new Random();
     
     private int startingX;
     private int startingY;
     private final int rowColAmount;
-    private BufferedImage wallImage = null;
-    private BufferedImage passageImage = null;
-    private BufferedImage keyImage = null;
-    private BufferedImage lockedExitImage = null;
-    private BufferedImage unlockedExitImage = null;
-    private HashMap<String, BufferedImage> preloadedImages = new HashMap();
-    
-    private BufferedImage passage_0000  = null;
-    private BufferedImage passage_0001  = null;
-    private BufferedImage passage_0010  = null;
-    private BufferedImage passage_0011 = null;
-    private BufferedImage passage_0100 = null;
-    private BufferedImage passage_0101 = null;
-    private BufferedImage passage_0110 = null;
-    private BufferedImage passage_0111 = null;
-    private BufferedImage passage_1000 = null;
-    private BufferedImage passage_1001 = null;
-    private BufferedImage passage_1010 = null;
-    private BufferedImage passage_1011 = null;
-    private BufferedImage passage_1100 = null;
-    private BufferedImage passage_1101 = null;
-    private BufferedImage passage_1110 = null;
-    private BufferedImage passage_1111 = null;
-    
-    BufferedImage dogEast0 = null;
-    BufferedImage dogEast1 = null;
-    BufferedImage dogEast2 = null;
-    BufferedImage dogEast3 = null;
-    BufferedImage dogEast4 = null;
-    BufferedImage dogEast5 = null;
-    BufferedImage dogEast6 = null;
-    
-    BufferedImage dogWest0 = null;
-    BufferedImage dogWest1 = null;
-    BufferedImage dogWest2 = null;
-    BufferedImage dogWest3 = null;
-    BufferedImage dogWest4 = null;
-    BufferedImage dogWest5 = null;
-    BufferedImage dogWest6 = null;
-    
-    BufferedImage dogNorth0 = null;
-    BufferedImage dogNorth1 = null;
-    BufferedImage dogNorth2 = null;
-    BufferedImage dogNorth3 = null;
-    BufferedImage dogNorth4 = null;
-    BufferedImage dogNorth5 = null;
-    
-    BufferedImage dogSouth0 = null;
-    BufferedImage dogSouth1 = null;
-    BufferedImage dogSouth2 = null;
-    BufferedImage dogSouth3 = null;
-    BufferedImage dogSouth4 = null;
-    BufferedImage dogSouth5 = null;
+
     
     private String playerMessage = "";
     private int tileWidth;
@@ -85,6 +33,7 @@ public class Renderer {
     private long activatedAt = Long.MAX_VALUE;
     private int keyCount;
     private int keysRequired;
+    AssetManager am;
     
     private BufferedImage playerImg = null;
     Stack<BufferedImage> nextAnimation = new Stack<>();
@@ -93,7 +42,7 @@ public class Renderer {
         return pixels;
     }
     
-    public Renderer(int screenHeight, int screenWidth, int rowColAmount, int tileWH)  {
+    public Renderer(int screenHeight, int screenWidth, int rowColAmount, int tileWH, AssetManager am)  {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.tileWidth = tileWH;
@@ -102,8 +51,9 @@ public class Renderer {
         this.rowColAmount = rowColAmount;
         keyCount = 0;
         keysRequired = (rowColAmount/10)*2;
-        try { preloadImages();} catch (IOException e) {e.printStackTrace();}
-        playerImg = dogEast0;
+        this.am = am;
+        try {am.preloadImages();} catch (IOException e) {e.printStackTrace();}
+        playerImg = am.getPreloadedImage("dogEast0");
         
         // Create a BufferedImage that represents the view
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
@@ -112,94 +62,7 @@ public class Renderer {
         pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
     }
     
-    public void preloadImages() throws IOException {
-        ImageIO.setUseCache(false);
-        passageImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
-        wallImage = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassTile.png"));
-        keyImage = ImageIO.read(getClass().getResourceAsStream("Assets\\KeyOnly.png")); 
-        lockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
-        unlockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitUnlocked.png"));
-        
-        dogEast0 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_0.png"));
-        dogEast1 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_1.png"));
-        dogEast2 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_2.png"));
-        dogEast3 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_3.png"));
-        dogEast4 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_4.png"));
-        dogEast5 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_5.png"));
-        dogEast6 = ImageIO.read(getClass().getResourceAsStream("Assets\\right_6.png"));
-        
-        dogWest0 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_0.png"));
-        dogWest1 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_1.png"));
-        dogWest2 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_2.png"));
-        dogWest3 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_3.png"));
-        dogWest4 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_4.png"));
-        dogWest5 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_5.png"));
-        dogWest6 = ImageIO.read(getClass().getResourceAsStream("Assets\\left_6.png"));
-        
-        dogSouth0 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_0.png"));
-        dogSouth1 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_1.png"));
-        dogSouth2 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_2.png"));
-        dogSouth3 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_3.png"));
-        dogSouth4 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_4.png"));
-        dogSouth5 = ImageIO.read(getClass().getResourceAsStream("Assets\\south_5.png"));
-        
-        dogNorth0 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_0.png"));
-        dogNorth1 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_1.png"));
-        dogNorth2 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_2.png"));
-        dogNorth3 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_3.png"));
-        dogNorth4 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_4.png"));
-        dogNorth5 = ImageIO.read(getClass().getResourceAsStream("Assets\\north_5.png"));
-        
-        
-        
-        
-        //Wall with passage in direction NESW | 0000
-        
-        passage_0000 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0000.png"));
-        passage_0001 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0001.png"));
-        passage_0010 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0010.png"));
-        passage_0011 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0011.png"));
-        passage_0100 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0100.png"));
-        passage_0101 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0101.png"));
-        passage_0110 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0110.png"));
-        passage_0111 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_0111.png"));
-        passage_1000 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1000.png"));
-        passage_1001 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1001.png"));
-        passage_1010 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1010.png"));
-        passage_1011 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1011.png"));
-        passage_1100 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1100.png"));
-        passage_1101 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1101.png"));
-        passage_1110 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1110.png"));
-        passage_1111 = ImageIO.read(getClass().getResourceAsStream("Assets\\passage_1111.png"));
-        
-        preloadedImages.put("Passage", passageImage);
-        preloadedImages.put("wall", wallImage);
-        preloadedImages.put("Key", keyImage);
-        preloadedImages.put("Locked Exit", lockedExitImage);
-        preloadedImages.put("Open Exit", unlockedExitImage);
-        
-        preloadedImages.put("passage_0000", passage_0000);
-        preloadedImages.put("passage_0001", passage_0001);
-        preloadedImages.put("passage_0010", passage_0010);
-        preloadedImages.put("passage_0011", passage_0011);
-        preloadedImages.put("passage_0100", passage_0100);
-        preloadedImages.put("passage_0101", passage_0101);
-        preloadedImages.put("passage_0110", passage_0110);
-        preloadedImages.put("passage_0111", passage_0111);
-        preloadedImages.put("passage_1000", passage_1000);
-        preloadedImages.put("passage_1001", passage_1001);
-        preloadedImages.put("passage_1010", passage_1010);
-        preloadedImages.put("passage_1011", passage_1011);
-        preloadedImages.put("passage_1100", passage_1100);
-        preloadedImages.put("passage_1101", passage_1101);
-        preloadedImages.put("passage_1110", passage_1110);
-        preloadedImages.put("passage_1111", passage_1111);
-                
-        
-        
-        
-        
-    }
+
     
     public void renderBackground(Graphics g) {
         // Sets background colour to black.
@@ -237,6 +100,7 @@ public class Renderer {
     Color c2 = Color.GREEN;
     
     public void renderMaze(Graphics g, int tileWH) {
+
         
         for(int i = 0; i < rowColAmount; i++){    // No of rows/columns
             for (int x = 0; x < rowColAmount; x++) {  // No of rows/columns
@@ -248,7 +112,12 @@ public class Renderer {
                     if(tile.getImageString() == "Key"){
                         g.drawImage(getImage("Key"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     }
-                     g.drawImage(getImage("Passage"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    if (x%2 == 0) {
+                        g.drawImage(getImage("GrassPassage_" + tile.getPassageImageId()), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    } else {
+                        g.drawImage(getImage("GrassPassage_0"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    }
+                     
                     
                     g.drawImage(img, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     
@@ -266,10 +135,7 @@ public class Renderer {
     }
     
     public BufferedImage getImage(String imageName) {
-        if(preloadedImages.containsKey(imageName)){
-            return preloadedImages.get(imageName);
-        }
-        return null;
+        return am.getPreloadedImage(imageName);
     }
     
     public void renderHUD(Graphics g, Player p1, int level) {
@@ -298,21 +164,21 @@ public class Renderer {
         //g.drawImage(dogEast_0, screenWidthHalf, screenHeightHalf, null);
         if (nextAnimation.size() <= 10) {
             if(dir < 0) {
-                    nextAnimation.push(dogEast0);
-                    nextAnimation.push(dogEast1);
-                    nextAnimation.push(dogEast2);
-                    nextAnimation.push(dogEast3);
-                    nextAnimation.push(dogEast4);
-                    nextAnimation.push(dogEast5);
-                    nextAnimation.push(dogEast6);
+                    nextAnimation.push(getImage("dogEast0"));
+                    nextAnimation.push(getImage("dogEast1"));
+                    nextAnimation.push(getImage("dogEast2"));
+                    nextAnimation.push(getImage("dogEast3"));
+                    nextAnimation.push(getImage("dogEast4"));
+                    nextAnimation.push(getImage("dogEast5"));
+                    nextAnimation.push(getImage("dogEast6"));
             } else {
-                    nextAnimation.push(dogWest0);
-                    nextAnimation.push(dogWest1);
-                    nextAnimation.push(dogWest2);
-                    nextAnimation.push(dogWest3);
-                    nextAnimation.push(dogWest4);
-                    nextAnimation.push(dogWest5);
-                    nextAnimation.push(dogWest6);
+                    nextAnimation.push(getImage("dogWest0"));
+                    nextAnimation.push(getImage("dogWest1"));
+                    nextAnimation.push(getImage("dogWest2"));
+                    nextAnimation.push(getImage("dogWest3"));
+                    nextAnimation.push(getImage("dogWest4"));
+                    nextAnimation.push(getImage("dogWest5"));
+                    nextAnimation.push(getImage("dogWest6"));
             }
         }
         
@@ -331,19 +197,19 @@ public class Renderer {
         
         if (nextAnimation.size() <= 10) {
             if(dir > 0) {
-                    nextAnimation.push(dogNorth0);
-                    nextAnimation.push(dogNorth1);
-                    nextAnimation.push(dogNorth2);
-                    nextAnimation.push(dogNorth3);
-                    nextAnimation.push(dogNorth4);
-                    nextAnimation.push(dogNorth5);
+                    nextAnimation.push(getImage("dogNorth0"));
+                    nextAnimation.push(getImage("dogNorth1"));
+                    nextAnimation.push(getImage("dogNorth2"));
+                    nextAnimation.push(getImage("dogNorth3"));
+                    nextAnimation.push(getImage("dogNorth4"));
+                    nextAnimation.push(getImage("dogNorth5"));
             } else {
-                    nextAnimation.push(dogSouth0);
-                    nextAnimation.push(dogSouth1);
-                    nextAnimation.push(dogSouth2);
-                    nextAnimation.push(dogSouth3);
-                    nextAnimation.push(dogSouth4);
-                    nextAnimation.push(dogSouth5);
+                    nextAnimation.push(getImage("dogSouth0"));
+                    nextAnimation.push(getImage("dogSouth1"));
+                    nextAnimation.push(getImage("dogSouth2"));
+                    nextAnimation.push(getImage("dogSouth3"));
+                    nextAnimation.push(getImage("dogSouth4"));
+                    nextAnimation.push(getImage("dogSouth5"));
             }
         }
     }

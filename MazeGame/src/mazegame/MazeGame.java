@@ -36,6 +36,7 @@ public class MazeGame extends JFrame implements Runnable {
     private int rowColAmount;
     private int movementSpeed = 5;
     private int fps = 30;
+    private AssetManager am;
     
     public MazeGame (int windowHeight, int windowWidth, UI ui, int rowColAmount) {
         this.windowWidth = windowWidth;
@@ -43,6 +44,7 @@ public class MazeGame extends JFrame implements Runnable {
         this.ui = ui;
         if (rowColAmount % 2 == 0) {rowColAmount+=1;}
         this.rowColAmount = rowColAmount;
+        am = new AssetManager();
     }
     
     public void setUpFrame() {
@@ -122,7 +124,7 @@ public class MazeGame extends JFrame implements Runnable {
         double nanoSecondConversion = 100000000.0 / fps; // Updated <fps> times per second
         double changeInSeconds = 0;
         double changeInSeconds2 = 0;
-        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, tileWH);
+        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, tileWH, am);
       
         setNESWKeys(pane);
 

@@ -2,6 +2,7 @@
 package mazegame;
 
 import java.awt.Color;
+import java.util.Random;
 
 public class TileWall implements Tile {
     
@@ -10,7 +11,8 @@ public class TileWall implements Tile {
     private int xPos;
     private int yPos;
     private String neighbours; // NESW
-    private String imgString = "passage";
+    private String imgString = "wall";
+    private String passageId;
 
     public TileWall (int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
@@ -18,6 +20,7 @@ public class TileWall implements Tile {
         this.yPos = yPos;
         neighbours = "0000"; // NESW
         c1 = Color.CYAN;
+        passageId = String.valueOf(new Random().nextInt(4));
     }
     
     public void setPassageNeighbours(String bits) {
@@ -76,5 +79,11 @@ public class TileWall implements Tile {
     @Override
     public String getImageString() {
         return imgString + "_" + neighbours;
+        
+    }
+
+    @Override
+    public String getPassageImageId() {
+        return passageId;
     }
 }

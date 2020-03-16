@@ -23,4 +23,6 @@ public interface Tile {
     public abstract int getSize();
     
     public abstract String getImageString();
+    
+    public abstract String getPassageImageId();
 }

@@ -1,9 +1,12 @@
 package mazegame;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
+import javax.swing.Timer;
 
 public class AssetManager {
 
@@ -64,10 +67,59 @@ public class AssetManager {
     private BufferedImage dogSouth4 = null;
     private BufferedImage dogSouth5 = null;
     
+    private BufferedImage key0 = null;
+    private BufferedImage key1 = null;
+    private BufferedImage key2 = null;
+    private BufferedImage key3 = null;
+    private BufferedImage key4 = null;
+    private BufferedImage key5 = null;
+    private BufferedImage key6 = null;
+    private BufferedImage key7 = null;
+    private BufferedImage key8 = null;
+    private BufferedImage key9 = null;
+    private BufferedImage key10 = null;
+    private BufferedImage key11 = null;
+    private BufferedImage key12 = null;
+    private BufferedImage key13 = null;
+    private BufferedImage key14 = null;
+    private BufferedImage key15 = null;
+    private BufferedImage key16 = null;
+    private BufferedImage key17 = null;
+    private BufferedImage key18= null;
+    private BufferedImage key19 = null;
+    
+    private Timer t;
+    private int keyTimerCount;
+    
+    public AssetManager() {
+        t = new Timer(100, new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                keyTimerCount++;
+                if (keyTimerCount == 19) {
+                    keyTimerCount = 0;
+                    t.restart();
+                }
+            }
+            
+        });
+        t.start();
+    }
+    
+    
     public BufferedImage getPreloadedImage(String key) {
         try {
             return preloadedImages.get(key);
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    public BufferedImage getKeyFrame() {
+        if(keyTimerCount == 19) {keyTimerCount = 0;}
+        try {
+            return preloadedImages.get("Key_" + String.valueOf(keyTimerCount));
+        } catch (Exception e) {
             return null;
         }
     }
@@ -85,13 +137,54 @@ public class AssetManager {
         preloadedImages.put("GrassPassage_2", grassPassage2);
         preloadedImages.put("GrassPassage_3", grassPassage3);
 
-        keyImage = ImageIO.read(getClass().getResourceAsStream("Assets\\KeyOnly.png")); 
+        
         lockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
         unlockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitUnlocked.png"));
-        
-        preloadedImages.put("Key", keyImage);
         preloadedImages.put("Locked Exit", lockedExitImage);
         preloadedImages.put("Open Exit", unlockedExitImage);
+        
+        key0 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_0.png"));
+        key1 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_1.png"));
+        key2 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_2.png"));
+        key3 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_3.png"));
+        key4 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_4.png"));
+        key5 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_5.png"));
+        key6 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_6.png"));
+        key7 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_7.png"));
+        key8 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_8.png"));
+        key9 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_9.png"));
+        key10 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_10.png"));
+        key11 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_11.png"));
+        key12 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_12.png"));
+        key13 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_13.png"));
+        key14 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_14.png"));
+        key15 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_15.png"));
+        key16 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_16.png"));
+        key17 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_17.png"));
+        key18 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_18.png"));
+        key19 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_19.png"));
+        
+        preloadedImages.put("Key_0", key0);
+        preloadedImages.put("Key_1", key1);
+        preloadedImages.put("Key_2", key2);
+        preloadedImages.put("Key_3", key3);
+        preloadedImages.put("Key_4", key4);
+        preloadedImages.put("Key_5", key5);
+        preloadedImages.put("Key_6", key6);
+        preloadedImages.put("Key_7", key7);
+        preloadedImages.put("Key_8", key8);
+        preloadedImages.put("Key_9", key9);
+        preloadedImages.put("Key_10", key10);
+        preloadedImages.put("Key_11", key11);
+        preloadedImages.put("Key_12", key12);
+        preloadedImages.put("Key_13", key13);
+        preloadedImages.put("Key_14", key14);
+        preloadedImages.put("Key_15", key15);
+        preloadedImages.put("Key_16", key16);
+        preloadedImages.put("Key_17", key17);
+        preloadedImages.put("Key_18", key18);
+        preloadedImages.put("Key_19", key19);
+        
         
         dogNorth0 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_0.png"));
         dogNorth1 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_1.png"));

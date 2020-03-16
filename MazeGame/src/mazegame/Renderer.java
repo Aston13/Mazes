@@ -7,7 +7,6 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
-import java.util.Random;
 import java.util.Stack;
 
 public class Renderer {
@@ -19,7 +18,6 @@ public class Renderer {
     private final int screenHeight;
     private final int screenWidthHalf;
     private final int screenHeightHalf;
-    private Random rand = new Random();
     
     private int startingX;
     private int startingY;
@@ -36,7 +34,7 @@ public class Renderer {
     AssetManager am;
     
     private BufferedImage playerImg = null;
-    Stack<BufferedImage> nextAnimation = new Stack<>();
+    Stack<BufferedImage> nextPlayerAnimation = new Stack<>();
 
     public int[] getPixels() {
         return pixels;
@@ -61,8 +59,6 @@ public class Renderer {
         // Create an array for pixels
         pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
     }
-    
-
     
     public void renderBackground(Graphics g) {
         // Sets background colour to black.
@@ -109,16 +105,15 @@ public class Renderer {
                    
                     
                     BufferedImage img = getImage(tile.getImageString());
-                    if(tile.getImageString() == "Key"){
-                        g.drawImage(getImage("Key"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
-                    }
                     if (x%2 == 0) {
                         g.drawImage(getImage("GrassPassage_" + tile.getPassageImageId()), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     } else {
                         g.drawImage(getImage("GrassPassage_0"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     }
                      
-                    
+                    if(tile.getImageString() == "Key"){
+                        g.drawImage(am.getKeyFrame(), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                    }
                     g.drawImage(img, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     
                     if (tile instanceof TileExit){
@@ -157,28 +152,26 @@ public class Renderer {
                     r1.setMinX(currentX+dir);
             }
         }
-        
-        
-        
+
         //String dog = "dogEast";
         //g.drawImage(dogEast_0, screenWidthHalf, screenHeightHalf, null);
-        if (nextAnimation.size() <= 10) {
+        if (nextPlayerAnimation.size() <= 10) {
             if(dir < 0) {
-                    nextAnimation.push(getImage("dogEast0"));
-                    nextAnimation.push(getImage("dogEast1"));
-                    nextAnimation.push(getImage("dogEast2"));
-                    nextAnimation.push(getImage("dogEast3"));
-                    nextAnimation.push(getImage("dogEast4"));
-                    nextAnimation.push(getImage("dogEast5"));
-                    nextAnimation.push(getImage("dogEast6"));
+                    nextPlayerAnimation.push(getImage("dogEast0"));
+                    nextPlayerAnimation.push(getImage("dogEast1"));
+                    nextPlayerAnimation.push(getImage("dogEast2"));
+                    nextPlayerAnimation.push(getImage("dogEast3"));
+                    nextPlayerAnimation.push(getImage("dogEast4"));
+                    nextPlayerAnimation.push(getImage("dogEast5"));
+                    nextPlayerAnimation.push(getImage("dogEast6"));
             } else {
-                    nextAnimation.push(getImage("dogWest0"));
-                    nextAnimation.push(getImage("dogWest1"));
-                    nextAnimation.push(getImage("dogWest2"));
-                    nextAnimation.push(getImage("dogWest3"));
-                    nextAnimation.push(getImage("dogWest4"));
-                    nextAnimation.push(getImage("dogWest5"));
-                    nextAnimation.push(getImage("dogWest6"));
+                    nextPlayerAnimation.push(getImage("dogWest0"));
+                    nextPlayerAnimation.push(getImage("dogWest1"));
+                    nextPlayerAnimation.push(getImage("dogWest2"));
+                    nextPlayerAnimation.push(getImage("dogWest3"));
+                    nextPlayerAnimation.push(getImage("dogWest4"));
+                    nextPlayerAnimation.push(getImage("dogWest5"));
+                    nextPlayerAnimation.push(getImage("dogWest6"));
             }
         }
         
@@ -195,21 +188,21 @@ public class Renderer {
             }
         }
         
-        if (nextAnimation.size() <= 10) {
+        if (nextPlayerAnimation.size() <= 10) {
             if(dir > 0) {
-                    nextAnimation.push(getImage("dogNorth0"));
-                    nextAnimation.push(getImage("dogNorth1"));
-                    nextAnimation.push(getImage("dogNorth2"));
-                    nextAnimation.push(getImage("dogNorth3"));
-                    nextAnimation.push(getImage("dogNorth4"));
-                    nextAnimation.push(getImage("dogNorth5"));
+                    nextPlayerAnimation.push(getImage("dogNorth0"));
+                    nextPlayerAnimation.push(getImage("dogNorth1"));
+                    nextPlayerAnimation.push(getImage("dogNorth2"));
+                    nextPlayerAnimation.push(getImage("dogNorth3"));
+                    nextPlayerAnimation.push(getImage("dogNorth4"));
+                    nextPlayerAnimation.push(getImage("dogNorth5"));
             } else {
-                    nextAnimation.push(getImage("dogSouth0"));
-                    nextAnimation.push(getImage("dogSouth1"));
-                    nextAnimation.push(getImage("dogSouth2"));
-                    nextAnimation.push(getImage("dogSouth3"));
-                    nextAnimation.push(getImage("dogSouth4"));
-                    nextAnimation.push(getImage("dogSouth5"));
+                    nextPlayerAnimation.push(getImage("dogSouth0"));
+                    nextPlayerAnimation.push(getImage("dogSouth1"));
+                    nextPlayerAnimation.push(getImage("dogSouth2"));
+                    nextPlayerAnimation.push(getImage("dogSouth3"));
+                    nextPlayerAnimation.push(getImage("dogSouth4"));
+                    nextPlayerAnimation.push(getImage("dogSouth5"));
             }
         }
     }
@@ -250,21 +243,16 @@ public class Renderer {
         return true;
     }
     
-    public void updatePlayerFrame() {
-        if(nextAnimation.size() > 1) {
-            playerImg = nextAnimation.pop();
+    public void updateFrames() {
+        if(nextPlayerAnimation.size() > 1) {
+            playerImg = nextPlayerAnimation.pop();
         }
     }
     
     public void renderPlayer(Graphics g, Player p1, int size) {
-        
-        
+         
 //        g.setColor(p1.getColor());
 //        g.fillOval(screenWidthHalf, screenHeightHalf, p1.getSize(), p1.getSize());
-
-        
-
-
         g.drawImage(playerImg, screenWidthHalf, screenHeightHalf, size, size, null);
 
         if (displayMessage()) {
@@ -274,7 +262,6 @@ public class Renderer {
                         FontMetrics fm = g.getFontMetrics();
             int halfTxtWidth = (fm.stringWidth(playerMessage)/2);
 
-            
             g.drawString(playerMessage, (screenWidthHalf-halfTxtWidth)+tileWidth/2, screenHeightHalf);
         }
     }

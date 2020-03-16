@@ -114,7 +114,7 @@ public class MazeGame extends JFrame implements Runnable {
     }
     
     public void updatePlayer() {
-        renderer.updatePlayerFrame();
+        renderer.updateFrames();
     }
     
     

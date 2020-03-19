@@ -124,6 +124,19 @@ public class AssetManager {
         }
     }
     
+    public BufferedImage getBlinkingKeyFrame() {
+        if(keyTimerCount == 19) {keyTimerCount = 0;}
+        try {
+            if(keyTimerCount%2 == 0){
+                
+                return preloadedImages.get("Key_" + String.valueOf(keyTimerCount));
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+    
     public void preloadImages() throws IOException {
         ImageIO.setUseCache(false);
         

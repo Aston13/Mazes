@@ -4,10 +4,13 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
 import java.util.Stack;
+import javax.swing.Timer;
 
 public class Renderer {
     private final BufferedImage view;
@@ -22,7 +25,12 @@ public class Renderer {
     private int startingX;
     private int startingY;
     private final int rowColAmount;
-
+    
+    
+    private int keyRemovalTimer;
+    private Timer t;
+    private Stack<Tile> tileWithKey = new Stack<>();
+    
     
     private String playerMessage = "";
     private int tileWidth;
@@ -31,6 +39,7 @@ public class Renderer {
     private long activatedAt = Long.MAX_VALUE;
     private int keyCount;
     private int keysRequired;
+    private int keysRemaining = (keysRequired-keyCount);
     AssetManager am;
     
     private BufferedImage playerImg = null;
@@ -40,7 +49,7 @@ public class Renderer {
         return pixels;
     }
     
-    public Renderer(int screenHeight, int screenWidth, int rowColAmount, int tileWH, AssetManager am)  {
+    public Renderer(int screenHeight, int screenWidth, int rowColAmount, int tileWH, AssetManager am, MazeGame game)  {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.tileWidth = tileWH;
@@ -50,6 +59,7 @@ public class Renderer {
         keyCount = 0;
         keysRequired = (rowColAmount/10)*2;
         this.am = am;
+        keyRemovalTimer = keysRequired;
         try {am.preloadImages();} catch (IOException e) {e.printStackTrace();}
         playerImg = am.getPreloadedImage("dogEast0");
         
@@ -58,6 +68,36 @@ public class Renderer {
 
         // Create an array for pixels
         pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
+        
+        t = new Timer(10000, new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                keyRemovalTimer--;
+                TilePassage tp = (TilePassage)tileWithKey.pop();
+                tp.setItem(false);
+                
+                
+                
+                
+                
+                if (tileWithKey.size() < keysRequired) {
+                    //Gamer over;
+                    System.out.println("Game over");
+                    game.setGameState(false, "Level Failed");
+                    t.stop();
+                }
+            }
+            
+        });
+        
+    }
+    
+    public void beginTimer() {
+        t.start();
+    }
+    
+    public void stopTimer() {
+        t.stop();
     }
     
     public void renderBackground(Graphics g) {
@@ -70,7 +110,24 @@ public class Renderer {
         tileArr = rb1.startGeneration();
         startingX = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinX();
         startingY = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
+        
+        
+        for (Object tp: rb1.getKeyCoords()) {
+            tileWithKey.push((Tile)tp);
+        }
+        
+//        System.out.println(rb1.getKeyCoords().size());
+//        tp = (Tile)rb1.getKeyCoords().get(0);
+//        System.out.println(tp.getMinX());
+//        System.out.println(tp.getMinY());
+//        System.out.println(tileArr.length);
+        
+        //tp = tileArr[tp.getMinX()][tp.getMinY()];
+
+        
     }
+    
+    
     
     public void centerMaze() {
         Tile centerTile = tileArr[rb1.getStartingX()][rb1.getStartingY()];
@@ -112,7 +169,12 @@ public class Renderer {
                     }
                      
                     if(tile.getImageString() == "Key"){
-                        g.drawImage(am.getKeyFrame(), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                        
+                        if (tileWithKey.peek() == (tile)){
+                            g.drawImage(am.getBlinkingKeyFrame(), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                        } else {
+                            g.drawImage(am.getKeyFrame(), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
+                        }
                     }
                     g.drawImage(img, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     
@@ -227,7 +289,7 @@ public class Renderer {
             return false;
         } else if (t instanceof TileExit) {
             if (((TileExit)t).getAccessible()) {
-                game.setGameState(false);
+                game.setGameState(false, "Next Level");
             } else {
                 playerMessage = "The door is locked. Find " + (keysRequired-keyCount) + " more keys.";
                 activatedAt = System.currentTimeMillis();

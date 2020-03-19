@@ -10,7 +10,7 @@ public class RecursiveBacktracker extends Tilemap {
     private int newYPos;
     private final Tile [][] updateGrid;
     private Tile [][] exitTileSet;
-    Stack<Tile> visitedTiles = new Stack<>();
+    private Stack<Tile> visitedTiles = new Stack<>();
     private TilePassage visited;
     private final int rowColAmount;
     private int maxSE = 0;
@@ -22,6 +22,7 @@ public class RecursiveBacktracker extends Tilemap {
     private int biggestStack = 1;
     private TileExit furthestReached;
     private int tileWH;
+    private ArrayList<TilePassage> keyCoords = new ArrayList<TilePassage>();
 
     
     public RecursiveBacktracker (int tileWH, int tileBorder, int rowColAmount) {
@@ -66,11 +67,16 @@ public class RecursiveBacktracker extends Tilemap {
             
             if (!path.hasItem()){
                 path.setItem(true);
+                keyCoords.add(path);
                 keysAdded++;
             }     
         }
        
         return allTiles;
+    }
+    
+    public ArrayList getKeyCoords(){
+        return keyCoords;
     }
     
     public int getRandomStartingCoord() {

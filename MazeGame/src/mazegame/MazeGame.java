@@ -30,13 +30,14 @@ public class MazeGame extends JFrame implements Runnable {
     private final int tileWH = 100;
     private final int tileBorder = 0;
     private Renderer renderer;
-    private final JPanel pane = new JPanel(new GridLayout());
+    private  JPanel pane = new JPanel(new GridLayout());
     private int levelCount = 1;
     private Thread thread;
     private int rowColAmount;
-    private int movementSpeed = 5;
+    private int movementSpeed = 3;
     private int fps = 30;
     private AssetManager am;
+    private String stateChange;
     
     public MazeGame (int windowHeight, int windowWidth, UI ui, int rowColAmount) {
         this.windowWidth = windowWidth;
@@ -56,8 +57,13 @@ public class MazeGame extends JFrame implements Runnable {
         setVisible(true);
     }
     
-    public void setGameState(boolean inProgress) {
+    public void setGameState(boolean inProgress, String reason) {
         gameInProgress = inProgress;
+        stateChange = reason;
+    }
+    
+    public boolean getGameState() {
+        return gameInProgress;
     }
     
     public void update() {
@@ -113,6 +119,13 @@ public class MazeGame extends JFrame implements Runnable {
         buffStrat.show(); // Buffer has been written to and is ready to be put on screen
     }
     
+    public void renderBackground(){
+        BufferStrategy buffStrat = gameView.getBufferStrategy();
+        Graphics g  = buffStrat.getDrawGraphics();
+        super.paint(g); // Override
+        renderer.renderBackground(g); // Renders background
+    }
+    
     public void updatePlayer() {
         renderer.updateFrames();
     }
@@ -124,7 +137,7 @@ public class MazeGame extends JFrame implements Runnable {
         double nanoSecondConversion = 100000000.0 / fps; // Updated <fps> times per second
         double changeInSeconds = 0;
         double changeInSeconds2 = 0;
-        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, tileWH, am);
+        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, tileWH, am, this);
       
         setNESWKeys(pane);
 
@@ -135,11 +148,11 @@ public class MazeGame extends JFrame implements Runnable {
         renderer.generateMaze(tileWH, tileBorder);
         renderer.centerMaze();
         player = new Player(renderer.getStartingX(), renderer.getStartingY(), tileWH);
-        
+        renderer.beginTimer();
         
         render();
 
-        while(gameInProgress) {
+        while(getGameState()) {
             Long now = System.nanoTime();
             changeInSeconds += (now - lastTime) / nanoSecondConversion;
             changeInSeconds2 += (now - lastTime) / nanoSecondConversion; 
@@ -158,8 +171,70 @@ public class MazeGame extends JFrame implements Runnable {
             render();
             lastTime = now;
         }
-
-        runTransitionScreen();
+        gameView.getGraphics().finalize();
+        
+        getGraphics().finalize();
+        
+        renderBackground();
+        renderer.stopTimer();
+        
+        
+        if (stateChange.equalsIgnoreCase("Level Failed")){
+            runGameOverScreen();
+        } else if (stateChange.equalsIgnoreCase("Next Level")){
+            runTransitionScreen();
+        }
+        
+        System.out.println("State change reason not recognised.");
+        
+    }
+    
+    public void runGameOverScreen() {
+        JPanel panel = new JPanel(new GridLayout());
+        thread = new Thread(this);
+        
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+        setContentPane(panel);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+        
+        JLabel gameOver = ui.getLogo("You failed level " + levelCount + "! :(");
+        JButton retry = ui.getTopButton("Retry Level? [Space]");
+        JButton menu = ui.getMidButton("Main Menu");
+        panel.add(gameOver);
+        panel.add(retry);
+        panel.add(menu);
+        panel.setLayout(null);
+        panel.setBackground(Color.BLACK);
+        panel.setVisible(true);
+        
+        addKeyBinding(panel, KeyEvent.VK_SPACE, "Retry Level", false, (evt) -> {
+            setGameState(true, "");
+            thread.start();
+        });
+        
+        retry.addActionListener((ActionEvent e) -> {
+            setGameState(true, "");
+            thread.start();
+        });
+        
+        
+        menu.addActionListener((e) -> {
+//            dispose();
+//            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
+//            Thread newGameThread = new Thread(newGame);
+//            newGame.setGameState(false,"");
+//            newGame.runMenu();
+//            newGameThread.start();
+            setGameState(false,"");
+            
+            //thread.start();
+            
+            runMenu();
+            
+        });
     }
     
     public void runTransitionScreen() {
@@ -186,6 +261,7 @@ public class MazeGame extends JFrame implements Runnable {
         addKeyBinding(panel, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
             increaseLevel();
             thread.start();
+            
         });
         
         next.addActionListener((ActionEvent e) -> {
@@ -200,15 +276,25 @@ public class MazeGame extends JFrame implements Runnable {
     public void increaseLevel() {
         levelCount += 1;
         rowColAmount += 2;
-        setGameState(true);
+        setGameState(true, "");
     }
     
     public void runMenu() {
+        try {
+            super.remove(gameView);
+            pane.removeAll();
+            gameView.getBufferStrategy().dispose();
+            
+        } catch (Exception e) {
+            
+        }
+        pane = new JPanel(new GridLayout());
         setUpFrame();
+        
         JButton play = ui.getTopButton("Play [Space]");
         JButton quit = ui.getMidButton("Quit [Esc]");
         JLabel logo = ui.getLogo("Maze");
-        
+         
         pane.add(logo);
         pane.add(play);
         pane.add(quit);
@@ -219,7 +305,7 @@ public class MazeGame extends JFrame implements Runnable {
             dispose();
             MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
             Thread newGameThread = new Thread(newGame);
-            newGame.setGameState(true);
+            newGame.setGameState(true, "");
             newGameThread.start();
         });
         
@@ -231,7 +317,7 @@ public class MazeGame extends JFrame implements Runnable {
             dispose();
             MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
             Thread newGameThread = new Thread(newGame);
-            newGame.setGameState(true);
+            newGame.setGameState(true, "Next Level");
             newGameThread.start();
         });
         

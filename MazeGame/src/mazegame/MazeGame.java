@@ -212,7 +212,8 @@ public class MazeGame extends JFrame implements Runnable {
         if (stateChange.equalsIgnoreCase("Level Failed")){
             runGameOverScreen();
         } else if (stateChange.equalsIgnoreCase("Next Level")){
-            runTransitionScreen();
+            double timeInMs = renderer.getTimeTaken();
+            runCompletionScreen(timeInMs);
         }
         
         System.out.println("State change reason not recognised.");
@@ -267,8 +268,22 @@ public class MazeGame extends JFrame implements Runnable {
         });
     }
     
-    public void runTransitionScreen() {
-        String completedString = String.valueOf(levelCount) + ",completed,-1";
+    public void runCompletionScreen(double timeTaken) {
+        
+        String []lineWords = levelData[levelCount].split(",");
+        double bestTime = Double.valueOf(lineWords[2]);
+        System.out.println("best time: " + bestTime);
+        System.out.println("Time taken: " + timeTaken);
+        
+        if ((timeTaken < bestTime) || (bestTime == -1)) {
+            
+            // New best time
+            bestTime = timeTaken;
+        }
+        
+        String completedString = String.valueOf(levelCount) + 
+                ",completed," + String.valueOf(bestTime);
+        
         levelData[levelCount] = completedString;
         save();
         

@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Stack;
 import javax.swing.Timer;
 
@@ -41,6 +42,7 @@ public class Renderer {
     private int keysRequired;
     private int keysRemaining = (keysRequired-keyCount);
     private AssetManager am;
+    private double timeTaken = 0;
     
     private BufferedImage playerImg = null;
     private Stack <BufferedImage> nextPlayerAnimation = new Stack<>();
@@ -73,24 +75,25 @@ public class Renderer {
         // Create an array for pixels
         pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
         
-        t = new Timer(5000, new ActionListener(){
+        t = new Timer(10, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                keyRemovalTimer--;
-                TilePassage tp = (TilePassage)tileWithKey.pop();
-                tp.setItem(false);
                 
-//                System.out.println("Key Count: " + keyCount);
-//                System.out.println(tileWithKey.size());
-//                System.out.println("Keys Required: " + keysRequired);
-//                System.out.println("Difference: " + (keysRequired-keyCount));
+                timeTaken+= 0.01;
                 
-                if (tileWithKey.size() < (keysRequired-keyCount)) {
-                    //Gamer over;
-                    System.out.println("Game over");
-                    game.setGameState(false, "Level Failed");
-                    t.stop();
-                    
+                if (timeTaken%5 == 0) {
+                    keyRemovalTimer--;
+
+                    TilePassage tp = (TilePassage)tileWithKey.pop();
+                    tp.setItem(false);
+
+                    if (tileWithKey.size() < (keysRequired-keyCount)) {
+                        //Gamer over;
+                        System.out.println("Game over");
+                        game.setGameState(false, "Level Failed");
+                        t.stop();
+
+                    }
                 }
             } 
         }); 
@@ -102,6 +105,11 @@ public class Renderer {
     
     public void stopTimer() {
         t.stop();
+    }
+    
+    public double getTimeTaken() {
+        DecimalFormat df2 = new DecimalFormat("#.##");
+        return Double.valueOf(df2.format(timeTaken));
     }
     
     public void renderBackground(Graphics g) {

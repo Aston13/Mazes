@@ -40,10 +40,10 @@ public class Renderer {
     private int keyCount;
     private int keysRequired;
     private int keysRemaining = (keysRequired-keyCount);
-    AssetManager am;
+    private AssetManager am;
     
     private BufferedImage playerImg = null;
-    Stack<BufferedImage> nextPlayerAnimation = new Stack<>();
+    private Stack <BufferedImage> nextPlayerAnimation = new Stack<>();
 
     public int[] getPixels() {
         return pixels;
@@ -53,12 +53,16 @@ public class Renderer {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.tileWidth = tileWH;
+        this.rowColAmount = rowColAmount;
+        this.am = am;
+        
         screenWidthHalf = screenWidth/2;
         screenHeightHalf = screenHeight/2;
-        this.rowColAmount = rowColAmount;
+        
         keyCount = 0;
         keysRequired = (rowColAmount/10)*2;
-        this.am = am;
+        System.out.println(keysRequired);
+        
         keyRemovalTimer = keysRequired;
         try {am.preloadImages();} catch (IOException e) {e.printStackTrace();}
         playerImg = am.getPreloadedImage("dogEast0");
@@ -69,27 +73,27 @@ public class Renderer {
         // Create an array for pixels
         pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
         
-        t = new Timer(10000, new ActionListener(){
+        t = new Timer(5000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 keyRemovalTimer--;
                 TilePassage tp = (TilePassage)tileWithKey.pop();
                 tp.setItem(false);
                 
+//                System.out.println("Key Count: " + keyCount);
+//                System.out.println(tileWithKey.size());
+//                System.out.println("Keys Required: " + keysRequired);
+//                System.out.println("Difference: " + (keysRequired-keyCount));
                 
-                
-                
-                
-                if (tileWithKey.size() < keysRequired) {
+                if (tileWithKey.size() < (keysRequired-keyCount)) {
                     //Gamer over;
                     System.out.println("Game over");
                     game.setGameState(false, "Level Failed");
                     t.stop();
+                    
                 }
-            }
-            
-        });
-        
+            } 
+        }); 
     }
     
     public void beginTimer() {

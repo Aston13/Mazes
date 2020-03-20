@@ -110,10 +110,11 @@ public class RecursiveBacktracker extends Tilemap {
     }
    
     public Tile[][] setWinningTile(Tile[][] tileSet) {
-        
+        TilePassage tile = new TilePassage(0,0,0);
         visitedTiles.clear();
-         
-        TilePassage tile = (TilePassage)tileSet[startingX][startingY];
+        if (tileSet[startingX][startingY] instanceof TilePassage){
+            tile = (TilePassage)tileSet[startingX][startingY];
+        }
         tile.setRowNo(startingX);
         tile.setColNo(startingY);
         

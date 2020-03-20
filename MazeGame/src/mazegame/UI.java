@@ -8,6 +8,7 @@ import javax.swing.SwingConstants;
 
 public class UI {
     private final int windowWH;
+    
 
     /**
      *
@@ -34,7 +35,7 @@ public class UI {
     
     public JButton getTopButton(String text) {
         JButton b = new JButton(text);
-        int width = 150;
+        int width = 175;
         int height = 50;
         int x = (windowWH-width)/2;
         int y = (windowWH-height)/10;
@@ -50,12 +51,28 @@ public class UI {
     
     public JButton getMidButton(String text) {
         JButton b = new JButton(text);
-        int width = 150;
+        int width = 175;
         int height = 50;
         int x = (windowWH-width)/2;
         int y = (windowWH-height)/10;
         
         b.setBounds(x, y*5, width, height);
+        b.setBackground(Color.DARK_GRAY);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setVisible(true);
+        
+        return b;
+    }
+    
+    public JButton getBottomButton(String text) {
+        JButton b = new JButton(text);
+        int width = 175;
+        int height = 50;
+        int x = (windowWH-width)/2;
+        int y = (windowWH-height)/10;
+        
+        b.setBounds(x, y*6, width, height);
         b.setBackground(Color.DARK_GRAY);
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);

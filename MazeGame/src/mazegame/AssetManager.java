@@ -3,6 +3,12 @@ package mazegame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
@@ -10,6 +16,8 @@ import javax.swing.Timer;
 
 public class AssetManager {
 
+    private String levelDataFile = "./src/mazegame/assets/LevelData.txt";
+    
     private BufferedImage grassPassage0  = null;
     private BufferedImage grassPassage1  = null;
     private BufferedImage grassPassage2  = null;
@@ -104,6 +112,44 @@ public class AssetManager {
             
         });
         t.start();
+    }
+    
+    public void saveLevelData(String []lines) throws IOException {
+//        File file = new File("./src/mazegame/assets/");
+//        for(String fileNames : file.list()) System.out.println(fileNames);
+
+        BufferedWriter writer = new BufferedWriter(new FileWriter(levelDataFile));
+        
+        //Level Number | Completed | Best Time
+        for(String line : lines) {
+            writer.write(line);
+            writer.newLine();
+        }
+        writer.close();
+    }
+    
+    public String[] loadLevelData() throws FileNotFoundException, IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(levelDataFile));
+        int lines = 0;
+        
+        
+        //Level Number | Completed | Best Time
+        while(reader.readLine() != null) {lines++;}
+        reader.close();
+        
+        
+        String [] loadedData = new String[lines];
+        
+        BufferedReader reader2 = new BufferedReader(new FileReader(levelDataFile));
+        loadedData[0] = reader2.readLine();
+        
+        for (int i = 1; i < lines; i++) {
+            
+            loadedData[i] = reader2.readLine();
+        }
+        reader2.close();
+        
+        return loadedData;
     }
     
     

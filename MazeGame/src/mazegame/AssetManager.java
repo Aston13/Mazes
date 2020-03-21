@@ -17,6 +17,7 @@ import javax.swing.Timer;
 public class AssetManager {
 
     private String levelDataFile = "./src/mazegame/assets/LevelData.txt";
+    private String resetDataFile = "./src/mazegame/assets/ResetData.txt";
     
     private BufferedImage grassPassage0  = null;
     private BufferedImage grassPassage1  = null;
@@ -128,19 +129,19 @@ public class AssetManager {
         writer.close();
     }
     
-    public String[] loadLevelData() throws FileNotFoundException, IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(levelDataFile));
-        int lines = 0;
+    public String[] loadLevelData(boolean reset) throws FileNotFoundException, IOException {
+        String file = levelDataFile;
+        if (reset == true) {file = resetDataFile;}
         
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        int lines = 0;
         
         //Level Number | Completed | Best Time
         while(reader.readLine() != null) {lines++;}
         reader.close();
         
-        
         String [] loadedData = new String[lines];
-        
-        BufferedReader reader2 = new BufferedReader(new FileReader(levelDataFile));
+        BufferedReader reader2 = new BufferedReader(new FileReader(file));
         loadedData[0] = reader2.readLine();
         
         for (int i = 1; i < lines; i++) {
@@ -151,7 +152,6 @@ public class AssetManager {
         
         return loadedData;
     }
-    
     
     public BufferedImage getPreloadedImage(String key) {
         try {

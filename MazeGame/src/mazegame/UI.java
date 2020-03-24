@@ -1,9 +1,12 @@
 package mazegame;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 public class UI {
@@ -79,5 +82,50 @@ public class UI {
         b.setVisible(true);
         
         return b;
+    }
+    
+    public JPanel getLevelPanel(String s) {
+        JPanel p = new JPanel(new GridLayout(1,1));
+        int width = windowWH;
+        int height = 100;
+
+        
+ 
+        p.setPreferredSize(new Dimension(width-50,height));
+        p.setBackground(Color.DARK_GRAY);
+        p.setForeground(Color.WHITE);
+        
+        p.add(getLevelLabel(s));
+        p.add(getLevelButton("Play"));
+        
+        p.setVisible(true);
+
+        
+        return p;
+    }
+    
+    public JButton getLevelButton(String text) {
+        JButton b = new JButton(text);
+
+
+        
+
+        b.setBackground(Color.DARK_GRAY);
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setVisible(true);
+        
+        return b;
+    }
+    
+    public JLabel getLevelLabel(String text) {
+        JLabel l = new JLabel(text);
+
+
+        l.setBackground(Color.DARK_GRAY);
+        l.setForeground(Color.WHITE);
+        l.setVisible(true);
+        
+        return l;
     }
 }

@@ -1,10 +1,13 @@
 package mazegame;
 
+import java.awt.BorderLayout;
 import javax.swing.JFrame; // Import JFrame class from graphics library
 import java.awt.Graphics;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,12 +18,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
+import javax.swing.BoxLayout;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
+import javax.swing.ScrollPaneConstants;
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
+import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
+import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
 public class MazeGame extends JFrame implements Runnable {
     
@@ -301,7 +310,6 @@ public class MazeGame extends JFrame implements Runnable {
         addKeyBinding(panel, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
             increaseLevel();
             thread.start();
-            
         });
         
         next.addActionListener((ActionEvent e) -> {
@@ -314,39 +322,64 @@ public class MazeGame extends JFrame implements Runnable {
     }
     
     public void runLevelSelection() {
-        JPanel panel = new JPanel(new GridLayout());
-        thread = new Thread(this);
+        JPanel panelWrapper = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new GridLayout(0,1));
+        
+
+        
+
+        
+        
+        panel.setBackground(Color.red);
+//        JButton b1 = ui.getLevelButton("b1");
+//        JButton b2 = ui.getLevelButton("b2");
+//        JButton b3 = ui.getLevelButton("b3");
+//        JButton b4 = ui.getLevelButton("b4");
+//        JButton b5 = ui.getLevelButton("b5");
+//
+//   
+//        panel.add(b1);
+//        panel.add(b2);
+//        panel.add(b3);
+//        panel.add(b4);
+//        panel.add(b5);
+
+        JPanel p1 = ui.getLevelPanel("1");
+        JPanel p2 = ui.getLevelPanel("2");
+        JPanel p3 = ui.getLevelPanel("3");
+        JPanel p4 = ui.getLevelPanel("4");
+        JPanel p5 = ui.getLevelPanel("5");
+        JPanel p6 = ui.getLevelPanel("6");
+        JPanel p7 = ui.getLevelPanel("7");
+        
+        panel.add(p1);
+        panel.add(p2);
+        panel.add(p3);
+        panel.add(p4);
+        panel.add(p5);
+        panel.add(p6);
+        panel.add(p7);
+
+
+        panelWrapper.add(ui.getLogo("Level Selection"), BorderLayout.NORTH);
+        panelWrapper.add(panel, BorderLayout.SOUTH);
+        
+        
+        JScrollPane scrollPane = new JScrollPane(panelWrapper, VERTICAL_SCROLLBAR_ALWAYS, HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setPreferredSize(this.getPreferredSize());
+        scrollPane.setViewportView(panelWrapper);
         
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        setContentPane(panel);
+        setContentPane(scrollPane);
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
         
-        JLabel complete = ui.getLogo("Completed Level " + levelCount);
-        JButton next = ui.getTopButton("Next Level [Space]");
-        JButton menu = ui.getMidButton("Main Menu [Esc]");
-        panel.add(complete);
-        panel.add(next);
-        panel.add(menu);
-        panel.setLayout(null);
-        panel.setBackground(Color.BLACK);
-        panel.setVisible(true);
-        
-        addKeyBinding(panel, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
-            increaseLevel();
-            thread.start();
-            
-        });
-        
-        next.addActionListener((ActionEvent e) -> {
-            increaseLevel();
-            thread.start();
-        });
+        scrollPane.setVisible(true);
         
         addKeyBinding(panel, KeyEvent.VK_ESCAPE, "Menu", false, (evt) -> {runMenu();});
-        menu.addActionListener((e) -> {runMenu();});
+        
     }
     
     public void increaseLevel() {

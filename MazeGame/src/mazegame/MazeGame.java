@@ -35,7 +35,7 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private final int tileWH = 50;
+    private final int tileWH = 100;
     private final int tileBorder = 0;
     private Renderer renderer;
     private  JPanel pane = new JPanel(new GridLayout());
@@ -43,7 +43,7 @@ public class MazeGame extends JFrame implements Runnable {
     private Thread thread;
     private int rowColAmount;
     private int movementSpeed = 5;
-    private int fps = 60;
+    private int fps = 30;
     private AssetManager am;
     private String stateChange;
     private String[] levelData;
@@ -58,6 +58,7 @@ public class MazeGame extends JFrame implements Runnable {
         am = new AssetManager();
         load(false);
         setCurrentLevel(-1);
+        
     }
     
     public void setCurrentLevel(int level) {
@@ -66,13 +67,17 @@ public class MazeGame extends JFrame implements Runnable {
                 String []lineWords = levelData[i].split(",");
                 if (lineWords[1].equalsIgnoreCase("incomplete")){
                     levelCount = i;
+                    //System.out.println("play rowcol" + rowColAmount);
                     rowColAmount += ((i-1)*2);
                     break;
                 }
             }
         } else {
             levelCount = level;
-            rowColAmount += ((level-1)*2);
+            //System.out.println("select rowcol" + rowColAmount);
+            int rc = 10 + ((level-1)*2);
+            if (rc % 2 == 0) {rc+=1;}
+            rowColAmount = rc;
         }
     }
     

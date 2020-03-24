@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -116,12 +115,10 @@ public class AssetManager {
     }
     
     public void saveLevelData(String []lines) throws IOException {
-//        File file = new File("./src/mazegame/assets/");
-//        for(String fileNames : file.list()) System.out.println(fileNames);
-
+        
         BufferedWriter writer = new BufferedWriter(new FileWriter(levelDataFile));
         
-        //Level Number | Completed | Best Time
+        // Level Number | Completed | Best Time
         for(String line : lines) {
             writer.write(line);
             writer.newLine();
@@ -136,7 +133,7 @@ public class AssetManager {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         int lines = 0;
         
-        //Level Number | Completed | Best Time
+        // Level Number | Completed | Best Time
         while(reader.readLine() != null) {lines++;}
         reader.close();
         

@@ -6,19 +6,17 @@ import java.awt.Graphics;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
-import javax.swing.BoxLayout;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -26,8 +24,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
-import javax.swing.ScrollPaneConstants;
-import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 
@@ -39,7 +35,7 @@ public class MazeGame extends JFrame implements Runnable {
     private boolean gameInProgress = false;
     private Player player;
     private final UI ui;
-    private final int tileWH = 150;
+    private final int tileWH = 50;
     private final int tileBorder = 0;
     private Renderer renderer;
     private  JPanel pane = new JPanel(new GridLayout());
@@ -47,7 +43,7 @@ public class MazeGame extends JFrame implements Runnable {
     private Thread thread;
     private int rowColAmount;
     private int movementSpeed = 5;
-    private int fps = 30;
+    private int fps = 60;
     private AssetManager am;
     private String stateChange;
     private String[] levelData;
@@ -60,13 +56,24 @@ public class MazeGame extends JFrame implements Runnable {
         if (rowColAmount % 2 == 0) {rowColAmount+=1;}
         this.rowColAmount = rowColAmount;
         am = new AssetManager();
-        
-        try {
-            levelData = am.loadLevelData(false);
-            System.out.println("Game Loaded.");
-        } catch (IOException ex) {
-            Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+        load(false);
+        setCurrentLevel(-1);
+    }
+    
+    public void setCurrentLevel(int level) {
+        if (level == -1){
+            for (int i = 1; i < levelData.length; i++) {
+                String []lineWords = levelData[i].split(",");
+                if (lineWords[1].equalsIgnoreCase("incomplete")){
+                    levelCount = i;
+                    rowColAmount += ((i-1)*2);
+                    break;
+                }
+            }
+        } else {
+            levelCount = level;
+            rowColAmount += ((level-1)*2);
+        }
     }
     
     public void save() {
@@ -76,6 +83,15 @@ public class MazeGame extends JFrame implements Runnable {
         } catch (IOException ex) {
             System.out.println("File not found.");
         }
+    }
+    
+    public void load(boolean reset) {
+        try {
+            levelData = am.loadLevelData(reset);
+            System.out.println("Game Loaded.");
+        } catch (IOException ex) {
+            Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
+        } 
     }
     
     public void setUpFrame() {
@@ -214,10 +230,7 @@ public class MazeGame extends JFrame implements Runnable {
         } else if (stateChange.equalsIgnoreCase("Next Level")){
             double timeInMs = renderer.getTimeTaken();
             runCompletionScreen(timeInMs);
-        }
-        
-        System.out.println("State change reason not recognised.");
-        
+        } 
     }
     
     public void runGameOverScreen() {
@@ -253,15 +266,6 @@ public class MazeGame extends JFrame implements Runnable {
         
         addKeyBinding(panel, KeyEvent.VK_ESCAPE, "Menu", false, (evt) -> {runMenu();});
         menu.addActionListener((e) -> {
-//            dispose();
-//            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
-//            Thread newGameThread = new Thread(newGame);
-//            newGame.setGameState(false,"");
-//            newGame.runMenu();
-//            newGameThread.start();
-            //setGameState(false,"");
-            
-            //thread.start();
             
             runMenu();
             
@@ -324,44 +328,15 @@ public class MazeGame extends JFrame implements Runnable {
     public void runLevelSelection() {
         JPanel panelWrapper = new JPanel(new BorderLayout());
         JPanel panel = new JPanel(new GridLayout(0,1));
-        
+        ArrayList<JPanel> levelPanels = ui.getLevelPanels(levelData, this);
 
-        
-
-        
-        
         panel.setBackground(Color.red);
-//        JButton b1 = ui.getLevelButton("b1");
-//        JButton b2 = ui.getLevelButton("b2");
-//        JButton b3 = ui.getLevelButton("b3");
-//        JButton b4 = ui.getLevelButton("b4");
-//        JButton b5 = ui.getLevelButton("b5");
-//
-//   
-//        panel.add(b1);
-//        panel.add(b2);
-//        panel.add(b3);
-//        panel.add(b4);
-//        panel.add(b5);
+        for (int i = 1; i < levelData.length; i++) {
+            JPanel p = levelPanels.get(i-1);
+            panel.add(p);
+        }
 
-        JPanel p1 = ui.getLevelPanel("1");
-        JPanel p2 = ui.getLevelPanel("2");
-        JPanel p3 = ui.getLevelPanel("3");
-        JPanel p4 = ui.getLevelPanel("4");
-        JPanel p5 = ui.getLevelPanel("5");
-        JPanel p6 = ui.getLevelPanel("6");
-        JPanel p7 = ui.getLevelPanel("7");
-        
-        panel.add(p1);
-        panel.add(p2);
-        panel.add(p3);
-        panel.add(p4);
-        panel.add(p5);
-        panel.add(p6);
-        panel.add(p7);
-
-
-        panelWrapper.add(ui.getLogo("Level Selection"), BorderLayout.NORTH);
+        panelWrapper.add(ui.getLevelHeader(this), BorderLayout.NORTH);
         panelWrapper.add(panel, BorderLayout.SOUTH);
         
         
@@ -382,11 +357,24 @@ public class MazeGame extends JFrame implements Runnable {
         
     }
     
+    public void setLevel(int level) {
+        levelCount += level-1;
+        rowColAmount += (level-1*2);
+    }
+    
     public void increaseLevel() {
-        
         levelCount += 1;
         rowColAmount += 2;
-        setGameState(true, "");
+        setGameState(true, "Increase Level");
+    }
+    
+    public void playSelectedLevel() {
+            dispose();
+            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
+            Thread newGameThread = new Thread(newGame);
+            newGame.levelCount = levelCount;
+            newGame.setGameState(true, "Level Select");
+            newGameThread.start();
     }
     
     public void runMenu() {
@@ -401,8 +389,8 @@ public class MazeGame extends JFrame implements Runnable {
         pane = new JPanel(new GridLayout());
         setUpFrame();
         
-        JButton play = ui.getTopButton("Play [Space]");
-        JButton levels = ui.getMidButton("Levels");
+        JButton play = ui.getTopButton("Continue [Space]");
+        JButton levels = ui.getMidButton("Level Selection");
         JButton quit = ui.getBottomButton("Quit [Esc]");
         JLabel logo = ui.getLogo("Maze");
          

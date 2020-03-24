@@ -27,11 +27,9 @@ public class Renderer {
     private int startingY;
     private final int rowColAmount;
     
-    
     private int keyRemovalTimer;
     private Timer t;
     private Stack<Tile> tileWithKey = new Stack<>();
-    
     
     private String playerMessage = "";
     private int tileWidth;
@@ -43,7 +41,6 @@ public class Renderer {
     private int keysRemaining = (keysRequired-keyCount);
     private AssetManager am;
     private double timeTaken = 0;
-    
     private BufferedImage playerImg = null;
     private Stack <BufferedImage> nextPlayerAnimation = new Stack<>();
 
@@ -123,23 +120,10 @@ public class Renderer {
         startingX = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinX();
         startingY = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
         
-        
         for (Object tp: rb1.getKeyCoords()) {
             tileWithKey.push((Tile)tp);
-        }
-        
-//        System.out.println(rb1.getKeyCoords().size());
-//        tp = (Tile)rb1.getKeyCoords().get(0);
-//        System.out.println(tp.getMinX());
-//        System.out.println(tp.getMinY());
-//        System.out.println(tileArr.length);
-        
-        //tp = tileArr[tp.getMinX()][tp.getMinY()];
-
-        
+        }   
     }
-    
-    
     
     public void centerMaze() {
         Tile centerTile = tileArr[rb1.getStartingX()][rb1.getStartingY()];
@@ -166,13 +150,11 @@ public class Renderer {
     
     public void renderMaze(Graphics g, int tileWH) {
 
-        
         for(int i = 0; i < rowColAmount; i++){    // No of rows/columns
             for (int x = 0; x < rowColAmount; x++) {  // No of rows/columns
                 Tile tile = tileArr[x][i];
                 if((tile.getMinX() > -tileWH) && (tile.getMaxX() < screenWidth+tileWH) && (tile.getMinY() > -tileWH) && (tile.getMaxY() < screenHeight+tileWH)) {
                    
-                    
                     BufferedImage img = getImage(tile.getImageString());
                     if (x%2 == 0) {
                         g.drawImage(getImage("GrassPassage_" + tile.getPassageImageId()), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
@@ -195,9 +177,6 @@ public class Renderer {
                             ((TileExit)tile).setAccessible(true);
                         }
                     }
-                    
-                    //g.setColor(tile.getColor());
-                    //Sg.fillRect(tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize());
                 }
             }
         }
@@ -227,8 +206,6 @@ public class Renderer {
             }
         }
 
-        //String dog = "dogEast";
-        //g.drawImage(dogEast_0, screenWidthHalf, screenHeightHalf, null);
         if (nextPlayerAnimation.size() <= 10) {
             if(dir < 0) {
                     nextPlayerAnimation.push(getImage("dogEast0"));
@@ -247,10 +224,7 @@ public class Renderer {
                     nextPlayerAnimation.push(getImage("dogWest5"));
                     nextPlayerAnimation.push(getImage("dogWest6"));
             }
-        }
-        
-        
-        
+        }  
     }
     
     public void moveMazeY(Graphics g, int numOfRowCol, int dir) {
@@ -310,8 +284,7 @@ public class Renderer {
         } else {
             if (((TilePassage)t).hasItem()) {
                 ((TilePassage)t).setItem(false);
-                keyCount++;
-                
+                keyCount++; 
             }
         }
         return true;
@@ -325,8 +298,6 @@ public class Renderer {
     
     public void renderPlayer(Graphics g, Player p1, int size) {
          
-//        g.setColor(p1.getColor());
-//        g.fillOval(screenWidthHalf, screenHeightHalf, p1.getSize(), p1.getSize());
         g.drawImage(playerImg, screenWidthHalf, screenHeightHalf, size, size, null);
 
         if (displayMessage()) {

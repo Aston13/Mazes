@@ -4,7 +4,7 @@ public class Tilemap {
     
     private final int tileWH;
     private Tile tile;
-    private int yCount, xCount = 0;
+    private int yIndex, xIndex = 0;
     private final int rowColAmount;
     private int xCoord, yCoord = 0;
     private int pyCount, pxCount;
@@ -23,14 +23,14 @@ public class Tilemap {
         for(int y = 0; y < rowColAmount; y+=1) {  // Increments amount of tiles   
             for (int x = 0; x < rowColAmount; x+=1) {
                 tile = new TileWall(tileBorder, xCoord, yCoord);
-                tiles[yCount][xCount] = tile;
-                xCount++;
+                tiles[yIndex][xIndex] = tile;
+                xIndex++;
                 xCoord += tileWH;
                 
             }
             xCoord = 0;
-            xCount = 0;
-            yCount++;
+            xIndex = 0;
+            yIndex++;
             yCoord += tileWH;
         }
         

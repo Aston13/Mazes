@@ -15,7 +15,6 @@ import javax.swing.Timer;
 
 public class Renderer {
     private final BufferedImage view;
-    private final int[] pixels;
     private Tile [][] tileArr;
     private RecursiveBacktracker rb1;
     private final int screenWidth;
@@ -41,12 +40,9 @@ public class Renderer {
     private int keysRemaining = (keysRequired-keyCount);
     private AssetManager am;
     private double timeTaken = 0;
+    private double timeUntilKeyRemoval = 5.00;
     private BufferedImage playerImg = null;
     private Stack <BufferedImage> nextPlayerAnimation = new Stack<>();
-
-    public int[] getPixels() {
-        return pixels;
-    }
     
     public Renderer(int screenHeight, int screenWidth, int rowColAmount, int tileWH, AssetManager am, MazeGame game)  {
         this.screenWidth = screenWidth;
@@ -69,28 +65,27 @@ public class Renderer {
         // Create a BufferedImage that represents the view
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
 
-        // Create an array for pixels
-        pixels = ((DataBufferInt) view.getRaster().getDataBuffer()).getData();
-        
-        t = new Timer(10, new ActionListener(){
+            t = new Timer(10, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 
-                timeTaken+= 0.01;
+                timeTaken += 0.01;
+                timeUntilKeyRemoval = timeUntilKeyRemoval - 0.01;
                 
-                if (timeTaken%5 == 0) {
+                if (timeUntilKeyRemoval <= 0) {
                     keyRemovalTimer--;
-
+                    System.out.println("Key Removed");
                     TilePassage tp = (TilePassage)tileWithKey.pop();
                     tp.setItem(false);
+                    
 
                     if (tileWithKey.size() < (keysRequired-keyCount)) {
-                        //Gamer over;
+                        // Game over;
                         System.out.println("Game over");
                         game.setGameState(false, "Level Failed");
                         t.stop();
-
                     }
+                    timeUntilKeyRemoval = 5.00;
                 }
             } 
         }); 

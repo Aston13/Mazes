@@ -210,7 +210,6 @@ public class MazeGame extends JFrame implements Runnable {
             
             while(changeInSeconds >= 1) {
                 update();
-                
                 changeInSeconds = 0;
             }
             

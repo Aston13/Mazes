@@ -367,9 +367,11 @@ public class MazeGame extends JFrame implements Runnable {
     }
     
     public void increaseLevel() {
-        levelCount += 1;
-        rowColAmount += 2;
-        setGameState(true, "Increase Level");
+        if (levelCount < 30) {
+            levelCount += 1;
+            rowColAmount += 2;
+            setGameState(true, "Increase Level");   
+        }
     }
     
     public void playSelectedLevel() {

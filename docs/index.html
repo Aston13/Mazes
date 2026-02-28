@@ -141,8 +141,9 @@
 
                 overlay.querySelector('p').textContent = 'Starting game...';
 
-                // CheerpJ maps /app/ to the page origin
-                const exitCode = await cheerpjRunJar('/app/MazeGame.jar');
+                // Use absolute URL because GitHub Pages serves under /Mazes/ subpath
+                const jarUrl = new URL('MazeGame.jar', document.baseURI).href;
+                const exitCode = await cheerpjRunJar(jarUrl);
                 console.log('CheerpJ exit code:', exitCode);
             } catch (err) {
                 const msg = err?.message || String(err);

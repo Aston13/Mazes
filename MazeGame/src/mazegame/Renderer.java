@@ -254,6 +254,28 @@ public class Renderer {
     g.setFont(new Font("Serif", Font.PLAIN, HUD_FONT_SIZE));
     g.drawString("Keys: " + keyCount + "/" + keysRequired, 25, 20);
     g.drawString("Level: " + level, 25, 40);
+
+    // Countdown timer until next key removal (right-aligned)
+    DecimalFormat df = new DecimalFormat("0.0");
+    String countdown = "Next key loss: " + df.format(Math.max(0, timeUntilKeyRemoval)) + "s";
+    FontMetrics fm = g.getFontMetrics();
+    int countdownX = screenWidth - fm.stringWidth(countdown) - 25;
+
+    // Colour shifts from white → yellow → red as time runs out
+    double ratio = timeUntilKeyRemoval / KEY_REMOVAL_INTERVAL;
+    if (ratio < 0.3) {
+      g.setColor(Color.RED);
+    } else if (ratio < 0.6) {
+      g.setColor(Color.YELLOW);
+    } else {
+      g.setColor(Color.WHITE);
+    }
+    g.drawString(countdown, countdownX, 20);
+
+    // Elapsed time
+    g.setColor(Color.WHITE);
+    String elapsed = "Time: " + df.format(timeTaken) + "s";
+    g.drawString(elapsed, countdownX, 40);
   }
 
   /**

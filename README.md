@@ -44,6 +44,8 @@ cd MazeGame
 | `gradlew run` | Launch the game |
 | `gradlew test` | Run JUnit 5 tests only |
 | `gradlew jar` | Build the JAR (output: `build/libs/MazeGame-1.0.0.jar`) |
+| `gradlew browserJar` | Build Java-8 JAR for CheerpJ browser play |
+| `gradlew runBrowser` | Build browser JAR, copy to `docs/`, and start local HTTP server |
 | `gradlew clean` | Delete all build artifacts |
 
 ## Running the JAR Directly
@@ -135,16 +137,9 @@ The game runs in the browser via [CheerpJ 3.0](https://cheerpj.com/), which requ
 ./gradlew browserJar
 # Output: build/libs/MazeGame-browser-1.0.0.jar
 
-# Copy to docs/ for GitHub Pages
-cp build/libs/MazeGame-browser-*.jar ../docs/MazeGame.jar
-```
-
-To test locally, serve the `docs/` folder over HTTP (CheerpJ requires HTTP, not `file://`):
-
-```bash
-cd ../docs
-python -m http.server 8080
-# Open http://localhost:8080 in your browser
+# One-step local testing: builds JAR, copies to docs/, starts HTTP server
+./gradlew runBrowser
+# Open http://localhost:8080 in your browser (Ctrl+C to stop)
 ```
 
 ### Releasing

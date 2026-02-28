@@ -29,6 +29,9 @@ import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
 import java.awt.KeyboardFocusManager;
 import java.awt.KeyEventDispatcher;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Rectangle;
 
 public class MazeGame extends JFrame implements Runnable {
     
@@ -37,7 +40,9 @@ public class MazeGame extends JFrame implements Runnable {
     private final int windowHeight;
     private boolean gameInProgress = false;
     private volatile boolean paused = false;
-    private JPanel pauseOverlay = null;
+    private volatile String pauseAction = null; // "resume" or "menu"
+    private Rectangle resumeBtn = null;
+    private Rectangle menuBtn = null;
     private Player player;
     private final UI ui;
     private final int tileWH = 100;
@@ -238,58 +243,57 @@ public class MazeGame extends JFrame implements Runnable {
         player.setMoveE(false);
         player.setMoveS(false);
         player.setMoveW(false);
+    }
 
-        // Wait for the game loop to see paused=true and stop rendering
-        try { Thread.sleep(60); } catch (InterruptedException ignored) {}
+    private void renderPauseScreen() {
+        Graphics g = getGameGraphics();
+        if (g == null) return;
 
-        pauseOverlay = new JPanel(null);
-        pauseOverlay.setBackground(Color.BLACK);
-        pauseOverlay.setPreferredSize(new Dimension(windowWidth, windowHeight));
+        // Dark overlay
+        g.setColor(new Color(0, 0, 0, 200));
+        g.fillRect(0, 0, windowWidth, windowHeight);
 
-        JButton resume = ui.getTopButton("Resume [Space]");
-        JButton menu = ui.getMidButton("Main Menu");
-        JLabel title = ui.getLogo("Paused");
-        pauseOverlay.add(title);
-        pauseOverlay.add(resume);
-        pauseOverlay.add(menu);
+        // Title
+        g.setColor(Color.CYAN);
+        g.setFont(new Font("Dialog", Font.PLAIN, 40));
+        FontMetrics fmTitle = g.getFontMetrics();
+        String title = "Paused";
+        g.drawString(title, (windowWidth - fmTitle.stringWidth(title)) / 2, windowHeight / 4);
 
-        addKeyBinding(pauseOverlay, KeyEvent.VK_SPACE, "Resume", false, (evt) -> {
-            resumeGame();
-        });
-        addKeyBinding(pauseOverlay, KeyEvent.VK_ESCAPE, "ResumeEsc", false, (evt) -> {
-            resumeGame();
-        });
+        // Buttons
+        g.setFont(new Font("Dialog", Font.PLAIN, 20));
+        FontMetrics fm = g.getFontMetrics();
 
-        resume.addActionListener((e) -> resumeGame());
-        menu.addActionListener((e) -> {
-            removePauseOverlay();
-            setGameState(false, "Menu");
-        });
+        int btnW = 200, btnH = 45;
+        int btnX = (windowWidth - btnW) / 2;
 
-        // Swap content pane — game pane (with Canvas) stays intact
-        setContentPane(pauseOverlay);
-        revalidate();
-        repaint();
-        pauseOverlay.requestFocusInWindow();
+        // Resume button
+        int resumeY = windowHeight / 2 - 40;
+        resumeBtn = new Rectangle(btnX, resumeY, btnW, btnH);
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
+        g.setColor(Color.WHITE);
+        g.drawRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
+        String rText = "Resume [Space/Esc]";
+        g.drawString(rText, btnX + (btnW - fm.stringWidth(rText)) / 2, resumeY + 30);
+
+        // Main Menu button
+        int menuY = windowHeight / 2 + 30;
+        menuBtn = new Rectangle(btnX, menuY, btnW, btnH);
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
+        g.setColor(Color.WHITE);
+        g.drawRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
+        String mText = "Main Menu";
+        g.drawString(mText, btnX + (btnW - fm.stringWidth(mText)) / 2, menuY + 30);
+
+        g.dispose();
+        showBuffer();
     }
 
     private void resumeGame() {
-        // Restore game pane as content pane first, before unpausing
-        setContentPane(pane);
-        revalidate();
-        repaint();
         paused = false;
         renderer.beginTimer();
-        gameView.requestFocusInWindow();
-    }
-
-    private void removePauseOverlay() {
-        if (pauseOverlay != null) {
-            setContentPane(pane);
-            revalidate();
-            repaint();
-            pauseOverlay = null;
-        }
     }
     
     
@@ -303,12 +307,16 @@ public class MazeGame extends JFrame implements Runnable {
       
         setNESWKeys(pane);
 
-        // Global ESC dispatcher — works even when AWT Canvas has focus (CheerpJ)
+        // Global key dispatcher — handles ESC/Space for pause in all focus states
         KeyEventDispatcher escDispatcher = e -> {
-            if (e.getID() == KeyEvent.KEY_PRESSED
-                    && e.getKeyCode() == KeyEvent.VK_ESCAPE
-                    && gameInProgress && !paused) {
+            if (e.getID() != KeyEvent.KEY_PRESSED) return false;
+            int key = e.getKeyCode();
+            if (gameInProgress && !paused && key == KeyEvent.VK_ESCAPE) {
                 showPauseMenu();
+                return true;
+            }
+            if (paused && (key == KeyEvent.VK_SPACE || key == KeyEvent.VK_ESCAPE)) {
+                pauseAction = "resume";
                 return true;
             }
             return false;
@@ -319,6 +327,20 @@ public class MazeGame extends JFrame implements Runnable {
         setUpFrame();
         pane.add(gameView);
         gameView.setFocusable(true);
+
+        // Mouse click handler for pause menu buttons
+        gameView.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (!paused) return;
+                if (resumeBtn != null && resumeBtn.contains(e.getPoint())) {
+                    pauseAction = "resume";
+                } else if (menuBtn != null && menuBtn.contains(e.getPoint())) {
+                    pauseAction = "menu";
+                }
+            }
+        });
+
         try {
             gameView.createBufferStrategy(2);
         } catch (Exception e) {
@@ -334,7 +356,18 @@ public class MazeGame extends JFrame implements Runnable {
 
         while(getGameState()) {
             if (paused) {
-                try { Thread.sleep(50); } catch (InterruptedException ie) { }
+                // Check for pause menu actions
+                String action = pauseAction;
+                if ("resume".equals(action)) {
+                    pauseAction = null;
+                    resumeGame();
+                } else if ("menu".equals(action)) {
+                    pauseAction = null;
+                    setGameState(false, "Menu");
+                } else {
+                    renderPauseScreen();
+                    try { Thread.sleep(50); } catch (InterruptedException ie) { }
+                }
                 lastTime = System.nanoTime();
                 continue;
             }
@@ -376,7 +409,6 @@ public class MazeGame extends JFrame implements Runnable {
             double timeInMs = renderer.getTimeTaken();
             runCompletionScreen(timeInMs);
         } else if (stateChange.equalsIgnoreCase("Menu")){
-            removePauseOverlay();
             runMenu();
         } 
     }

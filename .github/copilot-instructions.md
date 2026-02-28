@@ -1,7 +1,7 @@
 # Copilot Instructions
 
 ## Project Overview
-Java Swing/AWT maze game with procedural maze generation. Single `mazegame` package, built with Gradle.
+Wesley's Way Out — a Java Swing/AWT maze game with procedural maze generation. Single `mazegame` package, built with Gradle.
 
 ## Source Layout (non-standard)
 - Source: `MazeGame/src/mazegame/` (not `src/main/java/`)

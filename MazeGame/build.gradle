@@ -49,6 +49,7 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    jvmArgs '-Djava.awt.headless=true'
 }
 
 jar {

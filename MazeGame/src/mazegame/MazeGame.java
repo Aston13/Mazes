@@ -512,13 +512,28 @@ public class MazeGame extends JFrame implements Runnable {
         
         JButton play = ui.getTopButton("Continue [Space]");
         JButton levels = ui.getMidButton("Level Selection");
-        JButton quit = ui.getBottomButton("Quit [Esc]");
         JLabel logo = ui.getLogo("Wesley's Way Out");
          
         pane.add(logo);
         pane.add(play);
         pane.add(levels);
-        pane.add(quit);
+
+        // Only show Quit on desktop (not in CheerpJ browser environment)
+        boolean inBrowser = false;
+        try {
+            Class.forName("com.leaningtech.client.Global");
+            inBrowser = true;
+        } catch (ClassNotFoundException ignored) {}
+
+        if (!inBrowser) {
+            JButton quit = ui.getBottomButton("Quit [Esc]");
+            pane.add(quit);
+            quit.addActionListener((e) -> {dispose();});
+            addKeyBinding(pane, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
+                dispose();
+            });
+        }
+
         pane.setLayout(null);
         pane.setBackground(Color.BLACK);
 
@@ -528,10 +543,6 @@ public class MazeGame extends JFrame implements Runnable {
             Thread newGameThread = new Thread(newGame);
             newGame.setGameState(true, "");
             newGameThread.start();
-        });
-        
-        addKeyBinding(pane, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
-            dispose();
         });
         
         levels.addActionListener((e) -> {
@@ -545,8 +556,6 @@ public class MazeGame extends JFrame implements Runnable {
             newGame.setGameState(true, "Next Level");
             newGameThread.start();
         });
-        
-        quit.addActionListener((e) -> {dispose();});
     }
     
     public void setNESWKeys(JComponent comp) {

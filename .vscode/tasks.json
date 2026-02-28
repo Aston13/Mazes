@@ -1,0 +1,50 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "./gradlew build",
+            "group": { "kind": "build", "isDefault": true },
+            "options": { "cwd": "${workspaceFolder}/MazeGame" },
+            "problemMatcher": ["$javac"],
+            "detail": "Compile sources + run tests (Java 21)"
+        },
+        {
+            "label": "Test",
+            "type": "shell",
+            "command": "./gradlew test",
+            "group": "test",
+            "options": { "cwd": "${workspaceFolder}/MazeGame" },
+            "problemMatcher": ["$javac"],
+            "detail": "Run JUnit 5 tests"
+        },
+        {
+            "label": "Run Game",
+            "type": "shell",
+            "command": "./gradlew run",
+            "options": { "cwd": "${workspaceFolder}/MazeGame" },
+            "problemMatcher": [],
+            "detail": "Launch the desktop game"
+        },
+        {
+            "label": "Build Browser JAR",
+            "type": "shell",
+            "command": "./gradlew browserJar",
+            "options": { "cwd": "${workspaceFolder}/MazeGame" },
+            "problemMatcher": ["$javac"],
+            "detail": "Compile Java 8 bytecode JAR for CheerpJ"
+        },
+        {
+            "label": "Deploy Browser JAR",
+            "type": "shell",
+            "command": "./gradlew browserJar && cp build/libs/MazeGame-browser-1.0.0.jar ../docs/MazeGame.jar",
+            "options": { "cwd": "${workspaceFolder}/MazeGame" },
+            "problemMatcher": [],
+            "detail": "Build browser JAR and copy to docs/ for GitHub Pages",
+            "windows": {
+                "command": ".\\gradlew.bat browserJar; Copy-Item build\\libs\\MazeGame-browser-1.0.0.jar ..\\docs\\MazeGame.jar -Force"
+            }
+        }
+    ]
+}

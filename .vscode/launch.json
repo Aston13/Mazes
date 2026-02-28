@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run Game (Desktop)",
+            "request": "launch",
+            "mainClass": "mazegame.Start",
+            "projectName": "MazeGame",
+            "cwd": "${workspaceFolder}/MazeGame"
+        },
+        {
+            "type": "java",
+            "name": "Debug Game (Desktop)",
+            "request": "launch",
+            "mainClass": "mazegame.Start",
+            "projectName": "MazeGame",
+            "cwd": "${workspaceFolder}/MazeGame",
+            "console": "integratedTerminal"
+        }
+    ]
+}

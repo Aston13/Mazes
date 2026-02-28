@@ -28,8 +28,14 @@
 # IDE
 .idea/
 *.iml
-.vscode/
 *.swp
+
+# VS Code — ignore user-specific files but track shared config
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
 
 # OS
 Thumbs.db

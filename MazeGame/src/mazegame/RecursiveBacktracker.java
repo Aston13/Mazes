@@ -357,6 +357,7 @@ public class RecursiveBacktracker extends Tilemap {
           newXPos = x;
           carvePassage(newXPos, newYPos);
         }
+        break;
 
       // East
       case 2:
@@ -376,6 +377,7 @@ public class RecursiveBacktracker extends Tilemap {
           newXPos = x + 2;
           carvePassage(newXPos, newYPos);
         }
+        break;
 
       // South
       case 3:
@@ -395,6 +397,7 @@ public class RecursiveBacktracker extends Tilemap {
           newXPos = x;
           carvePassage(newXPos, newYPos);
         }
+        break;
 
       // West
       case 4:

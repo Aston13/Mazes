@@ -103,12 +103,10 @@ public class Renderer {
 
               if (timeUntilKeyRemoval <= 0) {
                 keyRemovalTimer--;
-                System.out.println("Key Removed");
                 TilePassage removedKey = (TilePassage) keysOnMap.pop();
                 removedKey.setItem(false);
 
                 if (keysOnMap.size() < (keysRequired - keyCount)) {
-                  System.out.println("Game over");
                   game.setGameState(false, "Level Failed");
                   gameTimer.stop();
                 }
@@ -275,7 +273,7 @@ public class Renderer {
 
     if (nextPlayerAnimation.size() <= MAX_ANIMATION_STACK_SIZE) {
       String direction = (dir < 0) ? "dogEast" : "dogWest";
-      int frameCount = (dir < 0) ? 7 : 7;
+      int frameCount = 7;
       for (int i = 0; i < frameCount; i++) {
         nextPlayerAnimation.push(getImage(direction + i));
       }
@@ -299,7 +297,7 @@ public class Renderer {
 
     if (nextPlayerAnimation.size() <= MAX_ANIMATION_STACK_SIZE) {
       String direction = (dir > 0) ? "dogNorth" : "dogSouth";
-      int frameCount = (dir > 0) ? 6 : 6;
+      int frameCount = 6;
       for (int i = 0; i < frameCount; i++) {
         nextPlayerAnimation.push(getImage(direction + i));
       }

@@ -98,3 +98,32 @@ tasks.register('browserJar', Jar) {
     }
     destinationDirectory = layout.buildDirectory.dir('libs')
 }
+
+// --- Local browser testing ---
+// Builds the browser JAR, copies it to docs/, and starts a local HTTP server.
+// Usage: ./gradlew runBrowser
+tasks.register('runBrowser') {
+    description = 'Build browser JAR, copy to docs/, and open a local HTTP server for CheerpJ testing'
+    dependsOn 'browserJar'
+    doLast {
+        def jarFile = tasks.named('browserJar').get().archiveFile.get().asFile
+        def docsDir = file("${rootProject.projectDir}/docs")
+        copy {
+            from jarFile
+            into docsDir
+            rename { 'MazeGame.jar' }
+        }
+        println ""
+        println "Browser JAR copied to docs/MazeGame.jar"
+        println "Starting local server at http://localhost:8080"
+        println "Press Ctrl+C to stop."
+        println ""
+        // Start Python HTTP server from the docs directory
+        def pb = new ProcessBuilder('python', '-m', 'http.server', '8080')
+        pb.directory(docsDir)
+        pb.inheritIO()
+        def process = pb.start()
+        // Keep Gradle alive until the server is stopped with Ctrl+C
+        process.waitFor()
+    }
+}

@@ -60,6 +60,7 @@ public class MazeGame extends JFrame implements Runnable {
     private volatile boolean paused;
     private volatile String pauseAction;
     private Rectangle resumeBtn;
+    private Rectangle restartBtn;
     private Rectangle menuBtn;
     private Player player;
     private Renderer renderer;
@@ -297,9 +298,10 @@ public class MazeGame extends JFrame implements Runnable {
         FontMetrics fm = g.getFontMetrics();
 
         int btnX = (windowWidth - PAUSE_BUTTON_WIDTH) / 2;
+        int btnGap = PAUSE_BUTTON_HEIGHT + 15;
 
         // Resume button
-        int resumeY = windowHeight / 2 - 40;
+        int resumeY = windowHeight / 2 - PAUSE_BUTTON_HEIGHT - btnGap / 2;
         resumeBtn = new Rectangle(btnX, resumeY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
         g.setColor(Color.DARK_GRAY);
         g.fillRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
@@ -308,8 +310,18 @@ public class MazeGame extends JFrame implements Runnable {
         String rText = "Resume [Space/Esc]";
         g.drawString(rText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rText)) / 2, resumeY + 30);
 
+        // Restart Level button
+        int restartY = resumeY + btnGap;
+        restartBtn = new Rectangle(btnX, restartY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
+        g.setColor(Color.WHITE);
+        g.drawRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
+        String rstText = "Restart Level [R]";
+        g.drawString(rstText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rstText)) / 2, restartY + 30);
+
         // Main Menu button
-        int menuY = windowHeight / 2 + 30;
+        int menuY = restartY + btnGap;
         menuBtn = new Rectangle(btnX, menuY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
         g.setColor(Color.DARK_GRAY);
         g.fillRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
@@ -350,6 +362,10 @@ public class MazeGame extends JFrame implements Runnable {
                 pauseAction = "resume";
                 return true;
             }
+            if (paused && key == KeyEvent.VK_R) {
+                pauseAction = "restart";
+                return true;
+            }
             return false;
         };
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
@@ -366,6 +382,8 @@ public class MazeGame extends JFrame implements Runnable {
                 if (!paused) return;
                 if (resumeBtn != null && resumeBtn.contains(e.getPoint())) {
                     pauseAction = "resume";
+                } else if (restartBtn != null && restartBtn.contains(e.getPoint())) {
+                    pauseAction = "restart";
                 } else if (menuBtn != null && menuBtn.contains(e.getPoint())) {
                     pauseAction = "menu";
                 }
@@ -392,6 +410,9 @@ public class MazeGame extends JFrame implements Runnable {
                 if ("resume".equals(action)) {
                     pauseAction = null;
                     resumeGame();
+                } else if ("restart".equals(action)) {
+                    pauseAction = null;
+                    setGameState(false, "Restart");
                 } else if ("menu".equals(action)) {
                     pauseAction = null;
                     setGameState(false, "Menu");
@@ -446,6 +467,10 @@ public class MazeGame extends JFrame implements Runnable {
         } else if (stateChange.equalsIgnoreCase("Next Level")){
             double timeInMs = renderer.getTimeTaken();
             runCompletionScreen(timeInMs);
+        } else if (stateChange.equalsIgnoreCase("Restart")){
+            thread = new Thread(this);
+            setGameState(true, "");
+            thread.start();
         } else if (stateChange.equalsIgnoreCase("Menu")){
             runMenu();
         }
@@ -666,6 +691,17 @@ public class MazeGame extends JFrame implements Runnable {
         addKeyBinding(comp, KeyEvent.VK_RIGHT, "Stop East", true, (evt) -> {player.setMoveE(false);});
         addKeyBinding(comp, KeyEvent.VK_DOWN, "Stop South", true, (evt) -> {player.setMoveS(false);});
         addKeyBinding(comp, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {player.setMoveW(false);});
+
+        // WASD bindings (mirror arrow keys)
+        addKeyBinding(comp, KeyEvent.VK_W, "Move North WASD", false, (evt) -> {player.setMoveN(true);});
+        addKeyBinding(comp, KeyEvent.VK_D, "Move East WASD", false, (evt) -> {player.setMoveE(true);});
+        addKeyBinding(comp, KeyEvent.VK_S, "Move South WASD", false, (evt) -> {player.setMoveS(true);});
+        addKeyBinding(comp, KeyEvent.VK_A, "Move West WASD", false, (evt) -> {player.setMoveW(true);});
+
+        addKeyBinding(comp, KeyEvent.VK_W, "Stop North WASD", true, (evt) -> {player.setMoveN(false);});
+        addKeyBinding(comp, KeyEvent.VK_D, "Stop East WASD", true, (evt) -> {player.setMoveE(false);});
+        addKeyBinding(comp, KeyEvent.VK_S, "Stop South WASD", true, (evt) -> {player.setMoveS(false);});
+        addKeyBinding(comp, KeyEvent.VK_A, "Stop West WASD", true, (evt) -> {player.setMoveW(false);});
 
         addKeyBinding(comp, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
             if (!paused) {

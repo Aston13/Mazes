@@ -1,0 +1,27 @@
+{
+    // Java
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.project.sourcePaths": ["MazeGame/src"],
+    "java.project.referencedLibraries": [],
+    "java.compile.nullAnalysis.mode": "automatic",
+
+    // Editor defaults
+    "files.defaultLanguage": "markdown",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+
+    // Hide noisy directories in explorer & search
+    "files.exclude": {
+        "**/MazeGame/build": true,
+        "**/MazeGame/.gradle": true,
+        "**/.gradle": true
+    },
+    "search.exclude": {
+        "**/MazeGame/build": true,
+        "**/MazeGame/.gradle": true,
+        "**/MazeGame/gradle/wrapper": true
+    }
+}

@@ -20,6 +20,15 @@
 
 ## Game Engine / Architecture
 
+- [ ] **General code refactor across all classes.** Clean up the entire codebase for readability and maintainability:
+  - Remove dead/commented-out code and unused imports across all files
+  - Rename vague variables (e.g. `pane`, `am`, `rc`, `halfP`, `fullP`) to descriptive names
+  - Extract magic numbers into named constants (e.g. `650` window size, `100` tileWH, `5` movementSpeed, `30` fps, `180` overlay alpha)
+  - Add Javadoc to all public classes and methods — currently almost none exist
+  - Replace raw arrays (e.g. `int[]` for tile positions, `String[]` for level data) with records or typed classes
+  - Make fields `private final` wherever possible; several fields like `am`, `movementSpeed`, `fps` are package-private and mutable but never reassigned
+  - Use consistent code style: brace placement, spacing, blank lines (currently inconsistent)
+
 - [ ] **Decouple game loop from JFrame.** `MazeGame` is a god-class (~623 lines) that mixes JFrame lifecycle, game loop, rendering, input, menus, and level management. Extract:
   - `GameLoop` — owns the `while(getGameState())` loop, timing, pause logic
   - `MenuManager` — owns `runMenu()`, `runLevelSelection()`, `runGameOverScreen()`, `runCompletionScreen()`
@@ -52,6 +61,13 @@
 
 ## Developer Experience
 
+- [ ] **Improve VS Code workspace settings.** Expand `.vscode/settings.json` (currently minimal) with:
+  - Java source paths and test config for the Extension Pack for Java
+  - Exclude patterns for build output (`**/build/**`, `**/nbproject/**`)
+  - Recommended formatter settings (tab size, trim trailing whitespace, insert final newline)
+  - Debug launch configuration in `.vscode/launch.json` for running/debugging the desktop game
+  - Task definitions in `.vscode/tasks.json` for `build`, `test`, `run`, and `browserJar`
+- [ ] **Add a `.vscode/extensions.json`** with recommended extensions: Extension Pack for Java, Gradle for Java, EditorConfig, GitLens.
 - [ ] **Add a `./gradlew runBrowser` task** that builds the browser JAR, copies it to `docs/`, and opens a local HTTP server (e.g. Python `http.server`) for testing CheerpJ locally without pushing to GitHub Pages.
-- [ ] **Add EditorConfig or Spotless config** to enforce consistent formatting (indentation, line endings, trailing whitespace) across all contributors.
+- [ ] **Add `.editorconfig`** at the repo root to enforce consistent formatting (4-space indent for Java, 2-space for JSON/YAML, UTF-8, LF line endings, trim trailing whitespace, insert final newline) — works across all editors, not just VS Code.
 - [ ] **Document the dev workflow** in `README.md` or a `CONTRIBUTING.md`: how to build, run, test, and deploy (desktop JAR, browser JAR, GitHub Pages).

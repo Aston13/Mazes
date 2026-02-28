@@ -18,8 +18,6 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
@@ -104,14 +102,12 @@ public class MazeGame extends JFrame implements Runnable {
         String[] lineWords = levelData[i].split(",");
         if (lineWords[1].equalsIgnoreCase("incomplete")) {
           levelCount = i;
-          // System.out.println("play rowcol" + rowColAmount);
           rowColAmount += ((i - 1) * 2);
           break;
         }
       }
     } else {
       levelCount = level;
-      // System.out.println("select rowcol" + rowColAmount);
       int rc = INITIAL_GRID_SIZE + ((level - 1) * 2);
       if (rc % 2 == 0) {
         rc += 1;
@@ -124,9 +120,8 @@ public class MazeGame extends JFrame implements Runnable {
   public void save() {
     try {
       assetManager.saveLevelData(levelData);
-      System.out.println("Game Saved.");
     } catch (IOException ex) {
-      System.out.println("File not found.");
+      System.err.println("Save failed: " + ex.getMessage());
     }
   }
 
@@ -134,9 +129,8 @@ public class MazeGame extends JFrame implements Runnable {
   public void load(boolean reset) {
     try {
       levelData = assetManager.loadLevelData(reset);
-      System.out.println("Game Loaded.");
     } catch (IOException ex) {
-      Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
+      System.err.println("Load failed: " + ex.getMessage());
     }
   }
 
@@ -372,7 +366,7 @@ public class MazeGame extends JFrame implements Runnable {
 
   @Override
   public void run() {
-    Long lastTime = System.nanoTime();
+    long lastTime = System.nanoTime();
     double nanoSecondConversion = 100000000.0 / TARGET_FPS;
     double changeInSeconds = 0;
     double changeInSeconds2 = 0;
@@ -457,7 +451,7 @@ public class MazeGame extends JFrame implements Runnable {
         lastTime = System.nanoTime();
         continue;
       }
-      Long now = System.nanoTime();
+      long now = System.nanoTime();
       changeInSeconds += (now - lastTime) / nanoSecondConversion;
       changeInSeconds2 += (now - lastTime) / nanoSecondConversion;
 
@@ -566,9 +560,6 @@ public class MazeGame extends JFrame implements Runnable {
 
     String[] lineWords = levelData[levelCount].split(",");
     double bestTime = Double.parseDouble(lineWords[2]);
-    System.out.println("best time: " + bestTime);
-    System.out.println("Time taken: " + timeTaken);
-
     if ((timeTaken < bestTime) || (bestTime == -1)) {
 
       // New best time
@@ -635,7 +626,7 @@ public class MazeGame extends JFrame implements Runnable {
     JPanel panel = new JPanel(new GridLayout(0, 1));
     ArrayList<JPanel> levelPanels = ui.getLevelPanels(levelData, this);
 
-    panel.setBackground(Color.red);
+    panel.setBackground(Color.RED);
     for (int i = 1; i < levelData.length; i++) {
       JPanel p = levelPanels.get(i - 1);
       panel.add(p);
@@ -673,7 +664,7 @@ public class MazeGame extends JFrame implements Runnable {
 
   public void setLevel(int level) {
     levelCount += level - 1;
-    rowColAmount += (level - 1 * 2);
+    rowColAmount += ((level - 1) * 2);
   }
 
   public void increaseLevel() {

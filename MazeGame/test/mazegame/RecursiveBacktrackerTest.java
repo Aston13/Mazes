@@ -23,43 +23,21 @@ class RecursiveBacktrackerTest {
   @Test
   @DisplayName("Maze generation produces a non-null tile grid")
   void mazeGenerationProducesGrid() {
-    Tile[][] tiles = null;
-    for (int attempt = 0; attempt < 5; attempt++) {
-      try {
-        int rowColAmount = 11;
-        RecursiveBacktracker rb = new RecursiveBacktracker(100, 0, rowColAmount);
-        tiles = rb.startGeneration();
+    int rowColAmount = 11;
+    RecursiveBacktracker rb = new RecursiveBacktracker(100, 0, rowColAmount);
+    Tile[][] tiles = rb.startGeneration();
 
-        assertNotNull(tiles, "Generated tile grid should not be null");
-        assertEquals(rowColAmount, tiles.length, "Grid should match rowColAmount");
-        assertEquals(rowColAmount, tiles[0].length, "Grid columns should match rowColAmount");
-        break;
-      } catch (ClassCastException e) {
-        if (attempt == 4) {
-          fail("Maze generation failed after 5 attempts: " + e.getMessage());
-        }
-      }
-    }
+    assertNotNull(tiles, "Generated tile grid should not be null");
+    assertEquals(rowColAmount, tiles.length, "Grid should match rowColAmount");
+    assertEquals(rowColAmount, tiles[0].length, "Grid columns should match rowColAmount");
   }
 
   @Test
   @DisplayName("Generated maze contains at least one TilePassage and one TileExit")
   void mazeContainsPassageAndExit() {
-    // Maze generation involves randomness that can occasionally cause
-    // ClassCastException internally. Retry a few times to account for this.
-    Tile[][] tiles = null;
-    for (int attempt = 0; attempt < 5; attempt++) {
-      try {
-        int rowColAmount = 11;
-        RecursiveBacktracker rb = new RecursiveBacktracker(100, 0, rowColAmount);
-        tiles = rb.startGeneration();
-        break;
-      } catch (ClassCastException e) {
-        if (attempt == 4) {
-          fail("Maze generation failed after 5 attempts: " + e.getMessage());
-        }
-      }
-    }
+    int rowColAmount = 11;
+    RecursiveBacktracker rb = new RecursiveBacktracker(100, 0, rowColAmount);
+    Tile[][] tiles = rb.startGeneration();
 
     assertNotNull(tiles);
 
@@ -80,19 +58,10 @@ class RecursiveBacktrackerTest {
   @Test
   @DisplayName("Keys are placed in the maze")
   void keysArePlaced() {
-    for (int attempt = 0; attempt < 5; attempt++) {
-      try {
-        int rowColAmount = 11;
-        RecursiveBacktracker rb = new RecursiveBacktracker(100, 0, rowColAmount);
-        rb.startGeneration();
+    int rowColAmount = 11;
+    RecursiveBacktracker rb = new RecursiveBacktracker(100, 0, rowColAmount);
+    rb.startGeneration();
 
-        assertFalse(rb.getKeyCoords().isEmpty(), "Maze should have keys placed");
-        return;
-      } catch (ClassCastException e) {
-        if (attempt == 4) {
-          fail("Maze generation failed after 5 attempts: " + e.getMessage());
-        }
-      }
-    }
+    assertFalse(rb.getKeyCoords().isEmpty(), "Maze should have keys placed");
   }
 }

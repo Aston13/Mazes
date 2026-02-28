@@ -263,7 +263,11 @@ public class MazeGame extends JFrame implements Runnable {
             setGameState(false, "Menu");
         });
 
-        getLayeredPane().add(pauseOverlay, Integer.valueOf(100));
+        // Hide the heavyweight Canvas so it doesn't paint over the overlay
+        gameView.setVisible(false);
+        pane.add(pauseOverlay);
+        pane.revalidate();
+        pane.repaint();
         pauseOverlay.setVisible(true);
         pauseOverlay.requestFocusInWindow();
     }
@@ -277,9 +281,11 @@ public class MazeGame extends JFrame implements Runnable {
 
     private void removePauseOverlay() {
         if (pauseOverlay != null) {
-            getLayeredPane().remove(pauseOverlay);
-            getLayeredPane().repaint();
+            pane.remove(pauseOverlay);
             pauseOverlay = null;
+            gameView.setVisible(true);
+            pane.revalidate();
+            pane.repaint();
         }
     }
     

@@ -16,8 +16,10 @@
 /MazeGame/build/
 /MazeGame/dist/
 
-# NetBeans private config
-/MazeGame/nbproject/private/
+# Legacy NetBeans (removed — keep ignored)
+/MazeGame/nbproject/
+/MazeGame/build.xml
+/MazeGame/manifest.mf
 
 # Gradle
 .gradle/

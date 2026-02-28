@@ -3,42 +3,50 @@ package mazegame;
 import java.awt.Color;
 import java.util.Random;
 
+/**
+ * An exit tile that can be locked or unlocked. The player must collect
+ * all required keys before the exit becomes accessible.
+ */
 public class TileExit implements Tile {
-    
+
     private final int tileWH;
-    private Color c1;
+    private Color color;
     private int xPos;
     private int yPos;
     private int rowNo;
     private int colNo;
     private boolean accessible;
-    private String imgStr;
-    private String passageId;
+    private String imageString;
+    private final String passageId;
 
-    public TileExit (int tileWH, int xPos, int yPos) {
+    public TileExit(int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
+        this.passageId = String.valueOf(new Random().nextInt(4));
         setAccessible(false);
-        passageId = String.valueOf(new Random().nextInt(4));
     }
-    
+
+    /**
+     * Sets whether this exit is accessible (unlocked).
+     *
+     * @param access true to unlock, false to lock
+     */
     public void setAccessible(boolean access) {
         accessible = access;
-        if (access == true) {
-            imgStr = "Open Exit";
+        if (access) {
+            imageString = "Open Exit";
             setColor(Color.GREEN);
         } else {
-            imgStr = "Locked Exit";
-            
+            imageString = "Locked Exit";
             setColor(Color.RED);
         }
     }
-    
+
     public boolean getAccessible() {
         return accessible;
     }
-    
+
     public int getRowNo() {
         return rowNo;
     }
@@ -57,12 +65,12 @@ public class TileExit implements Tile {
 
     @Override
     public void setColor(Color c) {
-        c1 = c;
+        color = c;
     }
 
     @Override
     public Color getColor() {
-        return c1;
+        return color;
     }
 
     @Override
@@ -102,7 +110,7 @@ public class TileExit implements Tile {
 
     @Override
     public String getImageString() {
-        return imgStr;
+        return imageString;
     }
 
     @Override

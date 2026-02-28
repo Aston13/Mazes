@@ -4,37 +4,49 @@ import java.util.ArrayList;
 import java.util.Stack;
 import java.util.Random;
 
+/**
+ * Generates a maze using the recursive backtracking algorithm.
+ * Extends {@link Tilemap} to build on an initial all-walls grid,
+ * then carves passages, places an exit at the furthest reachable point,
+ * and distributes key items.
+ */
 public class RecursiveBacktracker extends Tilemap {
-    
+
     private int newXPos;
     private int newYPos;
-    private final Tile [][] updateGrid;
-    private Tile [][] exitTileSet;
+    private final Tile[][] updateGrid;
+    private Tile[][] exitTileSet;
     private Stack<Tile> visitedTiles = new Stack<>();
     private TilePassage visited;
     private final int rowColAmount;
-    private int maxSE = 0;
+    private int maxSE;
     private final int minNW;
-    private final int[] directions = {1, 2, 3, 4}; // NESW
+    private final int[] directions = {1, 2, 3, 4}; // N, E, S, W
     private int startingX;
     private int startingY;
     private int exitPathLength;
     private int biggestStack = 1;
     private TileExit furthestReached;
-    private int tileWH;
-    private ArrayList<TilePassage> keyCoords = new ArrayList<TilePassage>();
+    private final int tileWH;
+    private final ArrayList<TilePassage> keyTiles = new ArrayList<>();
 
     
-    public RecursiveBacktracker (int tileWH, int tileBorder, int rowColAmount) {
+    public RecursiveBacktracker(int tileWH, int tileBorder, int rowColAmount) {
         super(tileWH, tileBorder, rowColAmount);
         this.minNW = 1;
         this.rowColAmount = rowColAmount;
-        exitPathLength = 1;
-        updateGrid = super.getTileArr();
-        maxSE = rowColAmount - 2;
         this.tileWH = tileWH;
+        this.exitPathLength = 1;
+        this.updateGrid = super.getTileArr();
+        this.maxSE = rowColAmount - 2;
     }
 
+    /**
+     * Runs the full maze generation pipeline: carve passages, place exit,
+     * distribute keys, and assign wall sprite IDs.
+     *
+     * @return the completed tile grid
+     */
     public Tile[][] startGeneration() {
         startingX = getRandomStartingCoord();
         startingY = getRandomStartingCoord();
@@ -47,9 +59,15 @@ public class RecursiveBacktracker extends Tilemap {
         tiles = addWallIds(tiles);
         return tiles;
     }
-    
-    public Tile[][] addKeys(Tile [][] allTiles) {
-        int keysRequired = (rowColAmount/10)*4;
+
+    /**
+     * Distributes key items randomly across passage tiles.
+     *
+     * @param allTiles the tile grid
+     * @return the grid with keys placed
+     */
+    public Tile[][] addKeys(Tile[][] allTiles) {
+        int keysRequired = (rowColAmount / 10) * 4;
         int keysAdded = 0;
         ArrayList<TilePassage> paths = new ArrayList<>();
         
@@ -65,20 +83,31 @@ public class RecursiveBacktracker extends Tilemap {
             int rndPath = new Random().nextInt(paths.size());
             TilePassage path = paths.get(rndPath);
             
-            if (!path.hasItem()){
+            if (!path.hasItem()) {
                 path.setItem(true);
-                keyCoords.add(path);
+                keyTiles.add(path);
                 keysAdded++;
-            }     
+            }
         }
-       
+
         return allTiles;
     }
-    
-    public ArrayList<TilePassage> getKeyCoords(){
-        return keyCoords;
+
+    /**
+     * Returns the list of passage tiles that contain keys.
+     *
+     * @return key tile coordinates
+     */
+    public ArrayList<TilePassage> getKeyCoords() {
+        return keyTiles;
     }
     
+    /**
+     * Returns a random odd coordinate within the valid maze range.
+     * Maze cells must be at odd indices for the backtracking algorithm.
+     *
+     * @return a random odd coordinate in {@code [1, rowColAmount - 2]}
+     */
     public int getRandomStartingCoord() {
         
         /* Ex. Maze size 0-11 has valid cells 1-9 (and odd numbers only) */
@@ -99,6 +128,14 @@ public class RecursiveBacktracker extends Tilemap {
         return startingY;
     }
     
+    /**
+     * Recursively carves passages through the wall grid.
+     * For each direction (shuffled), attempts to carve a two-cell corridor.
+     *
+     * @param x current x-coordinate
+     * @param y current y-coordinate
+     * @return the updated grid
+     */
     public Tile[][] carvePassage(int x, int y) {
         shuffleDirection(directions);
         for(int i = 0; i < directions.length; i++) {
@@ -366,6 +403,13 @@ public class RecursiveBacktracker extends Tilemap {
         }
     }
     
+    /**
+     * Assigns NESW neighbour bitmask strings to all wall tiles
+     * for sprite selection.
+     *
+     * @param tileSet the tile grid
+     * @return the grid with wall IDs set
+     */
     public Tile[][] addWallIds(Tile[][] tileSet) {
         int neighbours;
         

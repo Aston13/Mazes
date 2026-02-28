@@ -27,6 +27,8 @@ import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
 import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
+import java.awt.KeyboardFocusManager;
+import java.awt.KeyEventDispatcher;
 
 public class MazeGame extends JFrame implements Runnable {
     
@@ -292,8 +294,22 @@ public class MazeGame extends JFrame implements Runnable {
       
         setNESWKeys(pane);
 
+        // Global ESC dispatcher — works even when AWT Canvas has focus (CheerpJ)
+        KeyEventDispatcher escDispatcher = e -> {
+            if (e.getID() == KeyEvent.KEY_PRESSED
+                    && e.getKeyCode() == KeyEvent.VK_ESCAPE
+                    && gameInProgress && !paused) {
+                showPauseMenu();
+                return true;
+            }
+            return false;
+        };
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .addKeyEventDispatcher(escDispatcher);
+
         setUpFrame();
         pane.add(gameView);
+        gameView.setFocusable(true);
         try {
             gameView.createBufferStrategy(2);
         } catch (Exception e) {
@@ -330,6 +346,11 @@ public class MazeGame extends JFrame implements Runnable {
             render();
             lastTime = now;
         }
+
+        // Clean up global ESC dispatcher
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .removeKeyEventDispatcher(escDispatcher);
+
         Graphics gv = gameView.getGraphics();
         if (gv != null) gv.dispose();
         
@@ -519,11 +540,7 @@ public class MazeGame extends JFrame implements Runnable {
         pane.add(levels);
 
         // Only show Quit on desktop (not in CheerpJ browser environment)
-        boolean inBrowser = false;
-        try {
-            Class.forName("com.leaningtech.client.Global");
-            inBrowser = true;
-        } catch (ClassNotFoundException ignored) {}
+        boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
 
         if (!inBrowser) {
             JButton quit = ui.getBottomButton("Quit [Esc]");

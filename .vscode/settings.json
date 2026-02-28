@@ -1,6 +1,6 @@
 {
     // Java
-    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.configuration.updateBuildConfiguration": "automatic",
     "java.project.sourcePaths": ["MazeGame/src"],
     "java.project.referencedLibraries": [],
     "java.compile.nullAnalysis.mode": "automatic",

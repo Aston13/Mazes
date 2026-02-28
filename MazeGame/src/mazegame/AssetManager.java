@@ -17,197 +17,196 @@ import javax.imageio.ImageIO;
 import javax.swing.Timer;
 
 /**
- * Manages loading, caching, and retrieval of all game assets including
- * images, sprite animation frames, and level data persistence.
+ * Manages loading, caching, and retrieval of all game assets including images, sprite animation
+ * frames, and level data persistence.
  */
 public class AssetManager {
 
-    private static final String LEVEL_DATA_RESOURCE = "Assets/LevelData.txt";
-    private static final String RESET_DATA_RESOURCE = "Assets/ResetData.txt";
-    private static final String LEVEL_DATA_FILE = "LevelData.txt";
+  private static final String LEVEL_DATA_RESOURCE = "Assets/LevelData.txt";
+  private static final String RESET_DATA_RESOURCE = "Assets/ResetData.txt";
+  private static final String LEVEL_DATA_FILE = "LevelData.txt";
 
-    private static final int KEY_FRAME_COUNT = 20;
-    private static final int DOG_EAST_FRAME_COUNT = 7;
-    private static final int DOG_WEST_FRAME_COUNT = 7;
-    private static final int DOG_NORTH_FRAME_COUNT = 6;
-    private static final int DOG_SOUTH_FRAME_COUNT = 6;
-    private static final int GRASS_VARIANT_COUNT = 4;
-    private static final int WALL_COMBINATIONS = 16;
-    private static final int ANIMATION_TICK_MS = 100;
+  private static final int KEY_FRAME_COUNT = 20;
+  private static final int DOG_EAST_FRAME_COUNT = 7;
+  private static final int DOG_WEST_FRAME_COUNT = 7;
+  private static final int DOG_NORTH_FRAME_COUNT = 6;
+  private static final int DOG_SOUTH_FRAME_COUNT = 6;
+  private static final int GRASS_VARIANT_COUNT = 4;
+  private static final int WALL_COMBINATIONS = 16;
+  private static final int ANIMATION_TICK_MS = 100;
 
-    private final HashMap<String, BufferedImage> preloadedImages = new HashMap<>();
-    private final Timer animationTimer;
-    private int keyFrameIndex;
+  private final HashMap<String, BufferedImage> preloadedImages = new HashMap<>();
+  private final Timer animationTimer;
+  private int keyFrameIndex;
 
-    /**
-     * Creates a new AssetManager and starts the key animation timer.
-     */
-    public AssetManager() {
-        Timer timer = new Timer(ANIMATION_TICK_MS, null);
-        timer.addActionListener((ActionEvent e) -> {
-            keyFrameIndex++;
-            if (keyFrameIndex >= KEY_FRAME_COUNT) {
-                keyFrameIndex = 0;
-                timer.restart();
-            }
+  /** Creates a new AssetManager and starts the key animation timer. */
+  public AssetManager() {
+    Timer timer = new Timer(ANIMATION_TICK_MS, null);
+    timer.addActionListener(
+        (ActionEvent e) -> {
+          keyFrameIndex++;
+          if (keyFrameIndex >= KEY_FRAME_COUNT) {
+            keyFrameIndex = 0;
+            timer.restart();
+          }
         });
-        this.animationTimer = timer;
-        animationTimer.start();
-    }
+    this.animationTimer = timer;
+    animationTimer.start();
+  }
 
-    /**
-     * Saves level progress data to an external file.
-     * In CheerpJ (browser) this silently fails — progress is not persisted.
-     *
-     * @param lines array of level data lines to write
-     * @throws IOException if writing fails on desktop
-     */
-    public void saveLevelData(String[] lines) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream(LEVEL_DATA_FILE)))) {
-            for (String line : lines) {
-                writer.write(line);
-                writer.newLine();
-            }
+  /**
+   * Saves level progress data to an external file. In CheerpJ (browser) this silently fails —
+   * progress is not persisted.
+   *
+   * @param lines array of level data lines to write
+   * @throws IOException if writing fails on desktop
+   */
+  public void saveLevelData(String[] lines) throws IOException {
+    try (BufferedWriter writer =
+        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(LEVEL_DATA_FILE)))) {
+      for (String line : lines) {
+        writer.write(line);
+        writer.newLine();
+      }
+    } catch (Exception e) {
+      System.out.println("Save not supported in this environment.");
+    }
+  }
+
+  /**
+   * Loads level data, preferring an external save file over the classpath resource.
+   *
+   * @param reset if true, loads the default reset data instead of saved progress
+   * @return array of level data lines
+   * @throws IOException if the resource cannot be found or read
+   */
+  public String[] loadLevelData(boolean reset) throws IOException {
+    if (!reset) {
+      File external = new File(LEVEL_DATA_FILE);
+      if (external.exists()) {
+        try {
+          return readLines(new FileInputStream(external));
         } catch (Exception e) {
-            System.out.println("Save not supported in this environment.");
+          // Fall through to classpath resource
         }
+      }
     }
 
-    /**
-     * Loads level data, preferring an external save file over the classpath resource.
-     *
-     * @param reset if true, loads the default reset data instead of saved progress
-     * @return array of level data lines
-     * @throws IOException if the resource cannot be found or read
-     */
-    public String[] loadLevelData(boolean reset) throws IOException {
-        if (!reset) {
-            File external = new File(LEVEL_DATA_FILE);
-            if (external.exists()) {
-                try {
-                    return readLines(new FileInputStream(external));
-                } catch (Exception e) {
-                    // Fall through to classpath resource
-                }
-            }
-        }
+    String resource = reset ? RESET_DATA_RESOURCE : LEVEL_DATA_RESOURCE;
+    InputStream is = getClass().getResourceAsStream(resource);
+    if (is == null) {
+      throw new IOException("Resource not found: " + resource);
+    }
+    return readLines(is);
+  }
 
-        String resource = reset ? RESET_DATA_RESOURCE : LEVEL_DATA_RESOURCE;
-        InputStream is = getClass().getResourceAsStream(resource);
-        if (is == null) {
-            throw new IOException("Resource not found: " + resource);
-        }
-        return readLines(is);
+  private String[] readLines(InputStream is) throws IOException {
+    ArrayList<String> lines = new ArrayList<>();
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        lines.add(line);
+      }
+    }
+    return lines.toArray(new String[0]);
+  }
+
+  /**
+   * Returns a preloaded image by its cache key.
+   *
+   * @param key the image cache key
+   * @return the cached image, or {@code null} if not found
+   */
+  public BufferedImage getPreloadedImage(String key) {
+    return preloadedImages.get(key);
+  }
+
+  /**
+   * Returns the current key animation frame based on the internal timer.
+   *
+   * @return the current key frame image
+   */
+  public BufferedImage getKeyFrame() {
+    if (keyFrameIndex >= KEY_FRAME_COUNT) {
+      keyFrameIndex = 0;
+    }
+    return preloadedImages.get("Key_" + keyFrameIndex);
+  }
+
+  /**
+   * Returns the current key animation frame on even ticks (blinking effect), or {@code null} on odd
+   * ticks.
+   *
+   * @return the key frame image on even ticks, {@code null} on odd ticks
+   */
+  public BufferedImage getBlinkingKeyFrame() {
+    if (keyFrameIndex >= KEY_FRAME_COUNT) {
+      keyFrameIndex = 0;
+    }
+    if (keyFrameIndex % 2 == 0) {
+      return preloadedImages.get("Key_" + keyFrameIndex);
+    }
+    return null;
+  }
+
+  /**
+   * Preloads all game images into the cache. Must be called before rendering.
+   *
+   * @throws IOException if any image resource cannot be loaded
+   */
+  public void preloadImages() throws IOException {
+    ImageIO.setUseCache(false);
+
+    // Grass passage variants
+    for (int i = 0; i < GRASS_VARIANT_COUNT; i++) {
+      loadImage("GrassPassage_" + i, "Assets/GrassPassage_" + i + ".png");
     }
 
-    private String[] readLines(InputStream is) throws IOException {
-        ArrayList<String> lines = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
-            }
-        }
-        return lines.toArray(new String[0]);
+    // Exit tiles
+    loadImage("Locked Exit", "Assets/ExitLocked.png");
+    loadImage("Open Exit", "Assets/ExitUnlocked.png");
+
+    // Key animation frames
+    for (int i = 0; i < KEY_FRAME_COUNT; i++) {
+      loadImage("Key_" + i, "Assets/AnimationFrames/Key/Key_" + i + ".png");
     }
 
-    /**
-     * Returns a preloaded image by its cache key.
-     *
-     * @param key the image cache key
-     * @return the cached image, or {@code null} if not found
-     */
-    public BufferedImage getPreloadedImage(String key) {
-        return preloadedImages.get(key);
+    // Dog animation frames
+    for (int i = 0; i < DOG_NORTH_FRAME_COUNT; i++) {
+      loadImage("dogNorth" + i, "Assets/AnimationFrames/Dog/north_" + i + ".png");
+    }
+    for (int i = 0; i < DOG_EAST_FRAME_COUNT; i++) {
+      loadImage("dogEast" + i, "Assets/AnimationFrames/Dog/right_" + i + ".png");
+    }
+    for (int i = 0; i < DOG_SOUTH_FRAME_COUNT; i++) {
+      loadImage("dogSouth" + i, "Assets/AnimationFrames/Dog/south_" + i + ".png");
+    }
+    for (int i = 0; i < DOG_WEST_FRAME_COUNT; i++) {
+      loadImage("dogWest" + i, "Assets/AnimationFrames/Dog/left_" + i + ".png");
     }
 
-    /**
-     * Returns the current key animation frame based on the internal timer.
-     *
-     * @return the current key frame image
-     */
-    public BufferedImage getKeyFrame() {
-        if (keyFrameIndex >= KEY_FRAME_COUNT) {
-            keyFrameIndex = 0;
+    // Wall variants — all 16 NESW neighbour combinations
+    for (int n = 0; n <= 1; n++) {
+      for (int e = 0; e <= 1; e++) {
+        for (int s = 0; s <= 1; s++) {
+          for (int w = 0; w <= 1; w++) {
+            String id = "wall_" + n + e + s + w;
+            loadImage(id, "Assets/" + id + ".png");
+          }
         }
-        return preloadedImages.get("Key_" + keyFrameIndex);
+      }
     }
+  }
 
-    /**
-     * Returns the current key animation frame on even ticks (blinking effect),
-     * or {@code null} on odd ticks.
-     *
-     * @return the key frame image on even ticks, {@code null} on odd ticks
-     */
-    public BufferedImage getBlinkingKeyFrame() {
-        if (keyFrameIndex >= KEY_FRAME_COUNT) {
-            keyFrameIndex = 0;
-        }
-        if (keyFrameIndex % 2 == 0) {
-            return preloadedImages.get("Key_" + keyFrameIndex);
-        }
-        return null;
-    }
-
-    /**
-     * Preloads all game images into the cache. Must be called before rendering.
-     *
-     * @throws IOException if any image resource cannot be loaded
-     */
-    public void preloadImages() throws IOException {
-        ImageIO.setUseCache(false);
-
-        // Grass passage variants
-        for (int i = 0; i < GRASS_VARIANT_COUNT; i++) {
-            loadImage("GrassPassage_" + i, "Assets/GrassPassage_" + i + ".png");
-        }
-
-        // Exit tiles
-        loadImage("Locked Exit", "Assets/ExitLocked.png");
-        loadImage("Open Exit", "Assets/ExitUnlocked.png");
-
-        // Key animation frames
-        for (int i = 0; i < KEY_FRAME_COUNT; i++) {
-            loadImage("Key_" + i, "Assets/AnimationFrames/Key/Key_" + i + ".png");
-        }
-
-        // Dog animation frames
-        for (int i = 0; i < DOG_NORTH_FRAME_COUNT; i++) {
-            loadImage("dogNorth" + i, "Assets/AnimationFrames/Dog/north_" + i + ".png");
-        }
-        for (int i = 0; i < DOG_EAST_FRAME_COUNT; i++) {
-            loadImage("dogEast" + i, "Assets/AnimationFrames/Dog/right_" + i + ".png");
-        }
-        for (int i = 0; i < DOG_SOUTH_FRAME_COUNT; i++) {
-            loadImage("dogSouth" + i, "Assets/AnimationFrames/Dog/south_" + i + ".png");
-        }
-        for (int i = 0; i < DOG_WEST_FRAME_COUNT; i++) {
-            loadImage("dogWest" + i, "Assets/AnimationFrames/Dog/left_" + i + ".png");
-        }
-
-        // Wall variants — all 16 NESW neighbour combinations
-        for (int n = 0; n <= 1; n++) {
-            for (int e = 0; e <= 1; e++) {
-                for (int s = 0; s <= 1; s++) {
-                    for (int w = 0; w <= 1; w++) {
-                        String id = "wall_" + n + e + s + w;
-                        loadImage(id, "Assets/" + id + ".png");
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Loads a single image from the classpath and caches it.
-     *
-     * @param cacheKey     the key to store the image under
-     * @param resourcePath the classpath-relative resource path
-     * @throws IOException if the image cannot be read
-     */
-    private void loadImage(String cacheKey, String resourcePath) throws IOException {
-        BufferedImage img = ImageIO.read(getClass().getResourceAsStream(resourcePath));
-        preloadedImages.put(cacheKey, img);
-    }
+  /**
+   * Loads a single image from the classpath and caches it.
+   *
+   * @param cacheKey the key to store the image under
+   * @param resourcePath the classpath-relative resource path
+   * @throws IOException if the image cannot be read
+   */
+  private void loadImage(String cacheKey, String resourcePath) throws IOException {
+    BufferedImage img = ImageIO.read(getClass().getResourceAsStream(resourcePath));
+    preloadedImages.put(cacheKey, img);
+  }
 }

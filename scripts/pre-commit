@@ -1,0 +1,17 @@
+#!/bin/sh
+# Pre-commit hook: verify code formatting with Spotless.
+# Install: copy or symlink to .git/hooks/pre-commit
+#   cp scripts/pre-commit .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+
+cd MazeGame || exit 0
+
+echo "Running spotlessCheck..."
+./gradlew spotlessCheck --quiet 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Code formatting issues found."
+    echo "   Run: cd MazeGame && ./gradlew spotlessApply"
+    echo ""
+    exit 1
+fi

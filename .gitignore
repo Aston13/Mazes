@@ -6,6 +6,12 @@
 *.war
 *.ear
 
+# Allow Gradle wrapper JAR (required for builds)
+!MazeGame/gradle/wrapper/gradle-wrapper.jar
+
+# Allow Pages game JAR
+!docs/MazeGame.jar
+
 # Build output
 /MazeGame/build/
 /MazeGame/dist/

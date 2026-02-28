@@ -25,6 +25,10 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x MazeGame/gradlew
 
+      - name: Run tests
+        working-directory: MazeGame
+        run: ./gradlew test
+
       - name: Build JAR
         working-directory: MazeGame
         run: ./gradlew build browserJar

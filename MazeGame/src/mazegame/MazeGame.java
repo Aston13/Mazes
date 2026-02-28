@@ -1,12 +1,16 @@
 package mazegame;
 
 import java.awt.BorderLayout;
-import javax.swing.JFrame; // Import JFrame class from graphics library
-import java.awt.Graphics;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -21,56 +25,75 @@ import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
-import static javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER;
-import static javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS;
-import java.awt.KeyboardFocusManager;
-import java.awt.KeyEventDispatcher;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Rectangle;
+import javax.swing.ScrollPaneConstants;
 
+/**
+ * Main game class — owns the JFrame, game loop, rendering pipeline,
+ * input handling, menu screens, and level management.
+ */
 public class MazeGame extends JFrame implements Runnable {
-    
+
+    private static final int TILE_SIZE = 100;
+    private static final int TILE_BORDER = 0;
+    private static final int MOVEMENT_SPEED = 5;
+    private static final int TARGET_FPS = 30;
+    private static final int INITIAL_GRID_SIZE = 10;
+    private static final int PAUSE_OVERLAY_ALPHA = 200;
+    private static final int PAUSE_TITLE_FONT_SIZE = 40;
+    private static final int PAUSE_BUTTON_FONT_SIZE = 20;
+    private static final int PAUSE_BUTTON_WIDTH = 200;
+    private static final int PAUSE_BUTTON_HEIGHT = 45;
+    private static final int PAUSE_SLEEP_MS = 50;
     private final Canvas gameView = new Canvas();
     private final int windowWidth;
     private final int windowHeight;
-    private boolean gameInProgress = false;
-    private volatile boolean paused = false;
-    private volatile String pauseAction = null; // "resume" or "menu"
-    private Rectangle resumeBtn = null;
-    private Rectangle menuBtn = null;
-    private Player player;
     private final UI ui;
-    private final int tileWH = 100;
-    private final int tileBorder = 0;
+    private final AssetManager assetManager;
+
+    private boolean gameInProgress;
+    private volatile boolean paused;
+    private volatile String pauseAction;
+    private Rectangle resumeBtn;
+    private Rectangle menuBtn;
+    private Player player;
     private Renderer renderer;
-    private  JPanel pane = new JPanel(new GridLayout());
+    private JPanel pane = new JPanel(new GridLayout());
     private int levelCount = 1;
     private Thread thread;
     private int rowColAmount;
-    private int movementSpeed = 5;
-    private int fps = 30;
-    private AssetManager am;
     private String stateChange;
     private String[] levelData;
-    
-    
-    public MazeGame (int windowHeight, int windowWidth, UI ui, int rowColAmount) {
+
+    /**
+     * Creates a new game instance.
+     *
+     * @param windowHeight  the window height in pixels
+     * @param windowWidth   the window width in pixels
+     * @param ui            the UI factory for menu components
+     * @param rowColAmount  the initial maze grid size
+     */
+    public MazeGame(int windowHeight, int windowWidth, UI ui, int rowColAmount) {
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         this.ui = ui;
-        if (rowColAmount % 2 == 0) {rowColAmount+=1;}
+        if (rowColAmount % 2 == 0) { rowColAmount += 1; }
         this.rowColAmount = rowColAmount;
-        am = new AssetManager();
+        this.assetManager = new AssetManager();
         load(false);
         setCurrentLevel(-1);
-        
     }
     
+    /**
+     * Sets the current level. Pass {@code -1} to auto-detect the first
+     * incomplete level from saved data.
+     *
+     * @param level the level number, or -1 for auto-detect
+     */
     public void setCurrentLevel(int level) {
         if (level == -1){
             for (int i = 1; i < levelData.length; i++) {
@@ -78,37 +101,40 @@ public class MazeGame extends JFrame implements Runnable {
                 if (lineWords[1].equalsIgnoreCase("incomplete")){
                     levelCount = i;
                     //System.out.println("play rowcol" + rowColAmount);
-                    rowColAmount += ((i-1)*2);
+            rowColAmount += ((i - 1) * 2);
                     break;
                 }
             }
         } else {
             levelCount = level;
             //System.out.println("select rowcol" + rowColAmount);
-            int rc = 10 + ((level-1)*2);
-            if (rc % 2 == 0) {rc+=1;}
+            int rc = INITIAL_GRID_SIZE + ((level - 1) * 2);
+            if (rc % 2 == 0) { rc += 1; }
             rowColAmount = rc;
         }
     }
     
+    /** Saves current level progress to disk. */
     public void save() {
         try {
-            am.saveLevelData(levelData);
+            assetManager.saveLevelData(levelData);
             System.out.println("Game Saved.");
         } catch (IOException ex) {
             System.out.println("File not found.");
         }
     }
     
+    /** Loads level data from disk or classpath resource. */
     public void load(boolean reset) {
         try {
-            levelData = am.loadLevelData(reset);
+            levelData = assetManager.loadLevelData(reset);
             System.out.println("Game Loaded.");
         } catch (IOException ex) {
             Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
         } 
     }
     
+    /** Configures the JFrame: non-resizable, exit-on-close, centred. */
     public void setUpFrame() {
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
@@ -118,6 +144,12 @@ public class MazeGame extends JFrame implements Runnable {
         setVisible(true);
     }
     
+    /**
+     * Sets the game state and reason for the state change.
+     *
+     * @param inProgress true if a level is actively being played
+     * @param reason     the reason for the state change (e.g. "Next Level", "Level Failed")
+     */
     public void setGameState(boolean inProgress, String reason) {
         gameInProgress = inProgress;
         stateChange = reason;
@@ -173,37 +205,36 @@ public class MazeGame extends JFrame implements Runnable {
     }
 
     public void update() {
-        int halfP = player.getSize()/2;
-        int fullP = player.getSize();
+        int halfPlayer = player.getSize() / 2;
         Graphics g = getGameGraphics();
         if (g == null) return;
         
         if (player.getMoveN()) {
-            int nextTile[] = renderer.getTile(player.getX(), player.getY()-(halfP+1), player.getSize(), tileWH, tileBorder);
-            if(renderer.checkCollision(nextTile, this)) { 
-                renderer.moveMazeY(g, rowColAmount, movementSpeed);
-                player.setY(player.getY()-movementSpeed);  
+            int[] nextTile = renderer.getTile(player.getX(), player.getY() - (halfPlayer + 1), player.getSize(), TILE_SIZE, TILE_BORDER);
+            if (renderer.checkCollision(nextTile, this)) {
+                renderer.moveMazeY(g, rowColAmount, MOVEMENT_SPEED);
+                player.setY(player.getY() - MOVEMENT_SPEED);
             }
         }
-        if (player.getMoveE()) { 
-            int nextTile[] = renderer.getTile(player.getX()+(halfP+1), player.getY(), player.getSize(), tileWH, tileBorder);
-            if(renderer.checkCollision(nextTile, this)) { 
-                renderer.moveMazeX(g, rowColAmount, -movementSpeed);
-                player.setX(player.getX()+movementSpeed); 
+        if (player.getMoveE()) {
+            int[] nextTile = renderer.getTile(player.getX() + (halfPlayer + 1), player.getY(), player.getSize(), TILE_SIZE, TILE_BORDER);
+            if (renderer.checkCollision(nextTile, this)) {
+                renderer.moveMazeX(g, rowColAmount, -MOVEMENT_SPEED);
+                player.setX(player.getX() + MOVEMENT_SPEED);
             }
         }
         if (player.getMoveS()) {
-            int nextTile[] = renderer.getTile(player.getX(), player.getY()+(halfP+1), player.getSize(), tileWH, tileBorder);
-            if(renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeY(g, rowColAmount, -movementSpeed);
-                player.setY(player.getY()+movementSpeed);
-            } 
+            int[] nextTile = renderer.getTile(player.getX(), player.getY() + (halfPlayer + 1), player.getSize(), TILE_SIZE, TILE_BORDER);
+            if (renderer.checkCollision(nextTile, this)) {
+                renderer.moveMazeY(g, rowColAmount, -MOVEMENT_SPEED);
+                player.setY(player.getY() + MOVEMENT_SPEED);
+            }
         }
-        if (player.getMoveW()) { 
-            int nextTile[] = renderer.getTile(player.getX()-(halfP+1), player.getY(), player.getSize(), tileWH, tileBorder);
-            if(renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeX(g, rowColAmount, movementSpeed);
-                player.setX(player.getX()-movementSpeed); 
+        if (player.getMoveW()) {
+            int[] nextTile = renderer.getTile(player.getX() - (halfPlayer + 1), player.getY(), player.getSize(), TILE_SIZE, TILE_BORDER);
+            if (renderer.checkCollision(nextTile, this)) {
+                renderer.moveMazeX(g, rowColAmount, MOVEMENT_SPEED);
+                player.setX(player.getX() - MOVEMENT_SPEED);
             }
         }
         g.dispose();
@@ -215,8 +246,8 @@ public class MazeGame extends JFrame implements Runnable {
         super.paint(g); // Override
 
         renderer.renderBackground(g); // Renders background
-        renderer.renderMaze(g, tileWH);
-        renderer.renderPlayer(g, player, tileWH);
+        renderer.renderMaze(g, TILE_SIZE);
+        renderer.renderPlayer(g, player, TILE_SIZE);
         renderer.renderHUD(g, player, levelCount);
 
         g.dispose(); // clears graphics memory
@@ -250,42 +281,41 @@ public class MazeGame extends JFrame implements Runnable {
         if (g == null) return;
 
         // Dark overlay
-        g.setColor(new Color(0, 0, 0, 200));
+        g.setColor(new Color(0, 0, 0, PAUSE_OVERLAY_ALPHA));
         g.fillRect(0, 0, windowWidth, windowHeight);
 
         // Title
         g.setColor(Color.CYAN);
-        g.setFont(new Font("Dialog", Font.PLAIN, 40));
+        g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_TITLE_FONT_SIZE));
         FontMetrics fmTitle = g.getFontMetrics();
         String title = "Paused";
         g.drawString(title, (windowWidth - fmTitle.stringWidth(title)) / 2, windowHeight / 4);
 
         // Buttons
-        g.setFont(new Font("Dialog", Font.PLAIN, 20));
+        g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_BUTTON_FONT_SIZE));
         FontMetrics fm = g.getFontMetrics();
 
-        int btnW = 200, btnH = 45;
-        int btnX = (windowWidth - btnW) / 2;
+        int btnX = (windowWidth - PAUSE_BUTTON_WIDTH) / 2;
 
         // Resume button
         int resumeY = windowHeight / 2 - 40;
-        resumeBtn = new Rectangle(btnX, resumeY, btnW, btnH);
+        resumeBtn = new Rectangle(btnX, resumeY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
         g.setColor(Color.DARK_GRAY);
         g.fillRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
         g.setColor(Color.WHITE);
         g.drawRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
         String rText = "Resume [Space/Esc]";
-        g.drawString(rText, btnX + (btnW - fm.stringWidth(rText)) / 2, resumeY + 30);
+        g.drawString(rText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rText)) / 2, resumeY + 30);
 
         // Main Menu button
         int menuY = windowHeight / 2 + 30;
-        menuBtn = new Rectangle(btnX, menuY, btnW, btnH);
+        menuBtn = new Rectangle(btnX, menuY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
         g.setColor(Color.DARK_GRAY);
         g.fillRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
         g.setColor(Color.WHITE);
         g.drawRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
         String mText = "Main Menu";
-        g.drawString(mText, btnX + (btnW - fm.stringWidth(mText)) / 2, menuY + 30);
+        g.drawString(mText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(mText)) / 2, menuY + 30);
 
         g.dispose();
         showBuffer();
@@ -300,10 +330,10 @@ public class MazeGame extends JFrame implements Runnable {
     @Override
     public void run() {
         Long lastTime = System.nanoTime();
-        double nanoSecondConversion = 100000000.0 / fps; // Updated <fps> times per second
+        double nanoSecondConversion = 100000000.0 / TARGET_FPS;
         double changeInSeconds = 0;
         double changeInSeconds2 = 0;
-        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, tileWH, am, this);
+        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, TILE_SIZE, assetManager, this);
       
         setNESWKeys(pane);
 
@@ -347,9 +377,9 @@ public class MazeGame extends JFrame implements Runnable {
             System.out.println("BufferStrategy not supported, using direct rendering.");
         }
 
-        renderer.generateMaze(tileWH, tileBorder);
+        renderer.generateMaze(TILE_SIZE, TILE_BORDER);
         renderer.centerMaze();
-        player = new Player(renderer.getStartingX(), renderer.getStartingY(), tileWH);
+        player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);
         renderer.beginTimer();
         
         render();
@@ -366,7 +396,7 @@ public class MazeGame extends JFrame implements Runnable {
                     setGameState(false, "Menu");
                 } else {
                     renderPauseScreen();
-                    try { Thread.sleep(50); } catch (InterruptedException ie) { }
+                    try { Thread.sleep(PAUSE_SLEEP_MS); } catch (InterruptedException ie) { }
                 }
                 lastTime = System.nanoTime();
                 continue;
@@ -520,7 +550,9 @@ public class MazeGame extends JFrame implements Runnable {
         panelWrapper.add(panel, BorderLayout.SOUTH);
         
         
-        JScrollPane scrollPane = new JScrollPane(panelWrapper, VERTICAL_SCROLLBAR_ALWAYS, HORIZONTAL_SCROLLBAR_NEVER);
+        JScrollPane scrollPane = new JScrollPane(panelWrapper,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setPreferredSize(this.getPreferredSize());
         scrollPane.setViewportView(panelWrapper);
         

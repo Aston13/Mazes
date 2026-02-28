@@ -1,44 +1,46 @@
-
 package mazegame;
 
 import java.awt.Color;
 import java.util.Random;
 
+/**
+ * An impassable wall tile. Stores which neighbouring tiles are passages
+ * (NESW bitmask) for selecting the correct wall sprite.
+ */
 public class TileWall implements Tile {
-    
+
     private final int tileWH;
-    private Color c1;
+    private Color color;
     private int xPos;
     private int yPos;
-    private String neighbours; // NESW
-    private String imgString = "wall";
-    private String passageId;
+    private String neighbours;
+    private final String passageId;
 
-    public TileWall (int tileWH, int xPos, int yPos) {
+    public TileWall(int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
-        neighbours = "0000"; // NESW
-        c1 = Color.CYAN;
-        passageId = String.valueOf(new Random().nextInt(4));
+        this.neighbours = "0000";
+        this.color = Color.CYAN;
+        this.passageId = String.valueOf(new Random().nextInt(4));
     }
-    
+
     public void setPassageNeighbours(String bits) {
         neighbours = bits;
     }
-    
+
     public String getPassageNeighbours() {
         return neighbours;
     }
 
     @Override
     public void setColor(Color c) {
-        c1 = c;
+        color = c;
     }
 
     @Override
     public Color getColor() {
-        return c1;
+        return color;
     }
 
     @Override
@@ -78,8 +80,7 @@ public class TileWall implements Tile {
 
     @Override
     public String getImageString() {
-        return imgString + "_" + neighbours;
-        
+        return "wall_" + neighbours;
     }
 
     @Override

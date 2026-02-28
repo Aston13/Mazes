@@ -2,27 +2,33 @@ package mazegame;
 
 import java.awt.Color;
 
+/**
+ * Represents a single tile in the maze grid. Implementations include
+ * {@link TileWall}, {@link TilePassage}, and {@link TileExit}.
+ */
 public interface Tile {
-    
-    public abstract void setColor(Color c);
-    
-    public abstract Color getColor();
-    
-    public abstract int getMinY();
-    
-    public abstract int getMaxX();
-    
-    public abstract int getMinX();
-    
-    public abstract void setMinX(int x);
-    
-    public abstract void setMinY(int y);
-    
-    public abstract int getMaxY();
-    
-    public abstract int getSize();
-    
-    public abstract String getImageString();
-    
-    public abstract String getPassageImageId();
+
+    void setColor(Color c);
+
+    Color getColor();
+
+    int getMinX();
+
+    int getMinY();
+
+    int getMaxX();
+
+    int getMaxY();
+
+    void setMinX(int x);
+
+    void setMinY(int y);
+
+    int getSize();
+
+    /** Returns the image cache key used to look up this tile's sprite. */
+    String getImageString();
+
+    /** Returns the grass passage variant index for background rendering. */
+    String getPassageImageId();
 }

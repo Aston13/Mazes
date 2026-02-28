@@ -3,10 +3,14 @@ package mazegame;
 import java.awt.Color;
 import java.util.Random;
 
+/**
+ * A passable tile in the maze. May optionally hold a key item
+ * that the player must collect to unlock the exit.
+ */
 public class TilePassage implements Tile {
-    
+
     private final int tileWH;
-    private Color c1;
+    private Color color;
     private int rowNo;
     private int colNo;
     private int xPos;
@@ -14,54 +18,56 @@ public class TilePassage implements Tile {
     private boolean playerExplored;
     private boolean exitCheck;
     private boolean item;
-    private String imgString;
-    private String passageId;
+    private String imageString;
+    private final String passageId;
 
-    public TilePassage (int tileWH, int xPos, int yPos) {
+    public TilePassage(int tileWH, int xPos, int yPos) {
         this.tileWH = tileWH;
         this.xPos = xPos;
         this.yPos = yPos;
+        this.color = Color.WHITE;
+        this.passageId = String.valueOf(new Random().nextInt(4));
         setItem(false);
-        c1 = Color.WHITE;
-        playerExplored = false;
-        exitCheck = false;
-        passageId = String.valueOf(new Random().nextInt(4));
     }
-    
-    public void setItem (boolean item) {
+
+    /**
+     * Sets whether this passage contains a key item.
+     *
+     * @param item true if a key should be placed here
+     */
+    public void setItem(boolean item) {
         this.item = item;
-        
         if (item) {
-            imgString = "Key";
-            setColor(Color.darkGray);
+            imageString = "Key";
+            setColor(Color.DARK_GRAY);
         } else {
-            imgString = "Passage";
-            setColor(Color.black);
+            imageString = "Passage";
+            setColor(Color.BLACK);
         }
     }
-    
+
     public boolean hasItem () {
         return item;
     }
-    
+
     public boolean getCheckedExitPath() {
         return exitCheck;
     }
-    
+
     public void setCheckedExitPath(boolean checked) {
         exitCheck = checked;
-        c1 = Color.ORANGE;
+        color = Color.ORANGE;
     }
-    
-    public void setPlayerExplored(boolean hasExplored){
+
+    public void setPlayerExplored(boolean hasExplored) {
         playerExplored = hasExplored;
-        setColor(Color.darkGray);
+        setColor(Color.DARK_GRAY);
     }
-    
+
     public boolean getPlayerExplored(){
         return playerExplored;
     }
-    
+
     public int getRowNo() {
         return rowNo;
     }
@@ -80,12 +86,12 @@ public class TilePassage implements Tile {
 
     @Override
     public void setColor(Color c) {
-        c1 = c;
+        color = c;
     }
 
     @Override
     public Color getColor() {
-        return c1;
+        return color;
     }
 
     @Override
@@ -125,7 +131,7 @@ public class TilePassage implements Tile {
 
     @Override
     public String getImageString() {
-        return imgString;
+        return imageString;
     }
 
     @Override

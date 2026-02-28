@@ -1,11 +1,9 @@
 package mazegame;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,7 +24,7 @@ public class AssetManager {
     private BufferedImage keyImage = null;
     private BufferedImage lockedExitImage = null;
     private BufferedImage unlockedExitImage = null;
-    private HashMap<String, BufferedImage> preloadedImages = new HashMap();
+    private HashMap<String, BufferedImage> preloadedImages = new HashMap<>();
     
     private BufferedImage wall_0000  = null;
     private BufferedImage wall_0001  = null;
@@ -100,52 +98,41 @@ public class AssetManager {
     private int keyTimerCount;
     
     public AssetManager() {
-        t = new Timer(100, new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                keyTimerCount++;
-                if (keyTimerCount == 19) {
-                    keyTimerCount = 0;
-                    t.restart();
-                }
+        t = new Timer(100, (ActionEvent e) -> {
+            keyTimerCount++;
+            if (keyTimerCount == 19) {
+                keyTimerCount = 0;
+                t.restart();
             }
-            
         });
         t.start();
     }
     
-    public void saveLevelData(String []lines) throws IOException {
-        
-        BufferedWriter writer = new BufferedWriter(new FileWriter(levelDataFile));
-        
-        // Level Number | Completed | Best Time
-        for(String line : lines) {
-            writer.write(line);
-            writer.newLine();
+    public void saveLevelData(String[] lines) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(levelDataFile))) {
+            // Level Number | Completed | Best Time
+            for (String line : lines) {
+                writer.write(line);
+                writer.newLine();
+            }
         }
-        writer.close();
     }
     
-    public String[] loadLevelData(boolean reset) throws FileNotFoundException, IOException {
-        String file = levelDataFile;
-        if (reset == true) {file = resetDataFile;}
+    public String[] loadLevelData(boolean reset) throws IOException {
+        String file = reset ? resetDataFile : levelDataFile;
         
-        BufferedReader reader = new BufferedReader(new FileReader(file));
         int lines = 0;
-        
         // Level Number | Completed | Best Time
-        while(reader.readLine() != null) {lines++;}
-        reader.close();
-        
-        String [] loadedData = new String[lines];
-        BufferedReader reader2 = new BufferedReader(new FileReader(file));
-        loadedData[0] = reader2.readLine();
-        
-        for (int i = 1; i < lines; i++) {
-            
-            loadedData[i] = reader2.readLine();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            while (reader.readLine() != null) { lines++; }
         }
-        reader2.close();
+        
+        String[] loadedData = new String[lines];
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            for (int i = 0; i < lines; i++) {
+                loadedData[i] = reader.readLine();
+            }
+        }
         
         return loadedData;
     }
@@ -183,10 +170,10 @@ public class AssetManager {
     public void preloadImages() throws IOException {
         ImageIO.setUseCache(false);
         
-        grassPassage0 = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassPassage_0.png"));
-        grassPassage1  = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassPassage_1.png"));
-        grassPassage2 = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassPassage_2.png"));
-        grassPassage3  = ImageIO.read(getClass().getResourceAsStream("Assets\\GrassPassage_3.png"));
+        grassPassage0 = ImageIO.read(getClass().getResourceAsStream("Assets/GrassPassage_0.png"));
+        grassPassage1  = ImageIO.read(getClass().getResourceAsStream("Assets/GrassPassage_1.png"));
+        grassPassage2 = ImageIO.read(getClass().getResourceAsStream("Assets/GrassPassage_2.png"));
+        grassPassage3  = ImageIO.read(getClass().getResourceAsStream("Assets/GrassPassage_3.png"));
         
         preloadedImages.put("GrassPassage_0", grassPassage0);
         preloadedImages.put("GrassPassage_1", grassPassage1);
@@ -194,31 +181,31 @@ public class AssetManager {
         preloadedImages.put("GrassPassage_3", grassPassage3);
 
         
-        lockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitLocked.png"));
-        unlockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets\\ExitUnlocked.png"));
+        lockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets/ExitLocked.png"));
+        unlockedExitImage = ImageIO.read(getClass().getResourceAsStream("Assets/ExitUnlocked.png"));
         preloadedImages.put("Locked Exit", lockedExitImage);
         preloadedImages.put("Open Exit", unlockedExitImage);
         
-        key0 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_0.png"));
-        key1 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_1.png"));
-        key2 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_2.png"));
-        key3 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_3.png"));
-        key4 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_4.png"));
-        key5 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_5.png"));
-        key6 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_6.png"));
-        key7 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_7.png"));
-        key8 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_8.png"));
-        key9 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_9.png"));
-        key10 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_10.png"));
-        key11 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_11.png"));
-        key12 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_12.png"));
-        key13 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_13.png"));
-        key14 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_14.png"));
-        key15 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_15.png"));
-        key16 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_16.png"));
-        key17 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_17.png"));
-        key18 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_18.png"));
-        key19 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Key\\Key_19.png"));
+        key0 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_0.png"));
+        key1 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_1.png"));
+        key2 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_2.png"));
+        key3 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_3.png"));
+        key4 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_4.png"));
+        key5 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_5.png"));
+        key6 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_6.png"));
+        key7 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_7.png"));
+        key8 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_8.png"));
+        key9 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_9.png"));
+        key10 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_10.png"));
+        key11 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_11.png"));
+        key12 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_12.png"));
+        key13 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_13.png"));
+        key14 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_14.png"));
+        key15 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_15.png"));
+        key16 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_16.png"));
+        key17 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_17.png"));
+        key18 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_18.png"));
+        key19 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Key/Key_19.png"));
         
         preloadedImages.put("Key_0", key0);
         preloadedImages.put("Key_1", key1);
@@ -242,12 +229,12 @@ public class AssetManager {
         preloadedImages.put("Key_19", key19);
         
         
-        dogNorth0 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_0.png"));
-        dogNorth1 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_1.png"));
-        dogNorth2 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_2.png"));
-        dogNorth3 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_3.png"));
-        dogNorth4 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_4.png"));
-        dogNorth5 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\north_5.png"));
+        dogNorth0 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/north_0.png"));
+        dogNorth1 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/north_1.png"));
+        dogNorth2 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/north_2.png"));
+        dogNorth3 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/north_3.png"));
+        dogNorth4 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/north_4.png"));
+        dogNorth5 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/north_5.png"));
         
         preloadedImages.put("dogNorth0", dogNorth0);
         preloadedImages.put("dogNorth1", dogNorth1);
@@ -256,13 +243,13 @@ public class AssetManager {
         preloadedImages.put("dogNorth4", dogNorth4);
         preloadedImages.put("dogNorth5", dogNorth5);
         
-        dogEast0 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\right_0.png"));
-        dogEast1 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\right_1.png"));
-        dogEast2 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\right_2.png"));
-        dogEast3 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\right_3.png"));
-        dogEast4 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\right_4.png"));
-        dogEast5 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\right_5.png"));
-        dogEast6 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\right_6.png"));
+        dogEast0 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/right_0.png"));
+        dogEast1 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/right_1.png"));
+        dogEast2 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/right_2.png"));
+        dogEast3 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/right_3.png"));
+        dogEast4 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/right_4.png"));
+        dogEast5 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/right_5.png"));
+        dogEast6 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/right_6.png"));
         
         preloadedImages.put("dogEast0", dogEast0);
         preloadedImages.put("dogEast1", dogEast1);
@@ -272,12 +259,12 @@ public class AssetManager {
         preloadedImages.put("dogEast5", dogEast5);
         preloadedImages.put("dogEast6", dogEast6);
 
-        dogSouth0 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\south_0.png"));
-        dogSouth1 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\south_1.png"));
-        dogSouth2 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\south_2.png"));
-        dogSouth3 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\south_3.png"));
-        dogSouth4 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\south_4.png"));
-        dogSouth5 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\south_5.png"));
+        dogSouth0 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/south_0.png"));
+        dogSouth1 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/south_1.png"));
+        dogSouth2 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/south_2.png"));
+        dogSouth3 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/south_3.png"));
+        dogSouth4 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/south_4.png"));
+        dogSouth5 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/south_5.png"));
         
         preloadedImages.put("dogSouth0", dogSouth0);
         preloadedImages.put("dogSouth1", dogSouth1);
@@ -286,13 +273,13 @@ public class AssetManager {
         preloadedImages.put("dogSouth4", dogSouth4);
         preloadedImages.put("dogSouth5", dogSouth5);
         
-        dogWest0 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\left_0.png"));
-        dogWest1 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\left_1.png"));
-        dogWest2 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\left_2.png"));
-        dogWest3 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\left_3.png"));
-        dogWest4 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\left_4.png"));
-        dogWest5 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\left_5.png"));
-        dogWest6 = ImageIO.read(getClass().getResourceAsStream("Assets\\AnimationFrames\\Dog\\left_6.png"));
+        dogWest0 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/left_0.png"));
+        dogWest1 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/left_1.png"));
+        dogWest2 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/left_2.png"));
+        dogWest3 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/left_3.png"));
+        dogWest4 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/left_4.png"));
+        dogWest5 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/left_5.png"));
+        dogWest6 = ImageIO.read(getClass().getResourceAsStream("Assets/AnimationFrames/Dog/left_6.png"));
         
         preloadedImages.put("dogWest0", dogWest0);
         preloadedImages.put("dogWest1", dogWest1);
@@ -303,22 +290,22 @@ public class AssetManager {
         preloadedImages.put("dogWest6", dogWest6);
         
         //Wall with passage in direction NESW | 0000
-        wall_0000 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0000.png"));
-        wall_0001 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0001.png"));
-        wall_0010 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0010.png"));
-        wall_0011 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0011.png"));
-        wall_0100 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0100.png"));
-        wall_0101 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0101.png"));
-        wall_0110 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0110.png"));
-        wall_0111 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_0111.png"));
-        wall_1000 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1000.png"));
-        wall_1001 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1001.png"));
-        wall_1010 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1010.png"));
-        wall_1011 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1011.png"));
-        wall_1100 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1100.png"));
-        wall_1101 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1101.png"));
-        wall_1110 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1110.png"));
-        wall_1111 = ImageIO.read(getClass().getResourceAsStream("Assets\\wall_1111.png"));
+        wall_0000 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0000.png"));
+        wall_0001 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0001.png"));
+        wall_0010 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0010.png"));
+        wall_0011 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0011.png"));
+        wall_0100 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0100.png"));
+        wall_0101 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0101.png"));
+        wall_0110 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0110.png"));
+        wall_0111 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_0111.png"));
+        wall_1000 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1000.png"));
+        wall_1001 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1001.png"));
+        wall_1010 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1010.png"));
+        wall_1011 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1011.png"));
+        wall_1100 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1100.png"));
+        wall_1101 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1101.png"));
+        wall_1110 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1110.png"));
+        wall_1111 = ImageIO.read(getClass().getResourceAsStream("Assets/wall_1111.png"));
         
         preloadedImages.put("wall_0000", wall_0000);
         preloadedImages.put("wall_0001", wall_0001);

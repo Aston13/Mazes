@@ -75,7 +75,7 @@ public class RecursiveBacktracker extends Tilemap {
         return allTiles;
     }
     
-    public ArrayList getKeyCoords(){
+    public ArrayList<TilePassage> getKeyCoords(){
         return keyCoords;
     }
     

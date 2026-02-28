@@ -9,7 +9,6 @@ public class Start {
             WINDOW_HEIGHT, ui, 10);
 
     public static void main (String [] args){
-        //game.run();
-        game.runMenu();
+        javax.swing.SwingUtilities.invokeLater(() -> game.runMenu());
     }
 }

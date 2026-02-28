@@ -5,7 +5,6 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
@@ -65,29 +64,24 @@ public class Renderer {
         // Create a BufferedImage that represents the view
         view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
 
-            t = new Timer(10, new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                
+        t = new Timer(10, (ActionEvent e) -> {
                 timeTaken += 0.01;
                 timeUntilKeyRemoval = timeUntilKeyRemoval - 0.01;
                 
                 if (timeUntilKeyRemoval <= 0) {
                     keyRemovalTimer--;
                     System.out.println("Key Removed");
-                    TilePassage tp = (TilePassage)tileWithKey.pop();
+                    TilePassage tp = (TilePassage) tileWithKey.pop();
                     tp.setItem(false);
-                    
 
-                    if (tileWithKey.size() < (keysRequired-keyCount)) {
-                        // Game over;
+                    if (tileWithKey.size() < (keysRequired - keyCount)) {
+                        // Game over
                         System.out.println("Game over");
                         game.setGameState(false, "Level Failed");
                         t.stop();
                     }
                     timeUntilKeyRemoval = 5.00;
                 }
-            } 
         }); 
     }
     
@@ -101,7 +95,7 @@ public class Renderer {
     
     public double getTimeTaken() {
         DecimalFormat df2 = new DecimalFormat("#.##");
-        return Double.valueOf(df2.format(timeTaken));
+        return Double.parseDouble(df2.format(timeTaken));
     }
     
     public void renderBackground(Graphics g) {
@@ -115,8 +109,8 @@ public class Renderer {
         startingX = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinX();
         startingY = tileArr[rb1.getStartingX()][rb1.getStartingY()].getMinY();
         
-        for (Object tp: rb1.getKeyCoords()) {
-            tileWithKey.push((Tile)tp);
+        for (TilePassage tp : rb1.getKeyCoords()) {
+            tileWithKey.push(tp);
         }   
     }
     
@@ -157,7 +151,7 @@ public class Renderer {
                         g.drawImage(getImage("GrassPassage_0"), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
                     }
                      
-                    if(tile.getImageString() == "Key"){
+                    if("Key".equals(tile.getImageString())){
                         
                         if (tileWithKey.peek() == (tile)){
                             g.drawImage(am.getBlinkingKeyFrame(), tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);

@@ -1,1 +1,28 @@
+# Compiled class files
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Build output
+/MazeGame/build/
 /MazeGame/dist/
+
+# NetBeans private config
+/MazeGame/nbproject/private/
+
+# Gradle
+.gradle/
+/MazeGame/.gradle/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store

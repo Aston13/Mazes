@@ -221,9 +221,9 @@ public class MazeGame extends JFrame implements Runnable {
             render();
             lastTime = now;
         }
-        gameView.getGraphics().finalize();
+        gameView.getGraphics().dispose();
         
-        getGraphics().finalize();
+        getGraphics().dispose();
         
         renderBackground();
         renderer.stopTimer();
@@ -279,7 +279,7 @@ public class MazeGame extends JFrame implements Runnable {
     public void runCompletionScreen(double timeTaken) {
         
         String []lineWords = levelData[levelCount].split(",");
-        double bestTime = Double.valueOf(lineWords[2]);
+        double bestTime = Double.parseDouble(lineWords[2]);
         System.out.println("best time: " + bestTime);
         System.out.println("Time taken: " + timeTaken);
         
@@ -448,7 +448,7 @@ public class MazeGame extends JFrame implements Runnable {
         addKeyBinding(comp, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {System.exit(0);});
     }
     
-    public void addKeyBinding(JComponent comp, int keyCode, String id, Boolean onRelease, ActionListener al) {
+    public void addKeyBinding(JComponent comp, int keyCode, String id, boolean onRelease, ActionListener al) {
         InputMap inMap = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actMap = comp.getActionMap();
         inMap.put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), id);

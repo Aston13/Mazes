@@ -4,17 +4,27 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.File;
 import java.util.HashMap;
+import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.Timer;
 
 public class AssetManager {
 
-    private String levelDataFile = "./src/mazegame/assets/LevelData.txt";
-    private String resetDataFile = "./src/mazegame/assets/ResetData.txt";
+    // Classpath resource paths (inside the JAR)
+    private static final String LEVEL_DATA_RESOURCE = "Assets/LevelData.txt";
+    private static final String RESET_DATA_RESOURCE = "Assets/ResetData.txt";
+
+    // External file for saving progress (alongside the JAR or in working dir)
+    private static final String LEVEL_DATA_FILE = "LevelData.txt";
     
     private BufferedImage grassPassage0  = null;
     private BufferedImage grassPassage1  = null;
@@ -109,32 +119,50 @@ public class AssetManager {
     }
     
     public void saveLevelData(String[] lines) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(levelDataFile))) {
-            // Level Number | Completed | Best Time
+        // Write to an external file in the working directory.
+        // In CheerpJ (browser) this will silently fail — progress is not persisted.
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(LEVEL_DATA_FILE)))) {
             for (String line : lines) {
                 writer.write(line);
                 writer.newLine();
             }
+        } catch (Exception e) {
+            System.out.println("Save not supported in this environment.");
         }
     }
     
     public String[] loadLevelData(boolean reset) throws IOException {
-        String file = reset ? resetDataFile : levelDataFile;
-        
-        int lines = 0;
-        // Level Number | Completed | Best Time
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            while (reader.readLine() != null) { lines++; }
-        }
-        
-        String[] loadedData = new String[lines];
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            for (int i = 0; i < lines; i++) {
-                loadedData[i] = reader.readLine();
+        // Try external save file first (only when not resetting)
+        if (!reset) {
+            File external = new File(LEVEL_DATA_FILE);
+            if (external.exists()) {
+                try {
+                    return readLines(new FileInputStream(external));
+                } catch (Exception e) {
+                    // Fall through to classpath resource
+                }
             }
         }
-        
-        return loadedData;
+
+        // Load from classpath resource (inside the JAR)
+        String resource = reset ? RESET_DATA_RESOURCE : LEVEL_DATA_RESOURCE;
+        InputStream is = getClass().getResourceAsStream(resource);
+        if (is == null) {
+            throw new IOException("Resource not found: " + resource);
+        }
+        return readLines(is);
+    }
+
+    private String[] readLines(InputStream is) throws IOException {
+        ArrayList<String> lines = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        return lines.toArray(new String[0]);
     }
     
     public BufferedImage getPreloadedImage(String key) {

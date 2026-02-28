@@ -42,6 +42,7 @@ public class MazeGame extends JFrame implements Runnable {
     private static final int TILE_BORDER = 0;
     private static final int MOVEMENT_SPEED = 5;
     private static final int TARGET_FPS = 30;
+    private static final long FRAME_TIME_NS = 1_000_000_000L / TARGET_FPS;
     private static final int INITIAL_GRID_SIZE = 10;
     private static final int PAUSE_OVERLAY_ALPHA = 200;
     private static final int PAUSE_TITLE_FONT_SIZE = 40;
@@ -55,7 +56,7 @@ public class MazeGame extends JFrame implements Runnable {
     private final UI ui;
     private final AssetManager assetManager;
 
-    private boolean gameInProgress;
+    private volatile boolean gameInProgress;
     private volatile boolean paused;
     private volatile String pauseAction;
     private Rectangle resumeBtn;
@@ -417,6 +418,13 @@ public class MazeGame extends JFrame implements Runnable {
             
             render();
             lastTime = now;
+
+            // Cap frame rate to avoid busy-spinning at 100% CPU
+            long elapsed = System.nanoTime() - now;
+            long sleepMs = (FRAME_TIME_NS - elapsed) / 1_000_000;
+            if (sleepMs > 0) {
+                try { Thread.sleep(sleepMs); } catch (InterruptedException ie) { }
+            }
         }
 
         // Clean up global ESC dispatcher

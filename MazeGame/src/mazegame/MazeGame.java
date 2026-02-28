@@ -239,9 +239,12 @@ public class MazeGame extends JFrame implements Runnable {
         player.setMoveS(false);
         player.setMoveW(false);
 
+        // Wait for the game loop to see paused=true and stop rendering
+        try { Thread.sleep(60); } catch (InterruptedException ignored) {}
+
         pauseOverlay = new JPanel(null);
-        pauseOverlay.setBackground(new Color(0, 0, 0, 180));
-        pauseOverlay.setBounds(0, 0, windowWidth, windowHeight);
+        pauseOverlay.setBackground(Color.BLACK);
+        pauseOverlay.setPreferredSize(new Dimension(windowWidth, windowHeight));
 
         JButton resume = ui.getTopButton("Resume [Space]");
         JButton menu = ui.getMidButton("Main Menu");
@@ -263,31 +266,29 @@ public class MazeGame extends JFrame implements Runnable {
             setGameState(false, "Menu");
         });
 
-        // Remove the heavyweight Canvas so it doesn't take layout space
-        pane.remove(gameView);
-        gameView.setVisible(false);
-        pane.add(pauseOverlay);
-        pane.revalidate();
-        pane.repaint();
-        pauseOverlay.setVisible(true);
+        // Swap content pane — game pane (with Canvas) stays intact
+        setContentPane(pauseOverlay);
+        revalidate();
+        repaint();
         pauseOverlay.requestFocusInWindow();
     }
 
     private void resumeGame() {
+        // Restore game pane as content pane first, before unpausing
+        setContentPane(pane);
+        revalidate();
+        repaint();
         paused = false;
-        removePauseOverlay();
         renderer.beginTimer();
-        pane.requestFocusInWindow();
+        gameView.requestFocusInWindow();
     }
 
     private void removePauseOverlay() {
         if (pauseOverlay != null) {
-            pane.remove(pauseOverlay);
+            setContentPane(pane);
+            revalidate();
+            repaint();
             pauseOverlay = null;
-            pane.add(gameView);
-            gameView.setVisible(true);
-            pane.revalidate();
-            pane.repaint();
         }
     }
     

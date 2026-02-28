@@ -286,6 +286,8 @@ public class MazeGame extends JFrame implements Runnable {
         } else if (stateChange.equalsIgnoreCase("Next Level")){
             double timeInMs = renderer.getTimeTaken();
             runCompletionScreen(timeInMs);
+        } else if (stateChange.equalsIgnoreCase("Menu")){
+            runMenu();
         } 
     }
     
@@ -498,7 +500,9 @@ public class MazeGame extends JFrame implements Runnable {
         addKeyBinding(comp, KeyEvent.VK_DOWN, "Stop South", true, (evt) -> {player.setMoveS(false);});
         addKeyBinding(comp, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {player.setMoveW(false);});
         
-        addKeyBinding(comp, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {System.exit(0);});
+        addKeyBinding(comp, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
+            setGameState(false, "Menu");
+        });
     }
     
     public void addKeyBinding(JComponent comp, int keyCode, String id, boolean onRelease, ActionListener al) {

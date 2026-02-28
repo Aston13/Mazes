@@ -117,11 +117,21 @@ public class MazeGame extends JFrame implements Runnable {
         return gameInProgress;
     }
     
+    private Graphics getGameGraphics() {
+        BufferStrategy bs = gameView.getBufferStrategy();
+        return (bs != null) ? bs.getDrawGraphics() : gameView.getGraphics();
+    }
+
+    private void showBuffer() {
+        BufferStrategy bs = gameView.getBufferStrategy();
+        if (bs != null) { bs.show(); }
+    }
+
     public void update() {
         int halfP = player.getSize()/2;
         int fullP = player.getSize();
-        BufferStrategy buffStrat = gameView.getBufferStrategy();
-        Graphics g = buffStrat.getDrawGraphics();
+        Graphics g = getGameGraphics();
+        if (g == null) return;
         
         if (player.getMoveN()) {
             int nextTile[] = renderer.getTile(player.getX(), player.getY()-(halfP+1), player.getSize(), tileWH, tileBorder);
@@ -155,24 +165,22 @@ public class MazeGame extends JFrame implements Runnable {
     }
     
     public void render() {
-        BufferStrategy buffStrat = gameView.getBufferStrategy();
-        Graphics g  = buffStrat.getDrawGraphics();
+        Graphics g = getGameGraphics();
+        if (g == null) return;
         super.paint(g); // Override
-        
-        
-        
+
         renderer.renderBackground(g); // Renders background
         renderer.renderMaze(g, tileWH);
         renderer.renderPlayer(g, player, tileWH);
         renderer.renderHUD(g, player, levelCount);
 
         g.dispose(); // clears graphics memory
-        buffStrat.show(); // Buffer has been written to and is ready to be put on screen
+        showBuffer(); // Buffer has been written to and is ready to be put on screen
     }
     
     public void renderBackground(){
-        BufferStrategy buffStrat = gameView.getBufferStrategy();
-        Graphics g  = buffStrat.getDrawGraphics();
+        Graphics g = getGameGraphics();
+        if (g == null) return;
         super.paint(g); // Override
         renderer.renderBackground(g); // Renders background
     }
@@ -194,7 +202,11 @@ public class MazeGame extends JFrame implements Runnable {
 
         setUpFrame();
         pane.add(gameView);
-        gameView.createBufferStrategy(2);
+        try {
+            gameView.createBufferStrategy(2);
+        } catch (Exception e) {
+            System.out.println("BufferStrategy not supported, using direct rendering.");
+        }
 
         renderer.generateMaze(tileWH, tileBorder);
         renderer.centerMaze();
@@ -221,9 +233,11 @@ public class MazeGame extends JFrame implements Runnable {
             render();
             lastTime = now;
         }
-        gameView.getGraphics().dispose();
+        Graphics gv = gameView.getGraphics();
+        if (gv != null) gv.dispose();
         
-        getGraphics().dispose();
+        Graphics gf = getGraphics();
+        if (gf != null) gf.dispose();
         
         renderBackground();
         renderer.stopTimer();
@@ -387,7 +401,8 @@ public class MazeGame extends JFrame implements Runnable {
         try {
             super.remove(gameView);
             pane.removeAll();
-            gameView.getBufferStrategy().dispose();
+            BufferStrategy bs = gameView.getBufferStrategy();
+            if (bs != null) bs.dispose();
             
         } catch (Exception e) {
             

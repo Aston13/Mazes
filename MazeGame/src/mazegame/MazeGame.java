@@ -33,698 +33,902 @@ import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 
 /**
- * Main game class — owns the JFrame, game loop, rendering pipeline,
- * input handling, menu screens, and level management.
+ * Main game class — owns the JFrame, game loop, rendering pipeline, input handling, menu screens,
+ * and level management.
  */
 public class MazeGame extends JFrame implements Runnable {
 
-    private static final int TILE_SIZE = 100;
-    private static final int TILE_BORDER = 0;
-    private static final int MOVEMENT_SPEED = 5;
-    private static final int TARGET_FPS = 30;
-    private static final long FRAME_TIME_NS = 1_000_000_000L / TARGET_FPS;
-    private static final int INITIAL_GRID_SIZE = 10;
-    private static final int PAUSE_OVERLAY_ALPHA = 200;
-    private static final int PAUSE_TITLE_FONT_SIZE = 40;
-    private static final int PAUSE_BUTTON_FONT_SIZE = 20;
-    private static final int PAUSE_BUTTON_WIDTH = 200;
-    private static final int PAUSE_BUTTON_HEIGHT = 45;
-    private static final int PAUSE_SLEEP_MS = 50;
-    private final Canvas gameView = new Canvas();
-    private final int windowWidth;
-    private final int windowHeight;
-    private final UI ui;
-    private final AssetManager assetManager;
+  private static final int TILE_SIZE = 100;
+  private static final int TILE_BORDER = 0;
+  private static final int MOVEMENT_SPEED = 5;
+  private static final int TARGET_FPS = 30;
+  private static final long FRAME_TIME_NS = 1_000_000_000L / TARGET_FPS;
+  private static final int INITIAL_GRID_SIZE = 10;
+  private static final int PAUSE_OVERLAY_ALPHA = 200;
+  private static final int PAUSE_TITLE_FONT_SIZE = 40;
+  private static final int PAUSE_BUTTON_FONT_SIZE = 20;
+  private static final int PAUSE_BUTTON_WIDTH = 200;
+  private static final int PAUSE_BUTTON_HEIGHT = 45;
+  private static final int PAUSE_SLEEP_MS = 50;
+  private final Canvas gameView = new Canvas();
+  private final int windowWidth;
+  private final int windowHeight;
+  private final UI ui;
+  private final AssetManager assetManager;
 
-    private volatile boolean gameInProgress;
-    private volatile boolean paused;
-    private volatile String pauseAction;
-    private Rectangle resumeBtn;
-    private Rectangle restartBtn;
-    private Rectangle menuBtn;
-    private Player player;
-    private Renderer renderer;
-    private JPanel pane = new JPanel(new GridLayout());
-    private int levelCount = 1;
-    private Thread thread;
-    private int rowColAmount;
-    private String stateChange;
-    private String[] levelData;
+  private volatile boolean gameInProgress;
+  private volatile boolean paused;
+  private volatile String pauseAction;
+  private Rectangle resumeBtn;
+  private Rectangle restartBtn;
+  private Rectangle menuBtn;
+  private Player player;
+  private Renderer renderer;
+  private JPanel pane = new JPanel(new GridLayout());
+  private int levelCount = 1;
+  private Thread thread;
+  private int rowColAmount;
+  private String stateChange;
+  private String[] levelData;
 
-    /**
-     * Creates a new game instance.
-     *
-     * @param windowHeight  the window height in pixels
-     * @param windowWidth   the window width in pixels
-     * @param ui            the UI factory for menu components
-     * @param rowColAmount  the initial maze grid size
-     */
-    public MazeGame(int windowHeight, int windowWidth, UI ui, int rowColAmount) {
-        this.windowWidth = windowWidth;
-        this.windowHeight = windowHeight;
-        this.ui = ui;
-        if (rowColAmount % 2 == 0) { rowColAmount += 1; }
-        this.rowColAmount = rowColAmount;
-        this.assetManager = new AssetManager();
-        load(false);
-        setCurrentLevel(-1);
+  /**
+   * Creates a new game instance.
+   *
+   * @param windowHeight the window height in pixels
+   * @param windowWidth the window width in pixels
+   * @param ui the UI factory for menu components
+   * @param rowColAmount the initial maze grid size
+   */
+  public MazeGame(int windowHeight, int windowWidth, UI ui, int rowColAmount) {
+    this.windowWidth = windowWidth;
+    this.windowHeight = windowHeight;
+    this.ui = ui;
+    if (rowColAmount % 2 == 0) {
+      rowColAmount += 1;
     }
+    this.rowColAmount = rowColAmount;
+    this.assetManager = new AssetManager();
+    load(false);
+    setCurrentLevel(-1);
+  }
 
-    /**
-     * Sets the current level. Pass {@code -1} to auto-detect the first
-     * incomplete level from saved data.
-     *
-     * @param level the level number, or -1 for auto-detect
-     */
-    public void setCurrentLevel(int level) {
-        if (level == -1){
-            for (int i = 1; i < levelData.length; i++) {
-                String []lineWords = levelData[i].split(",");
-                if (lineWords[1].equalsIgnoreCase("incomplete")){
-                    levelCount = i;
-                    //System.out.println("play rowcol" + rowColAmount);
-            rowColAmount += ((i - 1) * 2);
-                    break;
-                }
-            }
-        } else {
-            levelCount = level;
-            //System.out.println("select rowcol" + rowColAmount);
-            int rc = INITIAL_GRID_SIZE + ((level - 1) * 2);
-            if (rc % 2 == 0) { rc += 1; }
-            rowColAmount = rc;
+  /**
+   * Sets the current level. Pass {@code -1} to auto-detect the first incomplete level from saved
+   * data.
+   *
+   * @param level the level number, or -1 for auto-detect
+   */
+  public void setCurrentLevel(int level) {
+    if (level == -1) {
+      for (int i = 1; i < levelData.length; i++) {
+        String[] lineWords = levelData[i].split(",");
+        if (lineWords[1].equalsIgnoreCase("incomplete")) {
+          levelCount = i;
+          // System.out.println("play rowcol" + rowColAmount);
+          rowColAmount += ((i - 1) * 2);
+          break;
         }
+      }
+    } else {
+      levelCount = level;
+      // System.out.println("select rowcol" + rowColAmount);
+      int rc = INITIAL_GRID_SIZE + ((level - 1) * 2);
+      if (rc % 2 == 0) {
+        rc += 1;
+      }
+      rowColAmount = rc;
     }
+  }
 
-    /** Saves current level progress to disk. */
-    public void save() {
-        try {
-            assetManager.saveLevelData(levelData);
-            System.out.println("Game Saved.");
-        } catch (IOException ex) {
-            System.out.println("File not found.");
-        }
+  /** Saves current level progress to disk. */
+  public void save() {
+    try {
+      assetManager.saveLevelData(levelData);
+      System.out.println("Game Saved.");
+    } catch (IOException ex) {
+      System.out.println("File not found.");
     }
+  }
 
-    /** Loads level data from disk or classpath resource. */
-    public void load(boolean reset) {
-        try {
-            levelData = assetManager.loadLevelData(reset);
-            System.out.println("Game Loaded.");
-        } catch (IOException ex) {
-            Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
-        }
+  /** Loads level data from disk or classpath resource. */
+  public void load(boolean reset) {
+    try {
+      levelData = assetManager.loadLevelData(reset);
+      System.out.println("Game Loaded.");
+    } catch (IOException ex) {
+      Logger.getLogger(MazeGame.class.getName()).log(Level.SEVERE, null, ex);
     }
+  }
 
-    /** Configures the JFrame: non-resizable, exit-on-close, centred. */
-    public void setUpFrame() {
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        setContentPane(pane);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
+  /** Configures the JFrame: non-resizable, exit-on-close, centred. */
+  public void setUpFrame() {
+    setResizable(false);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+    setContentPane(pane);
+    pack();
+    setLocationRelativeTo(null);
+    setVisible(true);
+  }
+
+  /**
+   * Sets the game state and reason for the state change.
+   *
+   * @param inProgress true if a level is actively being played
+   * @param reason the reason for the state change (e.g. "Next Level", "Level Failed")
+   */
+  public void setGameState(boolean inProgress, String reason) {
+    gameInProgress = inProgress;
+    stateChange = reason;
+  }
+
+  public boolean getGameState() {
+    return gameInProgress;
+  }
+
+  private boolean useDirectRendering = false;
+  private BufferedImage offscreenBuffer = null;
+
+  private Graphics getGameGraphics() {
+    if (!useDirectRendering) {
+      try {
+        BufferStrategy bs = gameView.getBufferStrategy();
+        if (bs != null) {
+          Graphics g = bs.getDrawGraphics();
+          if (g != null) return g;
+        }
+      } catch (Exception e) {
+        // BufferStrategy is broken (e.g. CheerpJ) — fall back permanently
+        useDirectRendering = true;
+        System.out.println("BufferStrategy failed, switching to offscreen buffer.");
+      }
     }
-
-    /**
-     * Sets the game state and reason for the state change.
-     *
-     * @param inProgress true if a level is actively being played
-     * @param reason     the reason for the state change (e.g. "Next Level", "Level Failed")
-     */
-    public void setGameState(boolean inProgress, String reason) {
-        gameInProgress = inProgress;
-        stateChange = reason;
+    // Manual double-buffer: draw to offscreen image, blit in showBuffer()
+    if (offscreenBuffer == null
+        || offscreenBuffer.getWidth() != windowWidth
+        || offscreenBuffer.getHeight() != windowHeight) {
+      offscreenBuffer = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_ARGB);
     }
+    return offscreenBuffer.getGraphics();
+  }
 
-    public boolean getGameState() {
-        return gameInProgress;
+  private void showBuffer() {
+    if (!useDirectRendering) {
+      try {
+        BufferStrategy bs = gameView.getBufferStrategy();
+        if (bs != null) {
+          bs.show();
+          return;
+        }
+      } catch (Exception e) {
+        useDirectRendering = true;
+      }
     }
-
-    private boolean useDirectRendering = false;
-    private BufferedImage offscreenBuffer = null;
-
-    private Graphics getGameGraphics() {
-        if (!useDirectRendering) {
-            try {
-                BufferStrategy bs = gameView.getBufferStrategy();
-                if (bs != null) {
-                    Graphics g = bs.getDrawGraphics();
-                    if (g != null) return g;
-                }
-            } catch (Exception e) {
-                // BufferStrategy is broken (e.g. CheerpJ) — fall back permanently
-                useDirectRendering = true;
-                System.out.println("BufferStrategy failed, switching to offscreen buffer.");
-            }
-        }
-        // Manual double-buffer: draw to offscreen image, blit in showBuffer()
-        if (offscreenBuffer == null
-                || offscreenBuffer.getWidth() != windowWidth
-                || offscreenBuffer.getHeight() != windowHeight) {
-            offscreenBuffer = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_ARGB);
-        }
-        return offscreenBuffer.getGraphics();
-    }
-
-    private void showBuffer() {
-        if (!useDirectRendering) {
-            try {
-                BufferStrategy bs = gameView.getBufferStrategy();
-                if (bs != null) { bs.show(); return; }
-            } catch (Exception e) {
-                useDirectRendering = true;
-            }
-        }
-        // Blit offscreen buffer to canvas in one operation (no flicker)
-        if (offscreenBuffer != null) {
-            Graphics g = gameView.getGraphics();
-            if (g != null) {
-                g.drawImage(offscreenBuffer, 0, 0, null);
-                g.dispose();
-            }
-        }
-    }
-
-    public void update() {
-        int halfPlayer = player.getSize() / 2;
-        Graphics g = getGameGraphics();
-        if (g == null) return;
-
-        if (player.getMoveN()) {
-            int[] nextTile = renderer.getTile(player.getX(), player.getY() - (halfPlayer + 1), player.getSize(), TILE_SIZE, TILE_BORDER);
-            if (renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeY(g, rowColAmount, MOVEMENT_SPEED);
-                player.setY(player.getY() - MOVEMENT_SPEED);
-            }
-        }
-        if (player.getMoveE()) {
-            int[] nextTile = renderer.getTile(player.getX() + (halfPlayer + 1), player.getY(), player.getSize(), TILE_SIZE, TILE_BORDER);
-            if (renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeX(g, rowColAmount, -MOVEMENT_SPEED);
-                player.setX(player.getX() + MOVEMENT_SPEED);
-            }
-        }
-        if (player.getMoveS()) {
-            int[] nextTile = renderer.getTile(player.getX(), player.getY() + (halfPlayer + 1), player.getSize(), TILE_SIZE, TILE_BORDER);
-            if (renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeY(g, rowColAmount, -MOVEMENT_SPEED);
-                player.setY(player.getY() + MOVEMENT_SPEED);
-            }
-        }
-        if (player.getMoveW()) {
-            int[] nextTile = renderer.getTile(player.getX() - (halfPlayer + 1), player.getY(), player.getSize(), TILE_SIZE, TILE_BORDER);
-            if (renderer.checkCollision(nextTile, this)) {
-                renderer.moveMazeX(g, rowColAmount, MOVEMENT_SPEED);
-                player.setX(player.getX() - MOVEMENT_SPEED);
-            }
-        }
+    // Blit offscreen buffer to canvas in one operation (no flicker)
+    if (offscreenBuffer != null) {
+      Graphics g = gameView.getGraphics();
+      if (g != null) {
+        g.drawImage(offscreenBuffer, 0, 0, null);
         g.dispose();
+      }
     }
+  }
 
-    public void render() {
-        Graphics g = getGameGraphics();
-        if (g == null) return;
-        super.paint(g); // Override
+  public void update() {
+    int halfPlayer = player.getSize() / 2;
+    Graphics g = getGameGraphics();
+    if (g == null) return;
 
-        renderer.renderBackground(g); // Renders background
-        renderer.renderMaze(g, TILE_SIZE);
-        renderer.renderPlayer(g, player, TILE_SIZE);
-        renderer.renderHUD(g, player, levelCount);
-
-        g.dispose(); // clears graphics memory
-        showBuffer(); // Buffer has been written to and is ready to be put on screen
+    if (player.getMoveN()) {
+      int[] nextTile =
+          renderer.getTile(
+              player.getX(),
+              player.getY() - (halfPlayer + 1),
+              player.getSize(),
+              TILE_SIZE,
+              TILE_BORDER);
+      if (renderer.checkCollision(nextTile, this)) {
+        renderer.moveMazeY(g, rowColAmount, MOVEMENT_SPEED);
+        player.setY(player.getY() - MOVEMENT_SPEED);
+      }
     }
-
-    public void renderBackground(){
-        Graphics g = getGameGraphics();
-        if (g == null) return;
-        super.paint(g); // Override
-        renderer.renderBackground(g); // Renders background
-        g.dispose();
-        showBuffer();
+    if (player.getMoveE()) {
+      int[] nextTile =
+          renderer.getTile(
+              player.getX() + (halfPlayer + 1),
+              player.getY(),
+              player.getSize(),
+              TILE_SIZE,
+              TILE_BORDER);
+      if (renderer.checkCollision(nextTile, this)) {
+        renderer.moveMazeX(g, rowColAmount, -MOVEMENT_SPEED);
+        player.setX(player.getX() + MOVEMENT_SPEED);
+      }
     }
-
-    public void updatePlayer() {
-        renderer.updateFrames();
+    if (player.getMoveS()) {
+      int[] nextTile =
+          renderer.getTile(
+              player.getX(),
+              player.getY() + (halfPlayer + 1),
+              player.getSize(),
+              TILE_SIZE,
+              TILE_BORDER);
+      if (renderer.checkCollision(nextTile, this)) {
+        renderer.moveMazeY(g, rowColAmount, -MOVEMENT_SPEED);
+        player.setY(player.getY() + MOVEMENT_SPEED);
+      }
     }
-
-    private void showPauseMenu() {
-        paused = true;
-        renderer.stopTimer();
-        player.setMoveN(false);
-        player.setMoveE(false);
-        player.setMoveS(false);
-        player.setMoveW(false);
+    if (player.getMoveW()) {
+      int[] nextTile =
+          renderer.getTile(
+              player.getX() - (halfPlayer + 1),
+              player.getY(),
+              player.getSize(),
+              TILE_SIZE,
+              TILE_BORDER);
+      if (renderer.checkCollision(nextTile, this)) {
+        renderer.moveMazeX(g, rowColAmount, MOVEMENT_SPEED);
+        player.setX(player.getX() - MOVEMENT_SPEED);
+      }
     }
+    g.dispose();
+  }
 
-    private void renderPauseScreen() {
-        Graphics g = getGameGraphics();
-        if (g == null) return;
+  public void render() {
+    Graphics g = getGameGraphics();
+    if (g == null) return;
+    super.paint(g); // Override
 
-        // Dark overlay
-        g.setColor(new Color(0, 0, 0, PAUSE_OVERLAY_ALPHA));
-        g.fillRect(0, 0, windowWidth, windowHeight);
+    renderer.renderBackground(g); // Renders background
+    renderer.renderMaze(g, TILE_SIZE);
+    renderer.renderPlayer(g, player, TILE_SIZE);
+    renderer.renderHUD(g, player, levelCount);
 
-        // Title
-        g.setColor(Color.CYAN);
-        g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_TITLE_FONT_SIZE));
-        FontMetrics fmTitle = g.getFontMetrics();
-        String title = "Paused";
-        g.drawString(title, (windowWidth - fmTitle.stringWidth(title)) / 2, windowHeight / 4);
+    g.dispose(); // clears graphics memory
+    showBuffer(); // Buffer has been written to and is ready to be put on screen
+  }
 
-        // Buttons
-        g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_BUTTON_FONT_SIZE));
-        FontMetrics fm = g.getFontMetrics();
+  public void renderBackground() {
+    Graphics g = getGameGraphics();
+    if (g == null) return;
+    super.paint(g); // Override
+    renderer.renderBackground(g); // Renders background
+    g.dispose();
+    showBuffer();
+  }
 
-        int btnX = (windowWidth - PAUSE_BUTTON_WIDTH) / 2;
-        int btnGap = PAUSE_BUTTON_HEIGHT + 15;
+  public void updatePlayer() {
+    renderer.updateFrames();
+  }
 
-        // Resume button
-        int resumeY = windowHeight / 2 - PAUSE_BUTTON_HEIGHT - btnGap / 2;
-        resumeBtn = new Rectangle(btnX, resumeY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
-        g.setColor(Color.DARK_GRAY);
-        g.fillRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
-        g.setColor(Color.WHITE);
-        g.drawRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
-        String rText = "Resume [Space/Esc]";
-        g.drawString(rText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rText)) / 2, resumeY + 30);
+  private void showPauseMenu() {
+    paused = true;
+    renderer.stopTimer();
+    player.setMoveN(false);
+    player.setMoveE(false);
+    player.setMoveS(false);
+    player.setMoveW(false);
+  }
 
-        // Restart Level button
-        int restartY = resumeY + btnGap;
-        restartBtn = new Rectangle(btnX, restartY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
-        g.setColor(Color.DARK_GRAY);
-        g.fillRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
-        g.setColor(Color.WHITE);
-        g.drawRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
-        String rstText = "Restart Level [R]";
-        g.drawString(rstText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rstText)) / 2, restartY + 30);
+  private void renderPauseScreen() {
+    Graphics g = getGameGraphics();
+    if (g == null) return;
 
-        // Main Menu button
-        int menuY = restartY + btnGap;
-        menuBtn = new Rectangle(btnX, menuY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
-        g.setColor(Color.DARK_GRAY);
-        g.fillRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
-        g.setColor(Color.WHITE);
-        g.drawRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
-        String mText = "Main Menu";
-        g.drawString(mText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(mText)) / 2, menuY + 30);
+    // Dark overlay
+    g.setColor(new Color(0, 0, 0, PAUSE_OVERLAY_ALPHA));
+    g.fillRect(0, 0, windowWidth, windowHeight);
 
-        g.dispose();
-        showBuffer();
-    }
+    // Title
+    g.setColor(Color.CYAN);
+    g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_TITLE_FONT_SIZE));
+    FontMetrics fmTitle = g.getFontMetrics();
+    String title = "Paused";
+    g.drawString(title, (windowWidth - fmTitle.stringWidth(title)) / 2, windowHeight / 4);
 
-    private void resumeGame() {
-        paused = false;
-        renderer.beginTimer();
-    }
+    // Buttons
+    g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_BUTTON_FONT_SIZE));
+    FontMetrics fm = g.getFontMetrics();
 
+    int btnX = (windowWidth - PAUSE_BUTTON_WIDTH) / 2;
+    int btnGap = PAUSE_BUTTON_HEIGHT + 15;
 
-    @Override
-    public void run() {
-        Long lastTime = System.nanoTime();
-        double nanoSecondConversion = 100000000.0 / TARGET_FPS;
-        double changeInSeconds = 0;
-        double changeInSeconds2 = 0;
-        renderer = new Renderer(windowWidth, windowHeight, rowColAmount, TILE_SIZE, assetManager, this);
+    // Resume button
+    int resumeY = windowHeight / 2 - PAUSE_BUTTON_HEIGHT - btnGap / 2;
+    resumeBtn = new Rectangle(btnX, resumeY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
+    g.setColor(Color.DARK_GRAY);
+    g.fillRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
+    g.setColor(Color.WHITE);
+    g.drawRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
+    String rText = "Resume [Space/Esc]";
+    g.drawString(rText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rText)) / 2, resumeY + 30);
 
-        setNESWKeys(pane);
+    // Restart Level button
+    int restartY = resumeY + btnGap;
+    restartBtn = new Rectangle(btnX, restartY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
+    g.setColor(Color.DARK_GRAY);
+    g.fillRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
+    g.setColor(Color.WHITE);
+    g.drawRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
+    String rstText = "Restart Level [R]";
+    g.drawString(rstText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rstText)) / 2, restartY + 30);
 
-        // Global key dispatcher — handles ESC/Space for pause in all focus states
-        KeyEventDispatcher escDispatcher = e -> {
-            if (e.getID() != KeyEvent.KEY_PRESSED) return false;
-            int key = e.getKeyCode();
-            if (gameInProgress && !paused && key == KeyEvent.VK_ESCAPE) {
-                showPauseMenu();
-                return true;
-            }
-            if (paused && (key == KeyEvent.VK_SPACE || key == KeyEvent.VK_ESCAPE)) {
-                pauseAction = "resume";
-                return true;
-            }
-            if (paused && key == KeyEvent.VK_R) {
-                pauseAction = "restart";
-                return true;
-            }
-            return false;
+    // Main Menu button
+    int menuY = restartY + btnGap;
+    menuBtn = new Rectangle(btnX, menuY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
+    g.setColor(Color.DARK_GRAY);
+    g.fillRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
+    g.setColor(Color.WHITE);
+    g.drawRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
+    String mText = "Main Menu";
+    g.drawString(mText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(mText)) / 2, menuY + 30);
+
+    g.dispose();
+    showBuffer();
+  }
+
+  private void resumeGame() {
+    paused = false;
+    renderer.beginTimer();
+  }
+
+  @Override
+  public void run() {
+    Long lastTime = System.nanoTime();
+    double nanoSecondConversion = 100000000.0 / TARGET_FPS;
+    double changeInSeconds = 0;
+    double changeInSeconds2 = 0;
+    renderer = new Renderer(windowWidth, windowHeight, rowColAmount, TILE_SIZE, assetManager, this);
+
+    setNESWKeys(pane);
+
+    // Global key dispatcher — handles ESC/Space for pause in all focus states
+    KeyEventDispatcher escDispatcher =
+        e -> {
+          if (e.getID() != KeyEvent.KEY_PRESSED) return false;
+          int key = e.getKeyCode();
+          if (gameInProgress && !paused && key == KeyEvent.VK_ESCAPE) {
+            showPauseMenu();
+            return true;
+          }
+          if (paused && (key == KeyEvent.VK_SPACE || key == KeyEvent.VK_ESCAPE)) {
+            pauseAction = "resume";
+            return true;
+          }
+          if (paused && key == KeyEvent.VK_R) {
+            pauseAction = "restart";
+            return true;
+          }
+          return false;
         };
-        KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                .addKeyEventDispatcher(escDispatcher);
+    KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(escDispatcher);
 
-        setUpFrame();
-        pane.add(gameView);
-        gameView.setFocusable(true);
+    setUpFrame();
+    pane.add(gameView);
+    gameView.setFocusable(true);
 
-        // Mouse click handler for pause menu buttons
-        gameView.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (!paused) return;
-                if (resumeBtn != null && resumeBtn.contains(e.getPoint())) {
-                    pauseAction = "resume";
-                } else if (restartBtn != null && restartBtn.contains(e.getPoint())) {
-                    pauseAction = "restart";
-                } else if (menuBtn != null && menuBtn.contains(e.getPoint())) {
-                    pauseAction = "menu";
-                }
+    // Mouse click handler for pause menu buttons
+    gameView.addMouseListener(
+        new java.awt.event.MouseAdapter() {
+          @Override
+          public void mouseClicked(java.awt.event.MouseEvent e) {
+            if (!paused) return;
+            if (resumeBtn != null && resumeBtn.contains(e.getPoint())) {
+              pauseAction = "resume";
+            } else if (restartBtn != null && restartBtn.contains(e.getPoint())) {
+              pauseAction = "restart";
+            } else if (menuBtn != null && menuBtn.contains(e.getPoint())) {
+              pauseAction = "menu";
             }
+          }
         });
 
+    try {
+      gameView.createBufferStrategy(2);
+    } catch (Exception e) {
+      System.out.println("BufferStrategy not supported, using direct rendering.");
+    }
+
+    renderer.generateMaze(TILE_SIZE, TILE_BORDER);
+    renderer.centerMaze();
+    player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);
+    renderer.beginTimer();
+
+    render();
+
+    while (getGameState()) {
+      if (paused) {
+        // Check for pause menu actions
+        String action = pauseAction;
+        if ("resume".equals(action)) {
+          pauseAction = null;
+          resumeGame();
+        } else if ("restart".equals(action)) {
+          pauseAction = null;
+          setGameState(false, "Restart");
+        } else if ("menu".equals(action)) {
+          pauseAction = null;
+          setGameState(false, "Menu");
+        } else {
+          renderPauseScreen();
+          try {
+            Thread.sleep(PAUSE_SLEEP_MS);
+          } catch (InterruptedException ie) {
+          }
+        }
+        lastTime = System.nanoTime();
+        continue;
+      }
+      Long now = System.nanoTime();
+      changeInSeconds += (now - lastTime) / nanoSecondConversion;
+      changeInSeconds2 += (now - lastTime) / nanoSecondConversion;
+
+      while (changeInSeconds >= 1) {
+        update();
+        changeInSeconds = 0;
+      }
+
+      while (changeInSeconds2 >= 10) {
+        updatePlayer();
+        changeInSeconds2 = 0;
+      }
+
+      render();
+      lastTime = now;
+
+      // Cap frame rate to avoid busy-spinning at 100% CPU
+      long elapsed = System.nanoTime() - now;
+      long sleepMs = (FRAME_TIME_NS - elapsed) / 1_000_000;
+      if (sleepMs > 0) {
         try {
-            gameView.createBufferStrategy(2);
-        } catch (Exception e) {
-            System.out.println("BufferStrategy not supported, using direct rendering.");
+          Thread.sleep(sleepMs);
+        } catch (InterruptedException ie) {
         }
-
-        renderer.generateMaze(TILE_SIZE, TILE_BORDER);
-        renderer.centerMaze();
-        player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);
-        renderer.beginTimer();
-
-        render();
-
-        while(getGameState()) {
-            if (paused) {
-                // Check for pause menu actions
-                String action = pauseAction;
-                if ("resume".equals(action)) {
-                    pauseAction = null;
-                    resumeGame();
-                } else if ("restart".equals(action)) {
-                    pauseAction = null;
-                    setGameState(false, "Restart");
-                } else if ("menu".equals(action)) {
-                    pauseAction = null;
-                    setGameState(false, "Menu");
-                } else {
-                    renderPauseScreen();
-                    try { Thread.sleep(PAUSE_SLEEP_MS); } catch (InterruptedException ie) { }
-                }
-                lastTime = System.nanoTime();
-                continue;
-            }
-            Long now = System.nanoTime();
-            changeInSeconds += (now - lastTime) / nanoSecondConversion;
-            changeInSeconds2 += (now - lastTime) / nanoSecondConversion;
-
-            while(changeInSeconds >= 1) {
-                update();
-                changeInSeconds = 0;
-            }
-
-            while(changeInSeconds2 >= 10) {
-                updatePlayer();
-                changeInSeconds2 = 0;
-            }
-
-            render();
-            lastTime = now;
-
-            // Cap frame rate to avoid busy-spinning at 100% CPU
-            long elapsed = System.nanoTime() - now;
-            long sleepMs = (FRAME_TIME_NS - elapsed) / 1_000_000;
-            if (sleepMs > 0) {
-                try { Thread.sleep(sleepMs); } catch (InterruptedException ie) { }
-            }
-        }
-
-        // Clean up global ESC dispatcher
-        KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                .removeKeyEventDispatcher(escDispatcher);
-
-        Graphics gv = gameView.getGraphics();
-        if (gv != null) gv.dispose();
-
-        Graphics gf = getGraphics();
-        if (gf != null) gf.dispose();
-
-        renderBackground();
-        renderer.stopTimer();
-
-
-        if (stateChange.equalsIgnoreCase("Level Failed")){
-            runGameOverScreen();
-        } else if (stateChange.equalsIgnoreCase("Next Level")){
-            double timeInMs = renderer.getTimeTaken();
-            runCompletionScreen(timeInMs);
-        } else if (stateChange.equalsIgnoreCase("Restart")){
-            thread = new Thread(this);
-            setGameState(true, "");
-            thread.start();
-        } else if (stateChange.equalsIgnoreCase("Menu")){
-            runMenu();
-        }
+      }
     }
 
-    public void runGameOverScreen() {
-        JPanel panel = new JPanel(new GridLayout());
-        thread = new Thread(this);
+    // Clean up global ESC dispatcher
+    KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(escDispatcher);
 
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        setContentPane(panel);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
+    Graphics gv = gameView.getGraphics();
+    if (gv != null) gv.dispose();
 
-        JLabel gameOver = ui.getLogo("You failed level " + levelCount + "!");
-        JButton retry = ui.getTopButton("Retry Level? [Space]");
-        JButton menu = ui.getMidButton("Main Menu [Esc]");
-        panel.add(gameOver);
-        panel.add(retry);
-        panel.add(menu);
-        panel.setLayout(null);
-        panel.setBackground(Color.BLACK);
-        panel.setVisible(true);
+    Graphics gf = getGraphics();
+    if (gf != null) gf.dispose();
 
-        addKeyBinding(panel, KeyEvent.VK_SPACE, "Retry Level", false, (evt) -> {
-            setGameState(true, "");
-            thread.start();
+    renderBackground();
+    renderer.stopTimer();
+
+    if (stateChange.equalsIgnoreCase("Level Failed")) {
+      runGameOverScreen();
+    } else if (stateChange.equalsIgnoreCase("Next Level")) {
+      double timeInMs = renderer.getTimeTaken();
+      runCompletionScreen(timeInMs);
+    } else if (stateChange.equalsIgnoreCase("Restart")) {
+      thread = new Thread(this);
+      setGameState(true, "");
+      thread.start();
+    } else if (stateChange.equalsIgnoreCase("Menu")) {
+      runMenu();
+    }
+  }
+
+  public void runGameOverScreen() {
+    JPanel panel = new JPanel(new GridLayout());
+    thread = new Thread(this);
+
+    setResizable(false);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+    setContentPane(panel);
+    pack();
+    setLocationRelativeTo(null);
+    setVisible(true);
+
+    JLabel gameOver = ui.getLogo("You failed level " + levelCount + "!");
+    JButton retry = ui.getTopButton("Retry Level? [Space]");
+    JButton menu = ui.getMidButton("Main Menu [Esc]");
+    panel.add(gameOver);
+    panel.add(retry);
+    panel.add(menu);
+    panel.setLayout(null);
+    panel.setBackground(Color.BLACK);
+    panel.setVisible(true);
+
+    addKeyBinding(
+        panel,
+        KeyEvent.VK_SPACE,
+        "Retry Level",
+        false,
+        (evt) -> {
+          setGameState(true, "");
+          thread.start();
         });
 
-        retry.addActionListener((ActionEvent e) -> {
-            setGameState(true, "");
-            thread.start();
+    retry.addActionListener(
+        (ActionEvent e) -> {
+          setGameState(true, "");
+          thread.start();
         });
 
-        addKeyBinding(panel, KeyEvent.VK_ESCAPE, "Menu", false, (evt) -> {runMenu();});
-        menu.addActionListener((e) -> {
-
-            runMenu();
-
+    addKeyBinding(
+        panel,
+        KeyEvent.VK_ESCAPE,
+        "Menu",
+        false,
+        (evt) -> {
+          runMenu();
         });
+    menu.addActionListener(
+        (e) -> {
+          runMenu();
+        });
+  }
+
+  public void runCompletionScreen(double timeTaken) {
+
+    String[] lineWords = levelData[levelCount].split(",");
+    double bestTime = Double.parseDouble(lineWords[2]);
+    System.out.println("best time: " + bestTime);
+    System.out.println("Time taken: " + timeTaken);
+
+    if ((timeTaken < bestTime) || (bestTime == -1)) {
+
+      // New best time
+      bestTime = timeTaken;
     }
 
-    public void runCompletionScreen(double timeTaken) {
+    String completedString = String.valueOf(levelCount) + ",completed," + String.valueOf(bestTime);
 
-        String []lineWords = levelData[levelCount].split(",");
-        double bestTime = Double.parseDouble(lineWords[2]);
-        System.out.println("best time: " + bestTime);
-        System.out.println("Time taken: " + timeTaken);
+    levelData[levelCount] = completedString;
+    save();
 
-        if ((timeTaken < bestTime) || (bestTime == -1)) {
+    JPanel panel = new JPanel(new GridLayout());
+    thread = new Thread(this);
 
-            // New best time
-            bestTime = timeTaken;
-        }
+    setResizable(false);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+    setContentPane(panel);
+    pack();
+    setLocationRelativeTo(null);
+    setVisible(true);
 
-        String completedString = String.valueOf(levelCount) +
-                ",completed," + String.valueOf(bestTime);
+    JLabel complete = ui.getLogo("Completed Level " + levelCount);
+    JButton next = ui.getTopButton("Next Level [Space]");
+    JButton menu = ui.getMidButton("Main Menu [Esc]");
+    panel.add(complete);
+    panel.add(next);
+    panel.add(menu);
+    panel.setLayout(null);
+    panel.setBackground(Color.BLACK);
+    panel.setVisible(true);
 
-        levelData[levelCount] = completedString;
-        save();
-
-        JPanel panel = new JPanel(new GridLayout());
-        thread = new Thread(this);
-
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        setContentPane(panel);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
-
-        JLabel complete = ui.getLogo("Completed Level " + levelCount);
-        JButton next = ui.getTopButton("Next Level [Space]");
-        JButton menu = ui.getMidButton("Main Menu [Esc]");
-        panel.add(complete);
-        panel.add(next);
-        panel.add(menu);
-        panel.setLayout(null);
-        panel.setBackground(Color.BLACK);
-        panel.setVisible(true);
-
-        addKeyBinding(panel, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
-            increaseLevel();
-            thread.start();
+    addKeyBinding(
+        panel,
+        KeyEvent.VK_SPACE,
+        "Next Level",
+        false,
+        (evt) -> {
+          increaseLevel();
+          thread.start();
         });
 
-        next.addActionListener((ActionEvent e) -> {
-            increaseLevel();
-            thread.start();
+    next.addActionListener(
+        (ActionEvent e) -> {
+          increaseLevel();
+          thread.start();
         });
 
-        addKeyBinding(panel, KeyEvent.VK_ESCAPE, "Menu", false, (evt) -> {runMenu();});
-        menu.addActionListener((e) -> {runMenu();});
+    addKeyBinding(
+        panel,
+        KeyEvent.VK_ESCAPE,
+        "Menu",
+        false,
+        (evt) -> {
+          runMenu();
+        });
+    menu.addActionListener(
+        (e) -> {
+          runMenu();
+        });
+  }
+
+  public void runLevelSelection() {
+    JPanel panelWrapper = new JPanel(new BorderLayout());
+    JPanel panel = new JPanel(new GridLayout(0, 1));
+    ArrayList<JPanel> levelPanels = ui.getLevelPanels(levelData, this);
+
+    panel.setBackground(Color.red);
+    for (int i = 1; i < levelData.length; i++) {
+      JPanel p = levelPanels.get(i - 1);
+      panel.add(p);
     }
 
-    public void runLevelSelection() {
-        JPanel panelWrapper = new JPanel(new BorderLayout());
-        JPanel panel = new JPanel(new GridLayout(0,1));
-        ArrayList<JPanel> levelPanels = ui.getLevelPanels(levelData, this);
+    panelWrapper.add(ui.getLevelHeader(this), BorderLayout.NORTH);
+    panelWrapper.add(panel, BorderLayout.SOUTH);
 
-        panel.setBackground(Color.red);
-        for (int i = 1; i < levelData.length; i++) {
-            JPanel p = levelPanels.get(i-1);
-            panel.add(p);
-        }
+    JScrollPane scrollPane =
+        new JScrollPane(
+            panelWrapper,
+            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+    scrollPane.setPreferredSize(this.getPreferredSize());
+    scrollPane.setViewportView(panelWrapper);
 
-        panelWrapper.add(ui.getLevelHeader(this), BorderLayout.NORTH);
-        panelWrapper.add(panel, BorderLayout.SOUTH);
+    setResizable(false);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
+    setContentPane(scrollPane);
+    pack();
+    setLocationRelativeTo(null);
+    setVisible(true);
 
+    scrollPane.setVisible(true);
 
-        JScrollPane scrollPane = new JScrollPane(panelWrapper,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setPreferredSize(this.getPreferredSize());
-        scrollPane.setViewportView(panelWrapper);
+    addKeyBinding(
+        panel,
+        KeyEvent.VK_ESCAPE,
+        "Menu",
+        false,
+        (evt) -> {
+          runMenu();
+        });
+  }
 
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ends app build on close
-        setContentPane(scrollPane);
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
+  public void setLevel(int level) {
+    levelCount += level - 1;
+    rowColAmount += (level - 1 * 2);
+  }
 
-        scrollPane.setVisible(true);
+  public void increaseLevel() {
+    if (levelCount < 30) {
+      levelCount += 1;
+      rowColAmount += 2;
+      setGameState(true, "Increase Level");
+    }
+  }
 
-        addKeyBinding(panel, KeyEvent.VK_ESCAPE, "Menu", false, (evt) -> {runMenu();});
+  public void playSelectedLevel() {
+    dispose();
+    MazeGame newGame = new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
+    Thread newGameThread = new Thread(newGame);
+    newGame.levelCount = levelCount;
+    newGame.setGameState(true, "Level Select");
+    newGameThread.start();
+  }
+
+  public void runMenu() {
+    try {
+      super.remove(gameView);
+      pane.removeAll();
+      BufferStrategy bs = gameView.getBufferStrategy();
+      if (bs != null) bs.dispose();
+
+    } catch (Exception e) {
 
     }
+    pane = new JPanel(new GridLayout());
+    setUpFrame();
 
-    public void setLevel(int level) {
-        levelCount += level-1;
-        rowColAmount += (level-1*2);
-    }
+    JButton play = ui.getTopButton("Continue [Space]");
+    JButton levels = ui.getMidButton("Level Selection");
+    JLabel logo = ui.getLogo("Wesley's Way Out");
 
-    public void increaseLevel() {
-        if (levelCount < 30) {
-            levelCount += 1;
-            rowColAmount += 2;
-            setGameState(true, "Increase Level");
-        }
-    }
+    pane.add(logo);
+    pane.add(play);
+    pane.add(levels);
 
-    public void playSelectedLevel() {
+    // Only show Quit on desktop (not in CheerpJ browser environment)
+    boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
+
+    if (!inBrowser) {
+      JButton quit = ui.getBottomButton("Quit [Esc]");
+      pane.add(quit);
+      quit.addActionListener(
+          (e) -> {
             dispose();
-            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
-            Thread newGameThread = new Thread(newGame);
-            newGame.levelCount = levelCount;
-            newGame.setGameState(true, "Level Select");
-            newGameThread.start();
-    }
-
-    public void runMenu() {
-        try {
-            super.remove(gameView);
-            pane.removeAll();
-            BufferStrategy bs = gameView.getBufferStrategy();
-            if (bs != null) bs.dispose();
-
-        } catch (Exception e) {
-
-        }
-        pane = new JPanel(new GridLayout());
-        setUpFrame();
-
-        JButton play = ui.getTopButton("Continue [Space]");
-        JButton levels = ui.getMidButton("Level Selection");
-        JLabel logo = ui.getLogo("Wesley's Way Out");
-
-        pane.add(logo);
-        pane.add(play);
-        pane.add(levels);
-
-        // Only show Quit on desktop (not in CheerpJ browser environment)
-        boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
-
-        if (!inBrowser) {
-            JButton quit = ui.getBottomButton("Quit [Esc]");
-            pane.add(quit);
-            quit.addActionListener((e) -> {dispose();});
-            addKeyBinding(pane, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
-                dispose();
-            });
-        }
-
-        pane.setLayout(null);
-        pane.setBackground(Color.BLACK);
-
-        addKeyBinding(pane, KeyEvent.VK_SPACE, "Next Level", false, (evt) -> {
+          });
+      addKeyBinding(
+          pane,
+          KeyEvent.VK_ESCAPE,
+          "Exit",
+          false,
+          (evt) -> {
             dispose();
-            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
-            Thread newGameThread = new Thread(newGame);
-            newGame.setGameState(true, "");
-            newGameThread.start();
-        });
-
-        levels.addActionListener((e) -> {
-            runLevelSelection();
-        });
-
-        play.addActionListener((e) -> {
-            dispose();
-            MazeGame newGame =  new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
-            Thread newGameThread = new Thread(newGame);
-            newGame.setGameState(true, "Next Level");
-            newGameThread.start();
-        });
+          });
     }
 
-    public void setNESWKeys(JComponent comp) {
-        addKeyBinding(comp, KeyEvent.VK_UP, "Move North", false, (evt) -> {player.setMoveN(true);});
-        addKeyBinding(comp, KeyEvent.VK_RIGHT, "Move East", false, (evt) -> {player.setMoveE(true);});
-        addKeyBinding(comp, KeyEvent.VK_DOWN, "Move South", false, (evt) -> {player.setMoveS(true);});
-        addKeyBinding(comp, KeyEvent.VK_LEFT, "Move West", false, (evt) -> {player.setMoveW(true);});
+    pane.setLayout(null);
+    pane.setBackground(Color.BLACK);
 
-        addKeyBinding(comp, KeyEvent.VK_UP, "Stop North", true, (evt) -> {player.setMoveN(false);});
-        addKeyBinding(comp, KeyEvent.VK_RIGHT, "Stop East", true, (evt) -> {player.setMoveE(false);});
-        addKeyBinding(comp, KeyEvent.VK_DOWN, "Stop South", true, (evt) -> {player.setMoveS(false);});
-        addKeyBinding(comp, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {player.setMoveW(false);});
-
-        // WASD bindings (mirror arrow keys)
-        addKeyBinding(comp, KeyEvent.VK_W, "Move North WASD", false, (evt) -> {player.setMoveN(true);});
-        addKeyBinding(comp, KeyEvent.VK_D, "Move East WASD", false, (evt) -> {player.setMoveE(true);});
-        addKeyBinding(comp, KeyEvent.VK_S, "Move South WASD", false, (evt) -> {player.setMoveS(true);});
-        addKeyBinding(comp, KeyEvent.VK_A, "Move West WASD", false, (evt) -> {player.setMoveW(true);});
-
-        addKeyBinding(comp, KeyEvent.VK_W, "Stop North WASD", true, (evt) -> {player.setMoveN(false);});
-        addKeyBinding(comp, KeyEvent.VK_D, "Stop East WASD", true, (evt) -> {player.setMoveE(false);});
-        addKeyBinding(comp, KeyEvent.VK_S, "Stop South WASD", true, (evt) -> {player.setMoveS(false);});
-        addKeyBinding(comp, KeyEvent.VK_A, "Stop West WASD", true, (evt) -> {player.setMoveW(false);});
-
-        addKeyBinding(comp, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
-            if (!paused) {
-                showPauseMenu();
-            }
+    addKeyBinding(
+        pane,
+        KeyEvent.VK_SPACE,
+        "Next Level",
+        false,
+        (evt) -> {
+          dispose();
+          MazeGame newGame = new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
+          Thread newGameThread = new Thread(newGame);
+          newGame.setGameState(true, "");
+          newGameThread.start();
         });
-    }
 
-    public void addKeyBinding(JComponent comp, int keyCode, String id, boolean onRelease, ActionListener al) {
-        InputMap inMap = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actMap = comp.getActionMap();
-        inMap.put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), id);
-
-        actMap.put(id, new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                al.actionPerformed(e);
-            }
+    levels.addActionListener(
+        (e) -> {
+          runLevelSelection();
         });
-    }
 
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(windowWidth, windowHeight);
-    }
+    play.addActionListener(
+        (e) -> {
+          dispose();
+          MazeGame newGame = new MazeGame(windowWidth, windowHeight, ui, rowColAmount);
+          Thread newGameThread = new Thread(newGame);
+          newGame.setGameState(true, "Next Level");
+          newGameThread.start();
+        });
+  }
+
+  public void setNESWKeys(JComponent comp) {
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_UP,
+        "Move North",
+        false,
+        (evt) -> {
+          player.setMoveN(true);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_RIGHT,
+        "Move East",
+        false,
+        (evt) -> {
+          player.setMoveE(true);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_DOWN,
+        "Move South",
+        false,
+        (evt) -> {
+          player.setMoveS(true);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_LEFT,
+        "Move West",
+        false,
+        (evt) -> {
+          player.setMoveW(true);
+        });
+
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_UP,
+        "Stop North",
+        true,
+        (evt) -> {
+          player.setMoveN(false);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_RIGHT,
+        "Stop East",
+        true,
+        (evt) -> {
+          player.setMoveE(false);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_DOWN,
+        "Stop South",
+        true,
+        (evt) -> {
+          player.setMoveS(false);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_LEFT,
+        "Stop West",
+        true,
+        (evt) -> {
+          player.setMoveW(false);
+        });
+
+    // WASD bindings (mirror arrow keys)
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_W,
+        "Move North WASD",
+        false,
+        (evt) -> {
+          player.setMoveN(true);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_D,
+        "Move East WASD",
+        false,
+        (evt) -> {
+          player.setMoveE(true);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_S,
+        "Move South WASD",
+        false,
+        (evt) -> {
+          player.setMoveS(true);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_A,
+        "Move West WASD",
+        false,
+        (evt) -> {
+          player.setMoveW(true);
+        });
+
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_W,
+        "Stop North WASD",
+        true,
+        (evt) -> {
+          player.setMoveN(false);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_D,
+        "Stop East WASD",
+        true,
+        (evt) -> {
+          player.setMoveE(false);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_S,
+        "Stop South WASD",
+        true,
+        (evt) -> {
+          player.setMoveS(false);
+        });
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_A,
+        "Stop West WASD",
+        true,
+        (evt) -> {
+          player.setMoveW(false);
+        });
+
+    addKeyBinding(
+        comp,
+        KeyEvent.VK_ESCAPE,
+        "Exit",
+        false,
+        (evt) -> {
+          if (!paused) {
+            showPauseMenu();
+          }
+        });
+  }
+
+  public void addKeyBinding(
+      JComponent comp, int keyCode, String id, boolean onRelease, ActionListener al) {
+    InputMap inMap = comp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+    ActionMap actMap = comp.getActionMap();
+    inMap.put(KeyStroke.getKeyStroke(keyCode, 0, onRelease), id);
+
+    actMap.put(
+        id,
+        new AbstractAction() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+            al.actionPerformed(e);
+          }
+        });
+  }
+
+  @Override
+  public Dimension getPreferredSize() {
+    return new Dimension(windowWidth, windowHeight);
+  }
 }

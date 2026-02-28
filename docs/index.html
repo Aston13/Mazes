@@ -144,7 +144,18 @@
                 overlay.querySelector('p').textContent = 'Starting game...';
 
                 // /app/ maps to server root; project Pages live under /Mazes/
-                const exitCode = await cheerpjRunJar('/app/Mazes/MazeGame.jar');
+                // Don't await — cheerpjRunJar resolves only when the app exits.
+                // Hide the overlay after a short delay to let Swing paint.
+                const runPromise = cheerpjRunJar('/app/Mazes/MazeGame.jar');
+
+                // Give the JVM a moment to start rendering, then fade out overlay
+                setTimeout(() => {
+                    overlay.style.transition = 'opacity 0.5s';
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 500);
+                }, 3000);
+
+                const exitCode = await runPromise;
                 console.log('CheerpJ exit code:', exitCode);
             } catch (err) {
                 const msg = err?.message || String(err);

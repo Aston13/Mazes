@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -118,6 +119,7 @@ public class MazeGame extends JFrame implements Runnable {
     }
     
     private boolean useDirectRendering = false;
+    private BufferedImage offscreenBuffer = null;
 
     private Graphics getGameGraphics() {
         if (!useDirectRendering) {
@@ -130,19 +132,34 @@ public class MazeGame extends JFrame implements Runnable {
             } catch (Exception e) {
                 // BufferStrategy is broken (e.g. CheerpJ) — fall back permanently
                 useDirectRendering = true;
-                System.out.println("BufferStrategy failed, switching to direct rendering.");
+                System.out.println("BufferStrategy failed, switching to offscreen buffer.");
             }
         }
-        return gameView.getGraphics();
+        // Manual double-buffer: draw to offscreen image, blit in showBuffer()
+        if (offscreenBuffer == null
+                || offscreenBuffer.getWidth() != windowWidth
+                || offscreenBuffer.getHeight() != windowHeight) {
+            offscreenBuffer = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_ARGB);
+        }
+        return offscreenBuffer.getGraphics();
     }
 
     private void showBuffer() {
-        if (useDirectRendering) return;
-        try {
-            BufferStrategy bs = gameView.getBufferStrategy();
-            if (bs != null) { bs.show(); }
-        } catch (Exception e) {
-            useDirectRendering = true;
+        if (!useDirectRendering) {
+            try {
+                BufferStrategy bs = gameView.getBufferStrategy();
+                if (bs != null) { bs.show(); return; }
+            } catch (Exception e) {
+                useDirectRendering = true;
+            }
+        }
+        // Blit offscreen buffer to canvas in one operation (no flicker)
+        if (offscreenBuffer != null) {
+            Graphics g = gameView.getGraphics();
+            if (g != null) {
+                g.drawImage(offscreenBuffer, 0, 0, null);
+                g.dispose();
+            }
         }
     }
 
@@ -202,6 +219,8 @@ public class MazeGame extends JFrame implements Runnable {
         if (g == null) return;
         super.paint(g); // Override
         renderer.renderBackground(g); // Renders background
+        g.dispose();
+        showBuffer();
     }
     
     public void updatePlayer() {

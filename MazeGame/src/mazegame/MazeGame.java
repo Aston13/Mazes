@@ -34,6 +34,8 @@ public class MazeGame extends JFrame implements Runnable {
     private final int windowWidth;
     private final int windowHeight;
     private boolean gameInProgress = false;
+    private volatile boolean paused = false;
+    private JPanel pauseOverlay = null;
     private Player player;
     private final UI ui;
     private final int tileWH = 100;
@@ -226,6 +228,58 @@ public class MazeGame extends JFrame implements Runnable {
     public void updatePlayer() {
         renderer.updateFrames();
     }
+
+    private void showPauseMenu() {
+        paused = true;
+        renderer.stopTimer();
+        player.setMoveN(false);
+        player.setMoveE(false);
+        player.setMoveS(false);
+        player.setMoveW(false);
+
+        pauseOverlay = new JPanel(null);
+        pauseOverlay.setBackground(new Color(0, 0, 0, 180));
+        pauseOverlay.setBounds(0, 0, windowWidth, windowHeight);
+
+        JButton resume = ui.getTopButton("Resume [Space]");
+        JButton menu = ui.getMidButton("Main Menu");
+        JLabel title = ui.getLogo("Paused");
+        pauseOverlay.add(title);
+        pauseOverlay.add(resume);
+        pauseOverlay.add(menu);
+
+        addKeyBinding(pauseOverlay, KeyEvent.VK_SPACE, "Resume", false, (evt) -> {
+            resumeGame();
+        });
+        addKeyBinding(pauseOverlay, KeyEvent.VK_ESCAPE, "ResumeEsc", false, (evt) -> {
+            resumeGame();
+        });
+
+        resume.addActionListener((e) -> resumeGame());
+        menu.addActionListener((e) -> {
+            removePauseOverlay();
+            setGameState(false, "Menu");
+        });
+
+        getLayeredPane().add(pauseOverlay, Integer.valueOf(100));
+        pauseOverlay.setVisible(true);
+        pauseOverlay.requestFocusInWindow();
+    }
+
+    private void resumeGame() {
+        paused = false;
+        removePauseOverlay();
+        renderer.beginTimer();
+        pane.requestFocusInWindow();
+    }
+
+    private void removePauseOverlay() {
+        if (pauseOverlay != null) {
+            getLayeredPane().remove(pauseOverlay);
+            getLayeredPane().repaint();
+            pauseOverlay = null;
+        }
+    }
     
     
     @Override
@@ -254,6 +308,11 @@ public class MazeGame extends JFrame implements Runnable {
         render();
 
         while(getGameState()) {
+            if (paused) {
+                try { Thread.sleep(50); } catch (InterruptedException ie) { }
+                lastTime = System.nanoTime();
+                continue;
+            }
             Long now = System.nanoTime();
             changeInSeconds += (now - lastTime) / nanoSecondConversion;
             changeInSeconds2 += (now - lastTime) / nanoSecondConversion; 
@@ -287,6 +346,7 @@ public class MazeGame extends JFrame implements Runnable {
             double timeInMs = renderer.getTimeTaken();
             runCompletionScreen(timeInMs);
         } else if (stateChange.equalsIgnoreCase("Menu")){
+            removePauseOverlay();
             runMenu();
         } 
     }
@@ -501,7 +561,9 @@ public class MazeGame extends JFrame implements Runnable {
         addKeyBinding(comp, KeyEvent.VK_LEFT, "Stop West", true, (evt) -> {player.setMoveW(false);});
         
         addKeyBinding(comp, KeyEvent.VK_ESCAPE, "Exit", false, (evt) -> {
-            setGameState(false, "Menu");
+            if (!paused) {
+                showPauseMenu();
+            }
         });
     }
     

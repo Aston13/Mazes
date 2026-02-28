@@ -1,14 +1,16 @@
 package mazegame;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
+import java.awt.GraphicsEnvironment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for MazeGame state management. These tests verify game state transitions and level
- * management without requiring a graphics display.
+ * Tests for MazeGame state management. These tests require a graphical display (MazeGame extends
+ * JFrame) and are automatically skipped in headless CI environments.
  */
 class MazeGameStateTest {
 
@@ -17,6 +19,7 @@ class MazeGameStateTest {
 
   @BeforeEach
   void setUp() {
+    assumeFalse(GraphicsEnvironment.isHeadless(), "Skipping — requires a graphical display");
     ui = new UI(650);
     game = new MazeGame(650, 650, ui, 10);
   }

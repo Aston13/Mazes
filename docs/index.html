@@ -124,31 +124,34 @@
         Powered by <a href="https://cheerpj.com">CheerpJ</a>
     </footer>
 
-    <script src="https://cjrtnc.leaningtech.com/4.0/cj4loader.mjs" type="module"></script>
-    <script type="module">
-        const container = document.getElementById('game-container');
-        const overlay = document.getElementById('loading-overlay');
+    <script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>
+    <script>
+        async function startGame() {
+            const container = document.getElementById('game-container');
+            const overlay = document.getElementById('loading-overlay');
 
-        try {
-            await cheerpjInit({
-                clipboardMode: 'system',
-                status: 'none',
-            });
+            try {
+                await cheerpjInit({
+                    clipboardMode: 'system',
+                    status: 'none',
+                });
 
-            // Display element for the Swing window
-            cheerpjCreateDisplay(650, 650, container);
+                // Display element for the Swing window
+                cheerpjCreateDisplay(650, 650, container);
 
-            overlay.querySelector('p').textContent = 'Starting game...';
+                overlay.querySelector('p').textContent = 'Starting game...';
 
-            // CheerpJ maps /app/ to the page origin
-            const exitCode = await cheerpjRunJar('/app/MazeGame.jar');
-            console.log('CheerpJ exit code:', exitCode);
-        } catch (err) {
-            const msg = err?.message || String(err);
-            overlay.querySelector('p').textContent =
-                'Failed to load: ' + msg;
-            console.error('CheerpJ error:', err);
+                // CheerpJ maps /app/ to the page origin
+                const exitCode = await cheerpjRunJar('/app/MazeGame.jar');
+                console.log('CheerpJ exit code:', exitCode);
+            } catch (err) {
+                const msg = err?.message || String(err);
+                overlay.querySelector('p').textContent =
+                    'Failed to load: ' + msg;
+                console.error('CheerpJ error:', err);
+            }
         }
+        startGame();
     </script>
 </body>
 </html>

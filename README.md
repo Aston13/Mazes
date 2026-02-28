@@ -100,4 +100,4 @@ Each level increases the grid size by 2 (starting at 11×11), making mazes progr
 
 ## License
 
-This project does not currently specify a license.
+All Rights Reserved. See [LICENSE](LICENSE) for details.

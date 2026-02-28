@@ -513,7 +513,7 @@ public class MazeGame extends JFrame implements Runnable {
         JButton play = ui.getTopButton("Continue [Space]");
         JButton levels = ui.getMidButton("Level Selection");
         JButton quit = ui.getBottomButton("Quit [Esc]");
-        JLabel logo = ui.getLogo("Maze");
+        JLabel logo = ui.getLogo("Wesley's Way Out");
          
         pane.add(logo);
         pane.add(play);

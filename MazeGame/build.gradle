@@ -61,3 +61,28 @@ jar {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+
+// --- CheerpJ browser build (Java 8 bytecode) ---
+// CheerpJ only supports Java 8 class format, so we compile a separate set of
+// classes with --release 8 and package them into a dedicated JAR.
+
+tasks.register('compileJava8', JavaCompile) {
+    description = 'Compile sources targeting Java 8 for CheerpJ browser play'
+    source = sourceSets.main.java
+    classpath = sourceSets.main.compileClasspath
+    destinationDirectory = layout.buildDirectory.dir('classes-java8')
+    options.release = 8
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('browserJar', Jar) {
+    description = 'Build a Java-8-compatible JAR for CheerpJ'
+    dependsOn 'compileJava8'
+    archiveBaseName = 'MazeGame-browser'
+    from(tasks.named('compileJava8').get().destinationDirectory)
+    from(sourceSets.main.resources)
+    manifest {
+        attributes('Main-Class': application.mainClass)
+    }
+    destinationDirectory = layout.buildDirectory.dir('libs')
+}

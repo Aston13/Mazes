@@ -27,10 +27,10 @@ jobs:
 
       - name: Build JAR
         working-directory: MazeGame
-        run: ./gradlew build
+        run: ./gradlew build browserJar
 
-      - name: Update GitHub Pages JAR
-        run: cp MazeGame/build/libs/MazeGame-*.jar docs/MazeGame.jar
+      - name: Update GitHub Pages JAR (Java 8 for CheerpJ)
+        run: cp MazeGame/build/libs/MazeGame-browser-*.jar docs/MazeGame.jar
 
       - name: Commit updated Pages JAR
         run: |

@@ -29,6 +29,17 @@ jobs:
         working-directory: MazeGame
         run: ./gradlew build
 
+      - name: Update GitHub Pages JAR
+        run: cp MazeGame/build/libs/MazeGame-*.jar docs/MazeGame.jar
+
+      - name: Commit updated Pages JAR
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/MazeGame.jar
+          git commit -m "Update Pages JAR for ${{ github.ref_name }}" || echo "No changes"
+          git push origin HEAD:main
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

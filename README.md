@@ -2,6 +2,8 @@
 
 A Java maze game built with Swing/AWT where you navigate a procedurally generated maze, collect keys to unlock the exit, and race against the clock.
 
+**[▶ Play in Browser](https://Aston13.github.io/Mazes/)** — no download or Java install required (powered by CheerpJ)
+
 ## Gameplay
 
 - Arrow keys to move (N/E/S/W)

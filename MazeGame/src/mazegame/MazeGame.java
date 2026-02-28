@@ -117,14 +117,33 @@ public class MazeGame extends JFrame implements Runnable {
         return gameInProgress;
     }
     
+    private boolean useDirectRendering = false;
+
     private Graphics getGameGraphics() {
-        BufferStrategy bs = gameView.getBufferStrategy();
-        return (bs != null) ? bs.getDrawGraphics() : gameView.getGraphics();
+        if (!useDirectRendering) {
+            try {
+                BufferStrategy bs = gameView.getBufferStrategy();
+                if (bs != null) {
+                    Graphics g = bs.getDrawGraphics();
+                    if (g != null) return g;
+                }
+            } catch (Exception e) {
+                // BufferStrategy is broken (e.g. CheerpJ) — fall back permanently
+                useDirectRendering = true;
+                System.out.println("BufferStrategy failed, switching to direct rendering.");
+            }
+        }
+        return gameView.getGraphics();
     }
 
     private void showBuffer() {
-        BufferStrategy bs = gameView.getBufferStrategy();
-        if (bs != null) { bs.show(); }
+        if (useDirectRendering) return;
+        try {
+            BufferStrategy bs = gameView.getBufferStrategy();
+            if (bs != null) { bs.show(); }
+        } catch (Exception e) {
+            useDirectRendering = true;
+        }
     }
 
     public void update() {

@@ -30,6 +30,9 @@ public class GameSettings {
     }
   }
 
+  /** Number of bones required to unlock the Sasso skin. */
+  public static final int SASSO_UNLOCK_BONES = 10;
+
   private DogSkin activeSkin = DogSkin.WESLEY;
   private boolean soundMuted;
   private boolean musicMuted;
@@ -40,9 +43,22 @@ public class GameSettings {
     return activeSkin;
   }
 
-  /** Sets the active dog skin. */
+  /** Sets the active dog skin (only if the skin is unlocked). */
   public void setActiveSkin(DogSkin skin) {
     this.activeSkin = skin;
+  }
+
+  /**
+   * Returns whether the given skin is unlocked based on bone count.
+   *
+   * @param skin the dog skin to check
+   * @param totalBones the player's total collected bones
+   * @return true if the skin is available for selection
+   */
+  public static boolean isSkinUnlocked(DogSkin skin, int totalBones) {
+    if (skin == DogSkin.WESLEY) return true;
+    if (skin == DogSkin.SASSO) return totalBones >= SASSO_UNLOCK_BONES;
+    return false;
   }
 
   /** Returns whether sound effects are muted. */

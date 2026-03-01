@@ -123,4 +123,27 @@ class GameSettingsTest {
     settings.setMusicVolume(1.0f);
     assertEquals(1.0f, settings.getMusicVolume(), 0.001f);
   }
+
+  @Test
+  @DisplayName("Wesley is always unlocked regardless of bone count")
+  void wesleyAlwaysUnlocked() {
+    assertTrue(GameSettings.isSkinUnlocked(DogSkin.WESLEY, 0));
+    assertTrue(GameSettings.isSkinUnlocked(DogSkin.WESLEY, 5));
+    assertTrue(GameSettings.isSkinUnlocked(DogSkin.WESLEY, 30));
+  }
+
+  @Test
+  @DisplayName("Sasso requires SASSO_UNLOCK_BONES bones to unlock")
+  void sassoRequiresBones() {
+    assertFalse(GameSettings.isSkinUnlocked(DogSkin.SASSO, 0));
+    assertFalse(GameSettings.isSkinUnlocked(DogSkin.SASSO, GameSettings.SASSO_UNLOCK_BONES - 1));
+    assertTrue(GameSettings.isSkinUnlocked(DogSkin.SASSO, GameSettings.SASSO_UNLOCK_BONES));
+    assertTrue(GameSettings.isSkinUnlocked(DogSkin.SASSO, 30));
+  }
+
+  @Test
+  @DisplayName("SASSO_UNLOCK_BONES constant is 10")
+  void sassoUnlockThresholdIsTen() {
+    assertEquals(10, GameSettings.SASSO_UNLOCK_BONES);
+  }
 }

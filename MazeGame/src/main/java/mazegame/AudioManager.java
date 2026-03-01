@@ -30,7 +30,8 @@ public class AudioManager {
     LEVEL_FAILED,
     LOW_TIME_WARNING,
     BUTTON_CLICK,
-    DOG_TALK
+    DOG_TALK,
+    BONE_PICKUP
   }
 
   private static final float SAMPLE_RATE = 44100f;
@@ -275,6 +276,9 @@ public class AudioManager {
 
     // Dog talk: short two-syllable bark/yap sound
     soundData.put(Sound.DOG_TALK, dogBark(0.3));
+
+    // Bone pickup: satisfying crunch/munch sound
+    soundData.put(Sound.BONE_PICKUP, boneCrunch(0.45));
   }
 
   /**
@@ -396,6 +400,53 @@ public class AudioManager {
       // Clipped sine for a harsher sound
       double raw = Math.sin(2 * Math.PI * freq * t);
       double val = Math.signum(raw) * Math.min(1.0, Math.abs(raw) * 2) * volume * envelope;
+      short sample = (short) (val * Short.MAX_VALUE);
+      buf[i * 2] = (byte) (sample & 0xFF);
+      buf[i * 2 + 1] = (byte) ((sample >> 8) & 0xFF);
+    }
+    return buf;
+  }
+
+  /**
+   * Synthesises a satisfying crunch sound for bone pickup — a burst of filtered noise mixed with a
+   * short bright tone for a "munch" quality.
+   */
+  private byte[] boneCrunch(double volume) {
+    // Two quick crunches
+    byte[] crunch1 = crunchSyllable(0.06, volume);
+    byte[] gap = new byte[(int) (SAMPLE_RATE * 0.03) * 2];
+    byte[] crunch2 = crunchSyllable(0.05, volume * 0.7);
+    byte[] shimmer = sine(1200, 0.08, volume * 0.25);
+    byte[] result = new byte[crunch1.length + gap.length + crunch2.length + shimmer.length];
+    System.arraycopy(crunch1, 0, result, 0, crunch1.length);
+    System.arraycopy(gap, 0, result, crunch1.length, gap.length);
+    System.arraycopy(crunch2, 0, result, crunch1.length + gap.length, crunch2.length);
+    // Mix shimmer into the tail by adding samples
+    int shimmerStart = crunch1.length + gap.length + crunch2.length;
+    System.arraycopy(shimmer, 0, result, shimmerStart, shimmer.length);
+    return result;
+  }
+
+  /** A single crunch: burst of shaped noise with a tonal click. */
+  private byte[] crunchSyllable(double durationSec, double volume) {
+    int samples = (int) (SAMPLE_RATE * durationSec);
+    byte[] buf = new byte[samples * 2];
+    java.util.Random rng = new java.util.Random(77);
+    for (int i = 0; i < samples; i++) {
+      double t = i / (double) SAMPLE_RATE;
+      // Very sharp attack, fast exponential decay
+      double env;
+      int attackLen = (int) (SAMPLE_RATE * 0.003);
+      if (i < attackLen) {
+        env = i / (double) attackLen;
+      } else {
+        double decay = (i - attackLen) / (double) (samples - attackLen);
+        env = Math.exp(-decay * 5.0);
+      }
+      double noise = (rng.nextDouble() * 2 - 1) * 0.6;
+      double click = Math.sin(2 * Math.PI * 800 * t) * 0.4;
+      double val = (noise + click) * volume * env;
+      val = Math.max(-1.0, Math.min(1.0, val));
       short sample = (short) (val * Short.MAX_VALUE);
       buf[i * 2] = (byte) (sample & 0xFF);
       buf[i * 2 + 1] = (byte) ((sample >> 8) & 0xFF);

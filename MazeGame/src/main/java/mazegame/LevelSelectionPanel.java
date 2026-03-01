@@ -351,6 +351,36 @@ public class LevelSelectionPanel extends JPanel {
         g.setColor(TEXT_DIM);
         g.drawString(timeStr, cx + (cardW - tfm.stringWidth(timeStr)) / 2, cy + cardH - 10);
       }
+
+      // Bone indicator (top-right corner of card)
+      boolean boneCollected = parts.length >= 4 && "1".equals(parts[3]);
+      if (category == 1 && boneCollected) {
+        // Golden bone check — small filled circle + check
+        int dotR = 7;
+        int dotX = cx + cardW - dotR * 2 - 6;
+        int dotY = cy + 10;
+        g.setColor(new Color(235, 210, 170));
+        g.fillOval(dotX, dotY, dotR * 2, dotR * 2);
+        g.setColor(new Color(180, 140, 90));
+        g.drawOval(dotX, dotY, dotR * 2, dotR * 2);
+        g.setFont(new Font("Dialog", Font.BOLD, 10));
+        g.setColor(new Color(80, 60, 30));
+        FontMetrics cfm = g.getFontMetrics();
+        g.drawString(
+            "\u2713",
+            dotX + dotR - cfm.stringWidth("\u2713") / 2,
+            dotY + dotR + cfm.getAscent() / 2 - 1);
+      } else if (category == 1) {
+        // Uncollected bone — dim placeholder
+        int dotR = 7;
+        int dotX = cx + cardW - dotR * 2 - 6;
+        int dotY = cy + 10;
+        Composite boneComp = g.getComposite();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+        g.setColor(new Color(235, 210, 170));
+        g.fillOval(dotX, dotY, dotR * 2, dotR * 2);
+        g.setComposite(boneComp);
+      }
     }
   }
 

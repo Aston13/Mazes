@@ -60,6 +60,7 @@ public class SettingsPanel extends JPanel {
   private final AudioManager audioManager;
   private final Runnable onBack;
   private final GameSettings.DogSkin[] skins = GameSettings.DogSkin.values();
+  private final int totalBones;
 
   private int hoveredCard = -1;
   private boolean hoveredBack = false;
@@ -80,16 +81,19 @@ public class SettingsPanel extends JPanel {
    * @param assetManager the asset manager for skin preview images
    * @param audioManager the audio manager for mute control
    * @param onBack callback to return to the main menu
+   * @param totalBones total bones collected (for skin unlock checks)
    */
   public SettingsPanel(
       GameSettings settings,
       AssetManager assetManager,
       AudioManager audioManager,
-      Runnable onBack) {
+      Runnable onBack,
+      int totalBones) {
     this.settings = settings;
     this.assetManager = assetManager;
     this.audioManager = audioManager;
     this.onBack = onBack;
+    this.totalBones = totalBones;
     setOpaque(true);
     setBackground(BG_TOP);
     setFocusable(true);
@@ -263,11 +267,41 @@ public class SettingsPanel extends JPanel {
       g.drawString(name, cx + (CARD_WIDTH - nfm.stringWidth(name)) / 2, cardsY + CARD_HEIGHT - 50);
 
       // Selected indicator or hint
+      boolean unlocked = GameSettings.isSkinUnlocked(skin, totalBones);
       g.setFont(descFont);
       FontMetrics dfm = g.getFontMetrics();
-      String desc = selected ? "\u2713 Selected" : "Click to select";
-      g.setColor(selected ? CARD_SELECTED_BORDER : TEXT_DIM);
-      g.drawString(desc, cx + (CARD_WIDTH - dfm.stringWidth(desc)) / 2, cardsY + CARD_HEIGHT - 28);
+      if (!unlocked) {
+        // Dark overlay covering the card
+        Composite lockComp = g.getComposite();
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.6f));
+        g.setColor(new Color(20, 18, 16));
+        g.fill(card);
+        g.setComposite(lockComp);
+
+        // Lock icon and message
+        g.setFont(new Font("Dialog", Font.BOLD, 28));
+        FontMetrics lockFm = g.getFontMetrics();
+        String lockIcon = "\uD83D\uDD12";
+        g.setColor(new Color(160, 145, 130));
+        g.drawString(
+            lockIcon,
+            cx + (CARD_WIDTH - lockFm.stringWidth(lockIcon)) / 2,
+            cardsY + CARD_HEIGHT / 2 - 10);
+        g.setFont(new Font("Dialog", Font.PLAIN, 11));
+        FontMetrics reqFm = g.getFontMetrics();
+        int remaining = GameSettings.SASSO_UNLOCK_BONES - totalBones;
+        String reqText = "Collect " + remaining + " more bones";
+        g.setColor(new Color(196, 149, 106));
+        g.drawString(
+            reqText,
+            cx + (CARD_WIDTH - reqFm.stringWidth(reqText)) / 2,
+            cardsY + CARD_HEIGHT / 2 + 14);
+      } else {
+        String desc = selected ? "\u2713 Selected" : "Click to select";
+        g.setColor(selected ? CARD_SELECTED_BORDER : TEXT_DIM);
+        g.drawString(
+            desc, cx + (CARD_WIDTH - dfm.stringWidth(desc)) / 2, cardsY + CARD_HEIGHT - 28);
+      }
     }
 
     // Sound section label
@@ -477,6 +511,9 @@ public class SettingsPanel extends JPanel {
   private void handleClick(int mx, int my) {
     int cardIdx = getCardIndex(mx, my);
     if (cardIdx >= 0 && cardIdx < skins.length) {
+      if (!GameSettings.isSkinUnlocked(skins[cardIdx], totalBones)) {
+        return; // locked skin — ignore click
+      }
       audioManager.play(AudioManager.Sound.BUTTON_CLICK);
       settings.setActiveSkin(skins[cardIdx]);
       repaint();

@@ -100,7 +100,12 @@ public class MenuManager {
     ResultOverlayPanel overlay =
         new ResultOverlayPanel("Completed Level " + level + "!", game.getAudioManager());
     String timeStr = String.format("%.1f", timeTaken);
-    overlay.setSubtitle("Time: " + timeStr + "s");
+    int totalBones = game.getTotalBones();
+    String subtitle = "Time: " + timeStr + "s";
+    if (totalBones > 0) {
+      subtitle += "  \u00B7  Bones: " + totalBones + "/30";
+    }
+    overlay.setSubtitle(subtitle);
     overlay.addButton(
         "Next Level",
         "[Space]",
@@ -149,7 +154,11 @@ public class MenuManager {
   public void showSettings() {
     SettingsPanel panel =
         new SettingsPanel(
-            game.getSettings(), game.getAssetManager(), game.getAudioManager(), this::showMainMenu);
+            game.getSettings(),
+            game.getAssetManager(),
+            game.getAudioManager(),
+            this::showMainMenu,
+            game.getTotalBones());
     swapContent(panel);
     panel.requestFocusInWindow();
   }

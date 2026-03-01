@@ -1,6 +1,7 @@
 package mazegame;
 
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Font;
@@ -10,9 +11,12 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
 import javax.swing.Timer;
@@ -97,6 +101,16 @@ public class Renderer {
     "Aston if you're watching — this one's for you!",
   };
 
+  private static final String[] BONE_PICKUP_QUIPS = {
+    "A BONE! Best. Day. Ever.",
+    "*crunch crunch* Mmm, crunchy!",
+    "Aston always said I had a nose for treasure",
+    "Bone collected! I deserve belly rubs for this",
+    "BONE! This maze just got 100% better",
+    "Finders keepers! That's the law of the maze",
+    "*happy tail wag* A bone just for me!",
+  };
+
   // Confetti particle system
   private static final int CONFETTI_COUNT = 60;
   private static final int CONFETTI_DURATION_MS = 1800;
@@ -168,6 +182,21 @@ public class Renderer {
   private int[] confettiColorIdx;
   private double[] confettiRotation;
 
+  // Bone collectible state
+  private static final Color BONE_COLOR = new Color(235, 210, 170);
+  private static final Color BONE_OUTLINE = new Color(180, 140, 90);
+  private static final Color BONE_GLOW = new Color(255, 220, 150, 60);
+  private TilePassage boneTile;
+  private boolean boneCollectedThisRun;
+  private final boolean boneAlreadyCollected;
+  private final MazeGame game;
+  private BufferedImage boneSprite;
+
+  // Bone-collection visual feedback
+  private long boneCollectFlashStart = Long.MIN_VALUE;
+  private static final int BONE_FLASH_DURATION_MS = 800;
+  private static final Color BONE_FLASH_COLOR = new Color(235, 210, 170, 80);
+
   /**
    * Creates a new renderer for the game view.
    *
@@ -179,6 +208,7 @@ public class Renderer {
    * @param audioManager the audio manager for sound effects
    * @param settings the game settings (used for skin prefix)
    * @param game the game instance for state callbacks
+   * @param boneAlreadyCollected true if the bone for this level was collected in a prior run
    */
   public Renderer(
       int screenHeight,
@@ -188,7 +218,8 @@ public class Renderer {
       AssetManager assetManager,
       AudioManager audioManager,
       GameSettings settings,
-      MazeGame game) {
+      MazeGame game,
+      boolean boneAlreadyCollected) {
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
     this.tileWidth = tileWH;
@@ -196,6 +227,8 @@ public class Renderer {
     this.assetManager = assetManager;
     this.audioManager = audioManager;
     this.skinPrefix = settings.getSpritePrefix();
+    this.game = game;
+    this.boneAlreadyCollected = boneAlreadyCollected;
 
     screenWidthHalf = screenWidth / 2;
     screenHeightHalf = screenHeight / 2;
@@ -210,6 +243,7 @@ public class Renderer {
       e.printStackTrace();
     }
     playerImg = assetManager.getPreloadedImage(skinPrefix + "East0");
+    boneSprite = generateBoneImage(tileWH);
 
     view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
 
@@ -298,6 +332,7 @@ public class Renderer {
     for (TilePassage keyTile : mazeGenerator.getKeyCoords()) {
       keysOnMap.push(keyTile);
     }
+    placeBone();
   }
 
   /** Centres the maze view on the player's starting tile. */
@@ -356,6 +391,18 @@ public class Renderer {
             g.drawImage(
                 keyFrame, tile.getMinX(), tile.getMinY(), tile.getSize(), tile.getSize(), null);
           }
+        }
+
+        // Bone item (animated bob)
+        if (tile == boneTile && !boneCollectedThisRun) {
+          double bob = Math.sin(System.currentTimeMillis() / 400.0) * 3;
+          g.drawImage(
+              boneSprite,
+              tile.getMinX(),
+              tile.getMinY() + (int) bob,
+              tile.getSize(),
+              tile.getSize(),
+              null);
         }
 
         // Tile sprite (wall, exit, or passage — passage returns null)
@@ -422,6 +469,23 @@ public class Renderer {
     g2.setFont(valueFont);
     g2.setColor(new Color(196, 149, 106));
     g2.drawString(keyCount + " / " + keysRequired, pad, botY);
+
+    // ---- Left: Bone indicator ----
+    g2.setFont(valueFont);
+    int keysTextW = g2.getFontMetrics().stringWidth(keyCount + " / " + keysRequired);
+    int boneIconX = pad + keysTextW + 14;
+    int boneIconSize = 20;
+    if (boneCollectedThisRun || boneAlreadyCollected) {
+      g.drawImage(boneSprite, boneIconX, topY - 4, boneIconSize, boneIconSize, null);
+      g2.setFont(new Font("Dialog", Font.BOLD, 11));
+      g2.setColor(BONE_COLOR);
+      g2.drawString("\u2713", boneIconX + boneIconSize + 2, botY - 2);
+    } else {
+      Composite boneOldComp = g2.getComposite();
+      g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
+      g.drawImage(boneSprite, boneIconX, topY - 4, boneIconSize, boneIconSize, null);
+      g2.setComposite(boneOldComp);
+    }
 
     // ---- Center: Level ----
     g2.setFont(labelFont);
@@ -578,6 +642,14 @@ public class Renderer {
       }
     } else {
       TilePassage passage = (TilePassage) tile;
+      // Bone pickup
+      if (passage == boneTile && !boneCollectedThisRun) {
+        boneCollectedThisRun = true;
+        boneCollectFlashStart = System.currentTimeMillis();
+        audioManager.play(AudioManager.Sound.BONE_PICKUP);
+        triggerQuip(randomQuip(BONE_PICKUP_QUIPS));
+        game.onBoneCollected();
+      }
       if (passage.hasItem()) {
         passage.setItem(false);
         keyCount++;
@@ -739,6 +811,33 @@ public class Renderer {
               alpha * 0.3f));
       g2.fillRect(0, 0, screenWidth, screenHeight);
     }
+
+    // Bone collection: warm golden flash + floating "Bone Found!" text
+    long boneElapsed = now - boneCollectFlashStart;
+    if (boneElapsed >= 0 && boneElapsed < BONE_FLASH_DURATION_MS) {
+      float progress = (float) boneElapsed / BONE_FLASH_DURATION_MS;
+      float alpha = 1.0f - progress;
+
+      g2.setColor(
+          new Color(
+              BONE_FLASH_COLOR.getRed() / 255f,
+              BONE_FLASH_COLOR.getGreen() / 255f,
+              BONE_FLASH_COLOR.getBlue() / 255f,
+              alpha * 0.4f));
+      g2.fillRect(0, 0, screenWidth, screenHeight);
+
+      int floatOffset = (int) (progress * 50);
+      int textAlpha = Math.max(0, Math.min(255, (int) (alpha * 255)));
+      g2.setFont(new Font("Dialog", Font.BOLD, 22));
+      String boneText = "Bone Found!";
+      FontMetrics bfm = g2.getFontMetrics();
+      int btx = screenWidthHalf + tileWidth / 2 - bfm.stringWidth(boneText) / 2;
+      int bty = screenHeightHalf - 16 - floatOffset;
+      g2.setColor(new Color(0, 0, 0, Math.max(0, textAlpha / 2)));
+      g2.drawString(boneText, btx + 1, bty + 1);
+      g2.setColor(new Color(235, 210, 170, textAlpha));
+      g2.drawString(boneText, btx, bty);
+    }
   }
 
   /** Sets whether a player message should be displayed. */
@@ -836,6 +935,87 @@ public class Renderer {
     g2.drawString(currentQuip, textX, textY);
 
     g2.setComposite(oldComp);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Bone helpers
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Generates a golden bone sprite entirely with Java2D.
+   *
+   * @param size the tile pixel size (image will be size×size)
+   * @return a BufferedImage with a rendered bone
+   */
+  private BufferedImage generateBoneImage(int size) {
+    BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+    Graphics2D g2 = img.createGraphics();
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+    AffineTransform old = g2.getTransform();
+    g2.translate(size / 2.0, size / 2.0);
+    g2.rotate(Math.toRadians(35));
+
+    int shaft = size * 3 / 8;
+    int thick = size / 7;
+    int bulb = size / 5;
+
+    // Soft glow behind the bone
+    g2.setColor(BONE_GLOW);
+    g2.fill(new Ellipse2D.Double(-shaft - bulb, -bulb * 1.5, (shaft + bulb) * 2, bulb * 3));
+
+    // Shaft
+    g2.setColor(BONE_COLOR);
+    g2.fillRoundRect(-shaft, -thick / 2, shaft * 2, thick, thick / 2, thick / 2);
+
+    // Bulbs (two at each end, offset vertically)
+    int bOff = thick / 2 + bulb / 3;
+    g2.fillOval(-shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.fillOval(-shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+    g2.fillOval(shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.fillOval(shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+
+    // Outline
+    g2.setColor(BONE_OUTLINE);
+    g2.setStroke(new BasicStroke(1.5f));
+    g2.drawRoundRect(-shaft, -thick / 2, shaft * 2, thick, thick / 2, thick / 2);
+    g2.drawOval(-shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.drawOval(-shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+    g2.drawOval(shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.drawOval(shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+
+    g2.setTransform(old);
+    g2.dispose();
+    return img;
+  }
+
+  /**
+   * Picks a random passable tile (not the start, not a key tile) and places the bone. Does nothing
+   * if the bone was already collected for this level.
+   */
+  private void placeBone() {
+    if (boneAlreadyCollected) return;
+
+    ArrayList<TilePassage> candidates = new ArrayList<>();
+    int startRow = mazeGenerator.getStartingX();
+    int startCol = mazeGenerator.getStartingY();
+    for (int r = 0; r < rowColAmount; r++) {
+      for (int c = 0; c < rowColAmount; c++) {
+        if (r == startRow && c == startCol) continue;
+        Tile t = tileArr[c][r];
+        if (t instanceof TilePassage && !((TilePassage) t).hasItem()) {
+          candidates.add((TilePassage) t);
+        }
+      }
+    }
+    if (!candidates.isEmpty()) {
+      boneTile = candidates.get(quipRng.nextInt(candidates.size()));
+    }
+  }
+
+  /** Returns true if the bone was picked up during this run. */
+  public boolean isBoneCollectedThisRun() {
+    return boneCollectedThisRun;
   }
 
   // ---------------------------------------------------------------------------

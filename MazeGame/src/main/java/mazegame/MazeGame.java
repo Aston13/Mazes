@@ -191,15 +191,64 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     return audioManager;
   }
 
-  /** Records a level completion, updating best time if improved. */
+  /** Records a level completion, updating best time if improved. Preserves bone status. */
   public void recordLevelCompletion(int level, double timeTaken) {
     String[] lineWords = levelData[level].split(",");
     double bestTime = Double.parseDouble(lineWords[2]);
     if (timeTaken < bestTime || bestTime == -1) {
       bestTime = timeTaken;
     }
-    levelData[level] = level + ",completed," + bestTime;
+    String bone = lineWords.length >= 4 ? lineWords[3] : "0";
+    levelData[level] = level + ",completed," + bestTime + "," + bone;
     save();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Bone collectibles
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Returns whether the bone for a given level has been collected.
+   *
+   * @param level the level number (1-based)
+   * @return true if the bone is recorded as collected
+   */
+  public boolean isBoneCollected(int level) {
+    if (level < 1 || level >= levelData.length) return false;
+    String[] parts = levelData[level].split(",");
+    return parts.length >= 4 && "1".equals(parts[3]);
+  }
+
+  /** Records a bone collection for the current level and saves. */
+  public void onBoneCollected() {
+    recordBoneCollection(levelCount);
+  }
+
+  /**
+   * Records a bone collection for a specific level.
+   *
+   * @param level the level number (1-based)
+   */
+  public void recordBoneCollection(int level) {
+    if (level < 1 || level >= levelData.length) return;
+    String[] parts = levelData[level].split(",");
+    String status = parts.length >= 2 ? parts[1] : "incomplete";
+    String time = parts.length >= 3 ? parts[2] : "-1";
+    levelData[level] = level + "," + status + "," + time + ",1";
+    save();
+  }
+
+  /**
+   * Returns the total number of bones collected across all levels.
+   *
+   * @return the total bone count
+   */
+  public int getTotalBones() {
+    int count = 0;
+    for (int i = 1; i < levelData.length; i++) {
+      if (isBoneCollected(i)) count++;
+    }
+    return count;
   }
 
   /** Advances to the next level (up to 30). */
@@ -303,7 +352,8 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
             assetManager,
             audioManager,
             settings,
-            this);
+            this,
+            isBoneCollected(levelCount));
     renderer.generateMaze(TILE_SIZE, TILE_BORDER);
     renderer.centerMaze();
     player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);

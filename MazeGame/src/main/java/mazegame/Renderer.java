@@ -56,8 +56,8 @@ public class Renderer {
 
   // Key-collection visual feedback
   private long keyCollectFlashStart = Long.MIN_VALUE;
-  private static final int KEY_FLASH_DURATION_MS = 400;
-  private static final Color KEY_FLASH_COLOR = new Color(196, 149, 106, 60);
+  private static final int KEY_FLASH_DURATION_MS = 600;
+  private static final Color KEY_FLASH_COLOR = new Color(196, 149, 106, 80);
 
   // Locked-door visual feedback
   private long lockedDoorFlashStart = Long.MIN_VALUE;
@@ -528,18 +528,31 @@ public class Renderer {
               KEY_FLASH_COLOR.getRed() / 255f,
               KEY_FLASH_COLOR.getGreen() / 255f,
               KEY_FLASH_COLOR.getBlue() / 255f,
-              alpha * 0.25f));
+              alpha * 0.45f));
       g2.fillRect(0, 0, screenWidth, screenHeight);
 
+      // Bright ring around the player tile
+      int ringX = screenWidthHalf - 4;
+      int ringY = screenHeightHalf - 4;
+      int ringSize = tileWidth + 8;
+      g2.setColor(new Color(255, 220, 160, Math.max(0, Math.min(255, (int) (alpha * 200)))));
+      g2.setStroke(new java.awt.BasicStroke(3f));
+      g2.drawRoundRect(ringX, ringY, ringSize, ringSize, 8, 8);
+      g2.setStroke(new java.awt.BasicStroke(1f));
+
       // Floating "+1 Key" text rising upward
-      int floatOffset = (int) (progress * 30);
+      int floatOffset = (int) (progress * 40);
       int textAlpha = (int) (alpha * 255);
-      g2.setFont(new Font("Dialog", Font.BOLD, 16));
-      g2.setColor(new Color(196, 149, 106, Math.max(0, Math.min(255, textAlpha))));
+      g2.setFont(new Font("Dialog", Font.BOLD, 20));
+      g2.setColor(new Color(255, 220, 160, Math.max(0, Math.min(255, textAlpha))));
       String collectText = "+1 Key";
       FontMetrics fm = g2.getFontMetrics();
       int textX = screenWidthHalf + tileWidth / 2 - fm.stringWidth(collectText) / 2;
-      int textY = screenHeightHalf - 10 - floatOffset;
+      int textY = screenHeightHalf - 12 - floatOffset;
+      // Text shadow
+      g2.setColor(new Color(0, 0, 0, Math.max(0, Math.min(255, textAlpha / 2))));
+      g2.drawString(collectText, textX + 1, textY + 1);
+      g2.setColor(new Color(255, 220, 160, Math.max(0, Math.min(255, textAlpha))));
       g2.drawString(collectText, textX, textY);
     }
 

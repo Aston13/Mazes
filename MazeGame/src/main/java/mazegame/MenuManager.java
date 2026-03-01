@@ -117,6 +117,7 @@ public class MenuManager {
             () -> {
               game.load(true);
               game.save();
+              game.setCurrentLevel(-1);
               showLevelSelection(); // refresh after reset
             },
             game.getAudioManager());

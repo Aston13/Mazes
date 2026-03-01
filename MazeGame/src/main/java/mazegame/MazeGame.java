@@ -122,7 +122,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
         String[] lineWords = levelData[i].split(",");
         if (lineWords[1].equalsIgnoreCase("incomplete")) {
           levelCount = i;
-          rowColAmount += ((i - 1) * 2);
+          int rc = INITIAL_GRID_SIZE + ((i - 1) * 2);
+          if (rc % 2 == 0) {
+            rc += 1;
+          }
+          rowColAmount = rc;
           break;
         }
       }

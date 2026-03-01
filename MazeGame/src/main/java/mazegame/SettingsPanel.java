@@ -270,7 +270,7 @@ public class SettingsPanel extends JPanel {
 
     g.setFont(new Font("Dialog", Font.PLAIN, 14));
     FontMetrics mmfm = g.getFontMetrics();
-    String musicLabel = musicMuted ? "\uD83D\uDD07 Music: OFF" : "\uD83C\uDFB5 Music: ON";
+    String musicLabel = musicMuted ? "\uD83D\uDD07 Music: OFF" : "\u266A Music: ON";
     g.setColor(musicMuted ? TEXT_DIM : TEXT_PRIMARY);
     g.drawString(
         musicLabel,

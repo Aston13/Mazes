@@ -1,6 +1,8 @@
 package mazegame;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.GradientPaint;
@@ -499,12 +501,59 @@ public class Renderer {
     renderActionFeedback(g);
 
     if (isMessageVisible()) {
-      g.setColor(Color.WHITE);
-      g.setFont(new Font("Serif", Font.PLAIN, MESSAGE_FONT_SIZE));
-      FontMetrics fm = g.getFontMetrics();
-      int halfTextWidth = fm.stringWidth(playerMessage) / 2;
-      g.drawString(
-          playerMessage, (screenWidthHalf - halfTextWidth) + tileWidth / 2, screenHeightHalf);
+      Graphics2D g2 = (Graphics2D) g;
+      g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+      g2.setRenderingHint(
+          RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+      long elapsed = System.currentTimeMillis() - activatedAt;
+      float fadeAlpha = 1f;
+      int fadeStart = MESSAGE_DURATION_MS - 800;
+      if (elapsed > fadeStart) {
+        fadeAlpha = 1f - (float) (elapsed - fadeStart) / 800f;
+        fadeAlpha = Math.max(0f, Math.min(1f, fadeAlpha));
+      }
+
+      Font msgFont = new Font("Dialog", Font.BOLD, MESSAGE_FONT_SIZE);
+      g2.setFont(msgFont);
+      FontMetrics fm = g2.getFontMetrics();
+      int textW = fm.stringWidth(playerMessage);
+      int textH = fm.getHeight();
+
+      int pillPadX = 18;
+      int pillPadY = 10;
+      int pillW = textW + pillPadX * 2;
+      int pillH = textH + pillPadY * 2;
+      int pillX = screenWidthHalf + tileWidth / 2 - pillW / 2;
+      int pillY = screenHeightHalf - pillH - 8;
+      int arc = 12;
+
+      // Pill background shadow
+      Composite oldComp = g2.getComposite();
+      g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, fadeAlpha * 0.35f));
+      g2.setColor(Color.BLACK);
+      g2.fillRoundRect(pillX + 2, pillY + 2, pillW, pillH, arc, arc);
+
+      // Pill background
+      g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, fadeAlpha * 0.85f));
+      g2.setColor(new Color(30, 26, 24));
+      g2.fillRoundRect(pillX, pillY, pillW, pillH, arc, arc);
+
+      // Accent border
+      g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, fadeAlpha * 0.7f));
+      g2.setColor(new Color(196, 149, 106));
+      g2.setStroke(new java.awt.BasicStroke(1.5f));
+      g2.drawRoundRect(pillX, pillY, pillW, pillH, arc, arc);
+      g2.setStroke(new java.awt.BasicStroke(1f));
+
+      // Text
+      g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, fadeAlpha));
+      int textX = pillX + pillPadX;
+      int textY = pillY + pillPadY + fm.getAscent();
+      g2.setColor(new Color(240, 236, 232));
+      g2.drawString(playerMessage, textX, textY);
+
+      g2.setComposite(oldComp);
     }
   }
 

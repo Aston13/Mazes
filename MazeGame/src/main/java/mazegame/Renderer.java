@@ -17,6 +17,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import javax.swing.Timer;
@@ -62,6 +65,18 @@ public class Renderer {
     "I could really go for a nap right now",
     "Note to self: don't chase tail in a maze",
     "*panting* Water break?",
+    "I wonder what Sasso's doing right now",
+    "Every dead end just means a new sniffing opportunity",
+    "My nose knows the way. Probably.",
+    "If I bark loud enough, will the walls move?",
+    "Aston should really put a map in here",
+    "*scratches ear* Where was I going?",
+    "This maze has no fire hydrants. Disappointing.",
+    "I've definitely been here before... maybe",
+    "Four paws and no GPS. Classic Wesley.",
+    "Do these walls ever end??",
+    "Stay focused, Wesley. Stay focused.",
+    "I smell something... nope, that's just me",
   };
 
   private static final String[] KEY_PICKUP_QUIPS = {
@@ -72,6 +87,11 @@ public class Renderer {
     "One step closer to freedom!",
     "Aston would be impressed",
     "That's what a good boy does",
+    "Another key! I'm on a roll!",
+    "Jingle jingle! Love that sound",
+    "Key get! ...is that how you say it?",
+    "Fetched! And they said I can't play fetch alone",
+    "Adding that to the collection! *tail wag*",
   };
 
   private static final String[] DOOR_LOCKED_QUIPS = {
@@ -79,12 +99,17 @@ public class Renderer {
     "The door said no. Rude.",
     "Locked?! Who does that to a dog?",
     "Aston never locks me out... well, sometimes",
+    "I'll be back, door. Count on it.",
+    "Not enough keys? This is an outrage!",
+    "*bonks nose on door* Still locked.",
   };
 
   private static final String[] ALL_KEYS_QUIPS = {
     "I got them all! Where's the exit?!",
     "Full key collection! Dad Aston would cry tears of joy",
     "Time to find that door!",
+    "All keys! Now where did I see that exit...",
+    "That's the last one! Door, here I come!",
   };
 
   /** Quips Wesley says when a new level starts. */
@@ -99,6 +124,11 @@ public class Renderer {
     "This one looks tricky... said no good boy ever",
     "Let's gooo! *tail helicopter*",
     "Aston if you're watching — this one's for you!",
+    "New maze, who dis?",
+    "*stretches paws* Alright, round two!",
+    "Bigger maze = more adventure. Bring it on!",
+    "This one smells harder. Is that a thing?",
+    "Focus! Sniff! Run! That's the plan.",
   };
 
   private static final String[] BONE_PICKUP_QUIPS = {
@@ -109,7 +139,15 @@ public class Renderer {
     "BONE! This maze just got 100% better",
     "Finders keepers! That's the law of the maze",
     "*happy tail wag* A bone just for me!",
+    "Buried treasure! Well, not buried, but still!",
+    "That's going straight to my collection",
+    "A bone AND a maze? Best day of my life!",
   };
+
+  /** How many recent quips to remember per pool to avoid repeats. */
+  private static final int QUIP_HISTORY_SIZE = 5;
+
+  private final Map<String[], LinkedList<String>> quipHistory = new HashMap<>();
 
   // Confetti particle system
   private static final int CONFETTI_COUNT = 60;
@@ -900,9 +938,31 @@ public class Renderer {
     triggerQuip(randomQuip(LEVEL_START_QUIPS));
   }
 
-  /** Picks a random quip from the given array. */
+  /** Picks a random quip from the given pool, avoiding recent repeats. */
   private String randomQuip(String[] pool) {
-    return pool[quipRng.nextInt(pool.length)];
+    LinkedList<String> history = quipHistory.computeIfAbsent(pool, k -> new LinkedList<>());
+    // Build a list of candidates not in recent history
+    ArrayList<String> candidates = new ArrayList<>(pool.length);
+    for (String q : pool) {
+      if (!history.contains(q)) {
+        candidates.add(q);
+      }
+    }
+    // If all quips were recently used, reset history and pick from full pool
+    if (candidates.isEmpty()) {
+      history.clear();
+      for (String q : pool) {
+        candidates.add(q);
+      }
+    }
+    String pick = candidates.get(quipRng.nextInt(candidates.size()));
+    history.addLast(pick);
+    // Keep history bounded
+    int maxHistory = Math.min(QUIP_HISTORY_SIZE, pool.length - 1);
+    while (history.size() > maxHistory) {
+      history.removeFirst();
+    }
+    return pick;
   }
 
   /** Checks whether it's time for an idle quip and triggers one if so. */

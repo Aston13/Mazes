@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'application'
-    id 'com.diffplug.spotless' version '7.0.2'
+    id 'com.diffplug.spotless' version '8.2.1'
 }
 
 group = 'mazegame'
@@ -32,7 +32,7 @@ repositories {
 
 dependencies {
     // Testing
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.14.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

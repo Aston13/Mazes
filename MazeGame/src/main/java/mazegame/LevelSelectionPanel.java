@@ -1,6 +1,8 @@
 package mazegame;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -14,7 +16,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.util.Random;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 /**
  * Custom-painted level-selection screen matching the dark-themed aesthetic of {@link
@@ -51,6 +55,8 @@ public class LevelSelectionPanel extends JPanel {
   private static final int CARD_FONT_SIZE = 14;
   private static final int CARD_SMALL_FONT_SIZE = 11;
   private static final int SCROLL_SPEED = 30;
+  private static final int PARTICLE_COUNT = 20;
+  private static final int PARTICLE_TICK_MS = 50;
 
   private final String[] levelData;
   private final MazeGame game;
@@ -62,6 +68,13 @@ public class LevelSelectionPanel extends JPanel {
   private int scrollOffset = 0;
   private int maxScroll = 0;
   private int firstIncompleteLevel = -1;
+  private final double[] particleX = new double[PARTICLE_COUNT];
+  private final double[] particleY = new double[PARTICLE_COUNT];
+  private final double[] particleSpeed = new double[PARTICLE_COUNT];
+  private final double[] particleAlpha = new double[PARTICLE_COUNT];
+  private final double[] particleSize = new double[PARTICLE_COUNT];
+  private final Random particleRng = new Random();
+  private Timer particleTimer;
 
   /**
    * Creates a new level-selection panel.
@@ -86,6 +99,25 @@ public class LevelSelectionPanel extends JPanel {
     setOpaque(true);
     setBackground(BG_TOP);
     setFocusable(true);
+
+    // Initialise floating particles
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      resetParticle(i, true);
+    }
+    particleTimer =
+        new Timer(
+            PARTICLE_TICK_MS,
+            e -> {
+              for (int i = 0; i < PARTICLE_COUNT; i++) {
+                particleY[i] -= particleSpeed[i];
+                particleAlpha[i] -= 0.004;
+                if (particleY[i] < -10 || particleAlpha[i] <= 0) {
+                  resetParticle(i, false);
+                }
+              }
+              repaint();
+            });
+    particleTimer.start();
 
     // Find first incomplete level
     for (int i = 1; i < levelData.length; i++) {
@@ -166,6 +198,19 @@ public class LevelSelectionPanel extends JPanel {
     for (int y = 0; y < h; y += 40) {
       g.drawLine(0, y, w, y);
     }
+
+    // Floating particles
+    Composite particleOrig = g.getComposite();
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      float alpha = (float) Math.max(0, Math.min(1, particleAlpha[i]));
+      g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+      g.setColor(new Color(196, 149, 106));
+      double px = particleX[i] / 800.0 * w;
+      double py = particleY[i] / 800.0 * h;
+      int sz = (int) particleSize[i];
+      g.fillOval((int) px, (int) py, sz, sz);
+    }
+    g.setComposite(particleOrig);
 
     paintHeader(g, w);
 
@@ -307,6 +352,14 @@ public class LevelSelectionPanel extends JPanel {
         g.drawString(timeStr, cx + (cardW - tfm.stringWidth(timeStr)) / 2, cy + cardH - 10);
       }
     }
+  }
+
+  private void resetParticle(int i, boolean randomY) {
+    particleX[i] = particleRng.nextDouble() * 800;
+    particleY[i] = randomY ? particleRng.nextDouble() * 800 : 780 + particleRng.nextDouble() * 40;
+    particleSpeed[i] = 0.3 + particleRng.nextDouble() * 0.7;
+    particleAlpha[i] = 0.10 + particleRng.nextDouble() * 0.20;
+    particleSize[i] = 2 + particleRng.nextDouble() * 3;
   }
 
   private void updateHover(int mx, int my) {

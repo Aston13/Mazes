@@ -213,6 +213,9 @@ public class AssetManager {
 
     // Wesley pixel art (used as menu decoration)
     loadImage("wesleyPixel", "Assets/ui/wesley-pixel.png");
+
+    // Splash screen mask image
+    loadImage("splashMask", "Assets/ui/splash_mask.png");
   }
 
   /**

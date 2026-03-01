@@ -334,6 +334,11 @@ public class MainMenuPanel extends JPanel {
       }
       g.drawString(btn.label(), textX, textY);
 
+      // Spinning diamond hover indicator
+      if (hovered) {
+        drawHoverDiamonds(g, btnX, btnY, BTN_WIDTH, BTN_HEIGHT, textY);
+      }
+
       // Hint text (e.g. "[Space]")
       if (!btn.hint().isEmpty()) {
         g.setFont(hintFont);
@@ -351,6 +356,40 @@ public class MainMenuPanel extends JPanel {
     FontMetrics vFm = g.getFontMetrics();
     g.setColor(new Color(120, 110, 100));
     g.drawString(versionText, w - vFm.stringWidth(versionText) - 10, h - 10);
+  }
+
+  /**
+   * Draws small spinning diamond accents on either side of a hovered button.
+   *
+   * @param g the graphics context
+   * @param btnX button left x
+   * @param btnY button top y
+   * @param btnW button width
+   * @param btnH button height
+   * @param textBaselineY baseline y of the button label text
+   */
+  private void drawHoverDiamonds(
+      Graphics2D g, int btnX, int btnY, int btnW, int btnH, int textBaselineY) {
+    double angle = (System.currentTimeMillis() % 2000) / 2000.0 * Math.PI * 2;
+    int cy = btnY + btnH / 2;
+    int size = 5;
+    g.setColor(ACCENT_LINE);
+
+    // Left diamond
+    int lx = btnX + 12;
+    java.awt.geom.AffineTransform old = g.getTransform();
+    g.rotate(angle, lx, cy);
+    g.fillPolygon(
+        new int[] {lx - size, lx, lx + size, lx}, new int[] {cy, cy - size, cy, cy + size}, 4);
+    g.setTransform(old);
+
+    // Right diamond
+    int rx = btnX + btnW - 12;
+    old = g.getTransform();
+    g.rotate(-angle, rx, cy);
+    g.fillPolygon(
+        new int[] {rx - size, rx, rx + size, rx}, new int[] {cy, cy - size, cy, cy + size}, 4);
+    g.setTransform(old);
   }
 
   private int getButtonIndex(int mx, int my) {

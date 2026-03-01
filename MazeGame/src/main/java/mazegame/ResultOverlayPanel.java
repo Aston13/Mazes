@@ -16,7 +16,9 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 /**
  * Custom-painted panel for result screens (level complete, game over). Shows a large message and
@@ -45,11 +47,20 @@ public class ResultOverlayPanel extends JPanel {
   private static final int BTN_GAP = 18;
   private static final int TITLE_FONT_SIZE = 36;
   private static final int BTN_FONT_SIZE = 18;
+  private static final int PARTICLE_COUNT = 20;
+  private static final int PARTICLE_TICK_MS = 50;
 
   private final String message;
   private String subtitle;
   private final List<MainMenuPanel.MenuButton> buttons = new ArrayList<MainMenuPanel.MenuButton>();
   private final AudioManager audioManager;
+  private final double[] particleX = new double[PARTICLE_COUNT];
+  private final double[] particleY = new double[PARTICLE_COUNT];
+  private final double[] particleSpeed = new double[PARTICLE_COUNT];
+  private final double[] particleAlpha = new double[PARTICLE_COUNT];
+  private final double[] particleSize = new double[PARTICLE_COUNT];
+  private final Random particleRng = new Random();
+  private Timer particleTimer;
   private int hoveredIndex = -1;
 
   public ResultOverlayPanel(String message, AudioManager audioManager) {
@@ -57,6 +68,25 @@ public class ResultOverlayPanel extends JPanel {
     this.audioManager = audioManager;
     setOpaque(true);
     setBackground(BG_TOP);
+
+    // Initialise floating particles
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      resetParticle(i, true);
+    }
+    particleTimer =
+        new Timer(
+            PARTICLE_TICK_MS,
+            e -> {
+              for (int i = 0; i < PARTICLE_COUNT; i++) {
+                particleY[i] -= particleSpeed[i];
+                particleAlpha[i] -= 0.004;
+                if (particleY[i] < -10 || particleAlpha[i] <= 0) {
+                  resetParticle(i, false);
+                }
+              }
+              repaint();
+            });
+    particleTimer.start();
 
     MouseAdapter mouseHandler =
         new MouseAdapter() {
@@ -93,6 +123,15 @@ public class ResultOverlayPanel extends JPanel {
         };
     addMouseListener(mouseHandler);
     addMouseMotionListener(mouseHandler);
+  }
+
+  /** Resets a particle to a random starting position. */
+  private void resetParticle(int i, boolean randomY) {
+    particleX[i] = particleRng.nextDouble() * 800;
+    particleY[i] = randomY ? particleRng.nextDouble() * 800 : 780 + particleRng.nextDouble() * 40;
+    particleSpeed[i] = 0.3 + particleRng.nextDouble() * 0.7;
+    particleAlpha[i] = 0.10 + particleRng.nextDouble() * 0.20;
+    particleSize[i] = 2 + particleRng.nextDouble() * 3;
   }
 
   /** Adds a button to the result screen. */
@@ -139,6 +178,19 @@ public class ResultOverlayPanel extends JPanel {
     for (int y = 0; y < h; y += 40) {
       g.drawLine(0, y, w, y);
     }
+
+    // Floating particles
+    Composite particleOrig = g.getComposite();
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      float alpha = (float) Math.max(0, Math.min(1, particleAlpha[i]));
+      g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+      g.setColor(ACCENT_LINE);
+      double px = particleX[i] / 800.0 * w;
+      double py = particleY[i] / 800.0 * h;
+      int sz = (int) particleSize[i];
+      g.fillOval((int) px, (int) py, sz, sz);
+    }
+    g.setComposite(particleOrig);
 
     // --- Title with glow, shadow, and letter spacing ---
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
@@ -238,6 +290,11 @@ public class ResultOverlayPanel extends JPanel {
       }
       g.drawString(btn.label(), textX, textY);
 
+      // Spinning diamond hover indicator
+      if (hovered) {
+        drawHoverDiamonds(g, btnX, btnY, BTN_WIDTH, BTN_HEIGHT);
+      }
+
       if (!btn.hint().isEmpty()) {
         g.setFont(hintFont);
         FontMetrics hintFm = g.getFontMetrics();
@@ -256,6 +313,27 @@ public class ResultOverlayPanel extends JPanel {
       g.drawString(String.valueOf(ch), cx, y);
       cx += fm.charWidth(ch) + spacing;
     }
+  }
+
+  private void drawHoverDiamonds(Graphics2D g, int btnX, int btnY, int btnW, int btnH) {
+    double angle = (System.currentTimeMillis() % 2000) / 2000.0 * Math.PI * 2;
+    int cy = btnY + btnH / 2;
+    int size = 5;
+    g.setColor(ACCENT_LINE);
+
+    int lx = btnX + 12;
+    java.awt.geom.AffineTransform old = g.getTransform();
+    g.rotate(angle, lx, cy);
+    g.fillPolygon(
+        new int[] {lx - size, lx, lx + size, lx}, new int[] {cy, cy - size, cy, cy + size}, 4);
+    g.setTransform(old);
+
+    int rx = btnX + btnW - 12;
+    old = g.getTransform();
+    g.rotate(-angle, rx, cy);
+    g.fillPolygon(
+        new int[] {rx - size, rx, rx + size, rx}, new int[] {cy, cy - size, cy, cy + size}, 4);
+    g.setTransform(old);
   }
 
   private int getButtonIndex(int mx, int my) {

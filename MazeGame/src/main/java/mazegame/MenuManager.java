@@ -21,6 +21,14 @@ public class MenuManager {
     this.game = game;
   }
 
+  /** Shows the splash screen, then transitions to the main menu. */
+  public void showSplash() {
+    java.awt.image.BufferedImage maskImg = game.getAssetManager().getPreloadedImage("splashMask");
+    SplashPanel splash = new SplashPanel(maskImg, this::showMainMenu);
+    swapContent(splash);
+    splash.requestFocusInWindow();
+  }
+
   /** Shows the main menu with custom-painted panel. */
   public void showMainMenu() {
     game.getAudioManager().playMenuMusic();

@@ -66,6 +66,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private String[] levelData;
   private GameLoop gameLoop;
   private boolean closingListenerAdded;
+  private boolean splashShown;
 
   /** Invisible cursor applied during gameplay so the mouse pointer doesn't distract. */
   private final Cursor blankCursor;
@@ -375,7 +376,12 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
     pane = new JPanel(new GridLayout());
     setUpFrame();
-    menuManager.showMainMenu();
+    if (!splashShown) {
+      splashShown = true;
+      menuManager.showSplash();
+    } else {
+      menuManager.showMainMenu();
+    }
   }
 
   /** Shows the level-selection screen. */

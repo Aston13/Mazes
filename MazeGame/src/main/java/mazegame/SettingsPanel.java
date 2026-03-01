@@ -16,7 +16,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 /**
  * Custom-painted settings screen allowing the player to choose a dog skin. Displays a preview of
@@ -50,6 +52,8 @@ public class SettingsPanel extends JPanel {
   private static final int BTN_WIDTH = 140;
   private static final int BTN_HEIGHT = 42;
   private static final int BTN_ARC = 10;
+  private static final int PARTICLE_COUNT = 20;
+  private static final int PARTICLE_TICK_MS = 50;
 
   private final GameSettings settings;
   private final AssetManager assetManager;
@@ -61,6 +65,13 @@ public class SettingsPanel extends JPanel {
   private boolean hoveredBack = false;
   private boolean hoveredMuteToggle = false;
   private boolean hoveredMusicToggle = false;
+  private final double[] particleX = new double[PARTICLE_COUNT];
+  private final double[] particleY = new double[PARTICLE_COUNT];
+  private final double[] particleSpeed = new double[PARTICLE_COUNT];
+  private final double[] particleAlpha = new double[PARTICLE_COUNT];
+  private final double[] particleSize = new double[PARTICLE_COUNT];
+  private final Random particleRng = new Random();
+  private Timer particleTimer;
 
   /**
    * Creates a new settings panel.
@@ -82,6 +93,25 @@ public class SettingsPanel extends JPanel {
     setOpaque(true);
     setBackground(BG_TOP);
     setFocusable(true);
+
+    // Initialise floating particles
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      resetParticle(i, true);
+    }
+    particleTimer =
+        new Timer(
+            PARTICLE_TICK_MS,
+            e -> {
+              for (int i = 0; i < PARTICLE_COUNT; i++) {
+                particleY[i] -= particleSpeed[i];
+                particleAlpha[i] -= 0.004;
+                if (particleY[i] < -10 || particleAlpha[i] <= 0) {
+                  resetParticle(i, false);
+                }
+              }
+              repaint();
+            });
+    particleTimer.start();
 
     MouseAdapter mouseHandler =
         new MouseAdapter() {
@@ -145,6 +175,19 @@ public class SettingsPanel extends JPanel {
     for (int y = 0; y < h; y += 40) {
       g.drawLine(0, y, w, y);
     }
+
+    // Floating particles
+    Composite particleOrig = g.getComposite();
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      float alpha = (float) Math.max(0, Math.min(1, particleAlpha[i]));
+      g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+      g.setColor(CARD_SELECTED_BORDER);
+      double px = particleX[i] / 800.0 * w;
+      double py = particleY[i] / 800.0 * h;
+      int sz = (int) particleSize[i];
+      g.fillOval((int) px, (int) py, sz, sz);
+    }
+    g.setComposite(particleOrig);
 
     // Title
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
@@ -306,6 +349,16 @@ public class SettingsPanel extends JPanel {
         backLabel,
         btnX + (BTN_WIDTH - bfm.stringWidth(backLabel)) / 2,
         btnY + (BTN_HEIGHT + bfm.getAscent()) / 2 - 2);
+  }
+
+  // ---- Particles ----
+
+  private void resetParticle(int i, boolean randomY) {
+    particleX[i] = particleRng.nextDouble() * 800;
+    particleY[i] = randomY ? particleRng.nextDouble() * 800 : 780 + particleRng.nextDouble() * 40;
+    particleSpeed[i] = 0.3 + particleRng.nextDouble() * 0.7;
+    particleAlpha[i] = 0.10 + particleRng.nextDouble() * 0.20;
+    particleSize[i] = 2 + particleRng.nextDouble() * 3;
   }
 
   // ---- Hit testing ----

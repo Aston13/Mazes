@@ -96,17 +96,31 @@ public class MenuManager {
 
   /** Shows the level-completion screen. */
   public void showCompletionScreen(int level, double timeTaken) {
+    // Grab PB *before* recording so we can detect improvement
+    double previousBest = game.getBestTime(level);
     game.recordLevelCompletion(level, timeTaken);
 
     ResultOverlayPanel overlay =
         new ResultOverlayPanel("Completed Level " + level + "!", game.getAudioManager());
     String timeStr = String.format("%.1f", timeTaken);
     int totalBones = game.getTotalBones();
-    String subtitle = "Time: " + timeStr + "s";
-    if (totalBones > 0) {
-      subtitle += "  \u00B7  Bones: " + totalBones + "/30";
+
+    // Build subtitle: current time + personal best + bones
+    StringBuilder sb = new StringBuilder();
+    sb.append("Time: ").append(timeStr).append('s');
+    if (previousBest > 0 && previousBest < timeTaken) {
+      // Previous PB still stands
+      sb.append("  \u00B7  \uD83C\uDFC6 PB: ")
+          .append(String.format("%.1f", previousBest))
+          .append('s');
+    } else {
+      // New PB (first completion or improved)
+      sb.append("  \u00B7  \uD83C\uDFC6 New PB!");
     }
-    overlay.setSubtitle(subtitle);
+    if (totalBones > 0) {
+      sb.append("  \u00B7  Bones: ").append(totalBones).append("/30");
+    }
+    overlay.setSubtitle(sb.toString());
     overlay.addButton(
         "Next Level",
         "[Space]",

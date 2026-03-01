@@ -191,6 +191,19 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     return audioManager;
   }
 
+  /**
+   * Returns the stored personal-best time for a level, or {@code -1} if the level has not been
+   * completed before.
+   *
+   * @param level the 1-based level number
+   * @return best time in seconds, or -1 if no prior completion
+   */
+  public double getBestTime(int level) {
+    if (level < 1 || level >= levelData.length) return -1;
+    String[] parts = levelData[level].split(",");
+    return Double.parseDouble(parts[2]);
+  }
+
   /** Records a level completion, updating best time if improved. Preserves bone status. */
   public void recordLevelCompletion(int level, double timeTaken) {
     String[] lineWords = levelData[level].split(",");

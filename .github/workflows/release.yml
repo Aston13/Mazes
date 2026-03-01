@@ -61,8 +61,8 @@ jobs:
             | File | Description |
             |------|-------------|
             | `MazeGame-${{ steps.version.outputs.VERSION }}.jar` | Desktop JAR (Java 21) — run with `java -jar MazeGame-${{ steps.version.outputs.VERSION }}.jar` |
-            | `MazeGame-browser-${{ steps.version.outputs.VERSION }}.jar` | Browser JAR (Java 8, CheerpJ) — used by [GitHub Pages](https://Aston13.github.io/Mazes/) |
+            | `MazeGame-browser-${{ steps.version.outputs.VERSION }}.jar` | Browser JAR (Java 8, CheerpJ) — used by [GitHub Pages](https://Aston13.github.io/Wesleys-Way-Out/) |
 
             ## Play Online
 
-            **[▶ Play in Browser](https://Aston13.github.io/Mazes/)** — no download or Java install required
+            **[▶ Play in Browser](https://Aston13.github.io/Wesleys-Way-Out/)** — no download or Java install required

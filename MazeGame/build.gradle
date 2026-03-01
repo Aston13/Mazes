@@ -41,6 +41,21 @@ tasks.named('test') {
     jvmArgs '-Djava.awt.headless=true'
 }
 
+// --- Generate version.properties so the game can display its version at runtime ---
+tasks.register('generateVersionProperties') {
+    description = 'Write version.properties into the resources output for runtime access'
+    def outputDir = layout.buildDirectory.dir('generated/resources/version')
+    outputs.dir(outputDir)
+    doLast {
+        def propsFile = outputDir.get().file('mazegame/version.properties').asFile
+        propsFile.parentFile.mkdirs()
+        propsFile.text = "version=${project.version}\n"
+    }
+}
+
+sourceSets.main.resources.srcDir(layout.buildDirectory.dir('generated/resources/version'))
+tasks.named('processResources') { dependsOn 'generateVersionProperties' }
+
 jar {
     manifest {
         attributes(
@@ -79,10 +94,11 @@ tasks.register('compileJava8', JavaCompile) {
 
 tasks.register('browserJar', Jar) {
     description = 'Build a Java-8-compatible JAR for CheerpJ'
-    dependsOn 'compileJava8'
+    dependsOn 'compileJava8', 'generateVersionProperties'
     archiveBaseName = 'MazeGame-browser'
     from(tasks.named('compileJava8').get().destinationDirectory)
     from(sourceSets.main.resources)
+    from(layout.buildDirectory.dir('generated/resources/version'))
     manifest {
         attributes('Main-Class': application.mainClass)
     }

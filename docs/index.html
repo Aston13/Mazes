@@ -122,7 +122,7 @@
     </div>
 
     <footer>
-        <a href="https://github.com/Aston13/Mazes">View on GitHub</a> &nbsp;·&nbsp;
+        <a href="https://github.com/Aston13/Wesleys-Way-Out">View on GitHub</a> &nbsp;·&nbsp;
         Powered by <a href="https://cheerpj.com">CheerpJ</a>
     </footer>
 
@@ -144,10 +144,10 @@
 
                 overlay.querySelector('p').textContent = 'Starting game...';
 
-                // /app/ maps to server root; project Pages live under /Mazes/
+                // /app/ maps to server root; project Pages live under /Wesleys-Way-Out/
                 // Don't await — cheerpjRunJar resolves only when the app exits.
                 // Hide the overlay after a short delay to let Swing paint.
-                const runPromise = cheerpjRunJar('/app/Mazes/MazeGame.jar');
+                const runPromise = cheerpjRunJar('/app/Wesleys-Way-Out/MazeGame.jar');
 
                 // Give the JVM a moment to start rendering, then fade out overlay
                 setTimeout(() => {

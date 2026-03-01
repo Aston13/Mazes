@@ -240,6 +240,14 @@ public class MainMenuPanel extends JPanel {
         g.drawString(btn.hint(), hintX, textY + 14);
       }
     }
+
+    // Version label (bottom-right corner)
+    String versionText = "v" + BuildInfo.getVersion();
+    Font versionFont = new Font("Dialog", Font.PLAIN, 11);
+    g.setFont(versionFont);
+    FontMetrics vFm = g.getFontMetrics();
+    g.setColor(new Color(120, 110, 100));
+    g.drawString(versionText, w - vFm.stringWidth(versionText) - 10, h - 10);
   }
 
   private int getButtonIndex(int mx, int my) {

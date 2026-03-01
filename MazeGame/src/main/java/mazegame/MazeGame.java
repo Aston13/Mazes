@@ -1,15 +1,12 @@
 package mazegame;
 
-import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.swing.JFrame;
@@ -34,7 +31,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private static final int PAUSE_BUTTON_WIDTH = 200;
   private static final int PAUSE_BUTTON_HEIGHT = 45;
 
-  private final Canvas gameView = new Canvas();
+  private final GamePanel gameView = new GamePanel();
   private final int windowWidth;
   private final int windowHeight;
   private final UI ui;
@@ -251,11 +248,6 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   }
 
   private void cleanUpGameView() {
-    Graphics gv = gameView.getGraphics();
-    if (gv != null) gv.dispose();
-    Graphics gf = getGraphics();
-    if (gf != null) gf.dispose();
-
     renderBackground();
     if (renderer != null) {
       renderer.stopTimer();
@@ -425,30 +417,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     return offscreenBuffer.getGraphics();
   }
 
-  /** Scales the offscreen buffer to the canvas, maintaining aspect ratio with letterboxing. */
+  /** Triggers a repaint of the game panel, which draws the offscreen buffer in paintComponent. */
   private void showBuffer() {
     if (offscreenBuffer == null) return;
-    Graphics2D g = (Graphics2D) gameView.getGraphics();
-    if (g == null) return;
-
-    int cw = gameView.getWidth();
-    int ch = gameView.getHeight();
-
-    // Black letterbox background
-    g.setColor(Color.BLACK);
-    g.fillRect(0, 0, cw, ch);
-
-    // Uniform scale preserving aspect ratio
-    double scale = Math.min((double) cw / windowWidth, (double) ch / windowHeight);
-    int scaledW = (int) (windowWidth * scale);
-    int scaledH = (int) (windowHeight * scale);
-    int offsetX = (cw - scaledW) / 2;
-    int offsetY = (ch - scaledH) / 2;
-
-    g.setRenderingHint(
-        RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-    g.drawImage(offscreenBuffer, offsetX, offsetY, scaledW, scaledH, null);
-    g.dispose();
+    gameView.setBuffer(offscreenBuffer);
+    gameView.repaint();
   }
 
   /**

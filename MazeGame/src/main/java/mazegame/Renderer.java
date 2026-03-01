@@ -770,6 +770,7 @@ public class Renderer {
   private void triggerQuip(String text) {
     currentQuip = text;
     quipActivatedAt = System.currentTimeMillis();
+    audioManager.play(AudioManager.Sound.DOG_TALK);
   }
 
   /** Triggers a random level-start quip (called externally when a new level begins). */

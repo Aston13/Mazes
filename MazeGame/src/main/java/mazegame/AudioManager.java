@@ -29,7 +29,8 @@ public class AudioManager {
     LEVEL_COMPLETE,
     LEVEL_FAILED,
     LOW_TIME_WARNING,
-    BUTTON_CLICK
+    BUTTON_CLICK,
+    DOG_TALK
   }
 
   private static final float SAMPLE_RATE = 44100f;
@@ -271,6 +272,58 @@ public class AudioManager {
 
     // Button click: short soft tap
     soundData.put(Sound.BUTTON_CLICK, sine(600, 0.04, 0.25));
+
+    // Dog talk: short two-syllable bark/yap sound
+    soundData.put(Sound.DOG_TALK, dogBark(0.3));
+  }
+
+  /**
+   * Synthesises a short dog-bark sound by layering a breathy noise burst with pitched harmonics.
+   * Two short syllables give a "ruff-ruff" feel.
+   */
+  private byte[] dogBark(double volume) {
+    // Two short bark syllables with a tiny gap
+    byte[] yap1 = barkSyllable(320, 0.07, volume);
+    byte[] gap = new byte[(int) (SAMPLE_RATE * 0.04) * 2]; // ~40ms silence
+    byte[] yap2 = barkSyllable(380, 0.06, volume * 0.85);
+    byte[] result = new byte[yap1.length + gap.length + yap2.length];
+    System.arraycopy(yap1, 0, result, 0, yap1.length);
+    System.arraycopy(gap, 0, result, yap1.length, gap.length);
+    System.arraycopy(yap2, 0, result, yap1.length + gap.length, yap2.length);
+    return result;
+  }
+
+  /**
+   * A single bark syllable: a mix of a fundamental tone, an overtone, and filtered noise to create
+   * a rough, breathy bark quality.
+   */
+  private byte[] barkSyllable(double freq, double durationSec, double volume) {
+    int samples = (int) (SAMPLE_RATE * durationSec);
+    byte[] buf = new byte[samples * 2];
+    java.util.Random noiseRng = new java.util.Random(42);
+    for (int i = 0; i < samples; i++) {
+      double t = i / (double) SAMPLE_RATE;
+      // Sharp attack, fast decay envelope
+      double env;
+      int attackLen = (int) (SAMPLE_RATE * 0.008);
+      if (i < attackLen) {
+        env = i / (double) attackLen;
+      } else {
+        double decay = (i - attackLen) / (double) (samples - attackLen);
+        env = 1.0 - decay * decay; // quadratic decay
+      }
+      // Fundamental + overtone for tonal bark character
+      double tone =
+          Math.sin(2 * Math.PI * freq * t) * 0.5 + Math.sin(2 * Math.PI * freq * 1.5 * t) * 0.25;
+      // Noise component for breathiness
+      double noise = (noiseRng.nextDouble() * 2 - 1) * 0.25;
+      double val = (tone + noise) * volume * env;
+      val = Math.max(-1.0, Math.min(1.0, val));
+      short sample = (short) (val * Short.MAX_VALUE);
+      buf[i * 2] = (byte) (sample & 0xFF);
+      buf[i * 2 + 1] = (byte) ((sample >> 8) & 0xFF);
+    }
+    return buf;
   }
 
   /**

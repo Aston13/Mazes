@@ -94,14 +94,24 @@ class AssetManagerTest {
       assertNotNull(am.getPreloadedImage("Key_" + i), "Key_" + i + " should be loaded");
     }
 
-    // Dog frames
+    // Dog frames (Sasso skin — original)
     for (int i = 0; i < 6; i++) {
-      assertNotNull(am.getPreloadedImage("dogNorth" + i));
-      assertNotNull(am.getPreloadedImage("dogSouth" + i));
+      assertNotNull(am.getPreloadedImage("sassoNorth" + i));
+      assertNotNull(am.getPreloadedImage("sassoSouth" + i));
     }
     for (int i = 0; i < 7; i++) {
-      assertNotNull(am.getPreloadedImage("dogEast" + i));
-      assertNotNull(am.getPreloadedImage("dogWest" + i));
+      assertNotNull(am.getPreloadedImage("sassoEast" + i));
+      assertNotNull(am.getPreloadedImage("sassoWest" + i));
+    }
+
+    // Dog frames (Wesley skin)
+    for (int i = 0; i < 6; i++) {
+      assertNotNull(am.getPreloadedImage("wesleyNorth" + i));
+      assertNotNull(am.getPreloadedImage("wesleySouth" + i));
+    }
+    for (int i = 0; i < 7; i++) {
+      assertNotNull(am.getPreloadedImage("wesleyEast" + i));
+      assertNotNull(am.getPreloadedImage("wesleyWest" + i));
     }
 
     // Wall variants (all 16 NESW combinations)

@@ -25,8 +25,9 @@ public class MenuManager {
   public void showMainMenu() {
     MainMenuPanel menuPanel = new MainMenuPanel();
 
-    // Use the dog sprite as a decoration on the menu background
-    BufferedImage dogSprite = game.getAssetManager().getPreloadedImage("dogEast0");
+    // Use the active dog skin sprite as a decoration on the menu background
+    String spriteKey = game.getSettings().getSpritePrefix() + "East0";
+    BufferedImage dogSprite = game.getAssetManager().getPreloadedImage(spriteKey);
     if (dogSprite != null) {
       menuPanel.setDecorationImage(dogSprite);
     }
@@ -34,6 +35,7 @@ public class MenuManager {
     String playLabel = game.hasProgress() ? "Continue" : "Play";
     menuPanel.addButton(playLabel, "[Space]", game::startLevel);
     menuPanel.addButton("Level Selection", "", this::showLevelSelection);
+    menuPanel.addButton("Settings", "", this::showSettings);
 
     boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
     if (!inBrowser) {
@@ -111,6 +113,14 @@ public class MenuManager {
               showLevelSelection(); // refresh after reset
             });
 
+    swapContent(panel);
+    panel.requestFocusInWindow();
+  }
+
+  /** Shows the settings screen (skin selection, etc.). */
+  public void showSettings() {
+    SettingsPanel panel =
+        new SettingsPanel(game.getSettings(), game.getAssetManager(), this::showMainMenu);
     swapContent(panel);
     panel.requestFocusInWindow();
   }

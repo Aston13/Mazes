@@ -41,6 +41,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private final int windowHeight;
   private final UI ui;
   private final AssetManager assetManager;
+  private final GameSettings settings;
   private final MenuManager menuManager;
   private final InputHandler inputHandler;
 
@@ -84,6 +85,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     } catch (IOException e) {
       System.err.println("Failed to preload images: " + e.getMessage());
     }
+    this.settings = new GameSettings();
     this.menuManager = new MenuManager(this, ui, this);
     this.inputHandler = new InputHandler(this);
     load(false);
@@ -155,6 +157,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   /** Returns the shared asset manager. */
   public AssetManager getAssetManager() {
     return assetManager;
+  }
+
+  /** Returns the game settings (skin, preferences). */
+  public GameSettings getSettings() {
+    return settings;
   }
 
   /** Records a level completion, updating best time if improved. */
@@ -239,7 +246,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     gameView.setFocusable(true);
     validate(); // Force layout so gameView has non-zero dimensions before first render
 
-    renderer = new Renderer(windowWidth, windowHeight, rowColAmount, TILE_SIZE, assetManager, this);
+    renderer =
+        new Renderer(
+            windowWidth, windowHeight, rowColAmount, TILE_SIZE, assetManager, settings, this);
     renderer.generateMaze(TILE_SIZE, TILE_BORDER);
     renderer.centerMaze();
     player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);
@@ -561,14 +570,14 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     g2.setRenderingHint(
         RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-    // Semi-transparent gradient overlay matching main menu palette
+    // Semi-transparent gradient overlay matching Wesley palette
     g2.setPaint(
         new GradientPaint(
-            0, 0, new Color(10, 10, 30, 210), 0, windowHeight, new Color(20, 20, 50, 210)));
+            0, 0, new Color(26, 26, 26, 210), 0, windowHeight, new Color(34, 30, 28, 210)));
     g2.fillRect(0, 0, windowWidth, windowHeight);
 
     // Subtle grid decoration
-    g2.setColor(new Color(255, 255, 255, 8));
+    g2.setColor(new Color(255, 255, 255, 6));
     for (int x = 0; x < windowWidth; x += 40) {
       g2.drawLine(x, 0, x, windowHeight);
     }
@@ -583,9 +592,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     String title = "Paused";
     int titleX = (windowWidth - fmTitle.stringWidth(title)) / 2;
     int titleY = windowHeight / 4;
-    g2.setColor(new Color(0, 80, 80));
+    g2.setColor(new Color(80, 60, 40));
     g2.drawString(title, titleX + 2, titleY + 2);
-    g2.setColor(new Color(0, 255, 255));
+    g2.setColor(new Color(240, 236, 232));
     g2.drawString(title, titleX, titleY);
 
     // Rounded buttons matching main menu style
@@ -614,9 +623,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
       Graphics2D g2, int x, int y, int w, int h, String label, String hint) {
     RoundRectangle2D.Double rect =
         new RoundRectangle2D.Double(x, y, w, h, PAUSE_BTN_ARC, PAUSE_BTN_ARC);
-    g2.setColor(new Color(40, 40, 60));
+    g2.setColor(new Color(50, 44, 40));
     g2.fill(rect);
-    g2.setColor(new Color(0, 200, 200));
+    g2.setColor(new Color(196, 149, 106));
     g2.draw(rect);
 
     Font btnFont = new Font("Dialog", Font.PLAIN, PAUSE_BUTTON_FONT_SIZE);
@@ -635,7 +644,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
       Font hintFont = new Font("Dialog", Font.PLAIN, 11);
       g2.setFont(hintFont);
       FontMetrics hfm = g2.getFontMetrics();
-      g2.setColor(new Color(120, 120, 140));
+      g2.setColor(new Color(160, 145, 130));
       int hintX = x + (w - hfm.stringWidth(hint)) / 2;
       g2.drawString(hint, hintX, textY + 14);
     }

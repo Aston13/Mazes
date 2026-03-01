@@ -25,16 +25,16 @@ import javax.swing.JPanel;
  */
 public class MainMenuPanel extends JPanel {
 
-  private static final Color BG_TOP = new Color(10, 10, 30);
-  private static final Color BG_BOTTOM = new Color(20, 20, 50);
-  private static final Color TITLE_COLOR = new Color(0, 255, 255);
-  private static final Color TITLE_SHADOW = new Color(0, 80, 80);
-  private static final Color BTN_BG = new Color(40, 40, 60);
-  private static final Color BTN_BORDER = new Color(0, 200, 200);
-  private static final Color BTN_HOVER_BG = new Color(0, 80, 80);
-  private static final Color BTN_TEXT = new Color(220, 220, 220);
+  private static final Color BG_TOP = new Color(26, 26, 26);
+  private static final Color BG_BOTTOM = new Color(34, 30, 28);
+  private static final Color TITLE_COLOR = new Color(240, 236, 232);
+  private static final Color TITLE_SHADOW = new Color(80, 60, 40);
+  private static final Color BTN_BG = new Color(50, 44, 40);
+  private static final Color BTN_BORDER = new Color(196, 149, 106);
+  private static final Color BTN_HOVER_BG = new Color(100, 75, 50);
+  private static final Color BTN_TEXT = new Color(220, 216, 210);
   private static final Color BTN_HOVER_TEXT = Color.WHITE;
-  private static final Color SUBTITLE_COLOR = new Color(120, 120, 140);
+  private static final Color SUBTITLE_COLOR = new Color(160, 145, 130);
 
   private static final int BTN_WIDTH = 240;
   private static final int BTN_HEIGHT = 50;
@@ -151,7 +151,7 @@ public class MainMenuPanel extends JPanel {
     g.fillRect(0, 0, w, h);
 
     // Decorative grid lines
-    g.setColor(new Color(255, 255, 255, 8));
+    g.setColor(new Color(255, 255, 255, 6));
     for (int x = 0; x < w; x += 40) {
       g.drawLine(x, 0, x, h);
     }

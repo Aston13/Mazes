@@ -36,6 +36,7 @@ public class Renderer {
   private final int rowColAmount;
   private final int keysRequired;
   private final AssetManager assetManager;
+  private final String skinPrefix;
 
   private Tile[][] tileArr;
   private RecursiveBacktracker mazeGenerator;
@@ -68,6 +69,7 @@ public class Renderer {
    * @param rowColAmount the maze grid size (rows and columns)
    * @param tileWH the pixel size of each tile
    * @param assetManager the shared asset manager for image lookup
+   * @param settings the game settings (used for skin prefix)
    * @param game the game instance for state callbacks
    */
   public Renderer(
@@ -76,12 +78,14 @@ public class Renderer {
       int rowColAmount,
       int tileWH,
       AssetManager assetManager,
+      GameSettings settings,
       MazeGame game) {
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
     this.tileWidth = tileWH;
     this.rowColAmount = rowColAmount;
     this.assetManager = assetManager;
+    this.skinPrefix = settings.getSpritePrefix();
 
     screenWidthHalf = screenWidth / 2;
     screenHeightHalf = screenHeight / 2;
@@ -95,7 +99,7 @@ public class Renderer {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    playerImg = assetManager.getPreloadedImage("dogEast0");
+    playerImg = assetManager.getPreloadedImage(skinPrefix + "East0");
 
     view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
 
@@ -272,11 +276,11 @@ public class Renderer {
 
     // Gradient background
     g2.setPaint(
-        new GradientPaint(0, 0, new Color(12, 12, 35, 240), 0, hudH, new Color(22, 22, 50, 240)));
+        new GradientPaint(0, 0, new Color(26, 26, 26, 240), 0, hudH, new Color(34, 30, 28, 240)));
     g2.fillRect(0, 0, screenWidth, hudH);
 
     // Bottom accent line
-    g2.setColor(new Color(0, 200, 200, 150));
+    g2.setColor(new Color(196, 149, 106, 150));
     g2.fillRect(0, hudH - 2, screenWidth, 2);
 
     int pad = 20;
@@ -284,14 +288,14 @@ public class Renderer {
     int botY = 39;
     Font labelFont = new Font("Dialog", Font.PLAIN, 11);
     Font valueFont = new Font("Dialog", Font.BOLD, 16);
-    Color labelColor = new Color(140, 140, 160);
+    Color labelColor = new Color(160, 145, 130);
 
     // ---- Left: Keys ----
     g2.setFont(labelFont);
     g2.setColor(labelColor);
     g2.drawString("KEYS", pad, topY);
     g2.setFont(valueFont);
-    g2.setColor(new Color(0, 230, 230));
+    g2.setColor(new Color(196, 149, 106));
     g2.drawString(keyCount + " / " + keysRequired, pad, botY);
 
     // ---- Center: Level ----
@@ -318,7 +322,7 @@ public class Renderer {
     } else if (ratio < 0.6) {
       countdownColor = new Color(255, 220, 80);
     } else {
-      countdownColor = new Color(0, 230, 230);
+      countdownColor = new Color(196, 149, 106);
     }
 
     g2.setFont(labelFont);
@@ -337,7 +341,7 @@ public class Renderer {
     int barH = 3;
     int barX = screenWidth - pad - barW;
     int barY = botY + 4;
-    g2.setColor(new Color(40, 40, 60));
+    g2.setColor(new Color(50, 44, 40));
     g2.fillRect(barX, barY, barW, barH);
     int filledW = (int) (barW * Math.max(0, Math.min(1, ratio)));
     g2.setColor(countdownColor);
@@ -350,7 +354,7 @@ public class Renderer {
     g2.setColor(labelColor);
     g2.drawString(timeLabel, timeX, topY);
     g2.setFont(valueFont);
-    g2.setColor(new Color(200, 200, 220));
+    g2.setColor(new Color(220, 216, 210));
     g2.drawString(df.format(timeTaken) + "s", timeX, botY);
   }
 
@@ -370,7 +374,7 @@ public class Renderer {
     }
 
     if (nextPlayerAnimation.size() <= MAX_ANIMATION_STACK_SIZE) {
-      String direction = (dir < 0) ? "dogEast" : "dogWest";
+      String direction = (dir < 0) ? skinPrefix + "East" : skinPrefix + "West";
       int frameCount = 7;
       for (int i = 0; i < frameCount; i++) {
         nextPlayerAnimation.push(getImage(direction + i));
@@ -394,7 +398,7 @@ public class Renderer {
     }
 
     if (nextPlayerAnimation.size() <= MAX_ANIMATION_STACK_SIZE) {
-      String direction = (dir > 0) ? "dogNorth" : "dogSouth";
+      String direction = (dir > 0) ? skinPrefix + "North" : skinPrefix + "South";
       int frameCount = 6;
       for (int i = 0; i < frameCount; i++) {
         nextPlayerAnimation.push(getImage(direction + i));

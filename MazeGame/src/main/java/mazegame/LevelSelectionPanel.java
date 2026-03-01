@@ -22,24 +22,24 @@ import javax.swing.JPanel;
  */
 public class LevelSelectionPanel extends JPanel {
 
-  private static final Color BG_TOP = new Color(10, 10, 30);
-  private static final Color BG_BOTTOM = new Color(20, 20, 50);
-  private static final Color TITLE_COLOR = new Color(0, 255, 255);
-  private static final Color TITLE_SHADOW = new Color(0, 80, 80);
-  private static final Color CARD_BG = new Color(40, 40, 60);
-  private static final Color CARD_BORDER = new Color(80, 80, 100);
-  private static final Color CARD_HOVER_BG = new Color(50, 50, 80);
-  private static final Color TEXT_PRIMARY = new Color(220, 220, 220);
-  private static final Color TEXT_DIM = new Color(120, 120, 140);
+  private static final Color BG_TOP = new Color(26, 26, 26);
+  private static final Color BG_BOTTOM = new Color(34, 30, 28);
+  private static final Color TITLE_COLOR = new Color(240, 236, 232);
+  private static final Color TITLE_SHADOW = new Color(80, 60, 40);
+  private static final Color CARD_BG = new Color(50, 44, 40);
+  private static final Color CARD_BORDER = new Color(100, 85, 70);
+  private static final Color CARD_HOVER_BG = new Color(65, 55, 48);
+  private static final Color TEXT_PRIMARY = new Color(240, 236, 232);
+  private static final Color TEXT_DIM = new Color(160, 145, 130);
 
   private static final Color STATUS_COMPLETED = new Color(0, 200, 100);
   private static final Color STATUS_CURRENT = new Color(220, 180, 30);
-  private static final Color STATUS_LOCKED = new Color(100, 100, 120);
+  private static final Color STATUS_LOCKED = new Color(100, 90, 80);
 
-  private static final Color BTN_BG = new Color(40, 40, 60);
-  private static final Color BTN_BORDER = new Color(0, 200, 200);
-  private static final Color BTN_HOVER_BG = new Color(0, 80, 80);
-  private static final Color BTN_TEXT = new Color(220, 220, 220);
+  private static final Color BTN_BG = new Color(50, 44, 40);
+  private static final Color BTN_BORDER = new Color(196, 149, 106);
+  private static final Color BTN_HOVER_BG = new Color(100, 75, 50);
+  private static final Color BTN_TEXT = new Color(220, 216, 210);
 
   private static final int HEADER_HEIGHT = 70;
   private static final int HEADER_BTN_WIDTH = 110;
@@ -152,7 +152,7 @@ public class LevelSelectionPanel extends JPanel {
     g.fillRect(0, 0, w, h);
 
     // Grid lines
-    g.setColor(new Color(255, 255, 255, 8));
+    g.setColor(new Color(255, 255, 255, 6));
     for (int x = 0; x < w; x += 40) {
       g.drawLine(x, 0, x, h);
     }

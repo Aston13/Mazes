@@ -228,6 +228,17 @@ public class LevelSelectionPanel extends JPanel {
     g.setColor(TITLE_COLOR);
     g.drawString(title, titleX, titleY);
 
+    // Bone counter (right of title)
+    int totalBones = game.getTotalBones();
+    String boneStr = "\uD83E\uDDB4 " + totalBones + "/30";
+    Font boneFont = new Font("Dialog", Font.PLAIN, 13);
+    g.setFont(boneFont);
+    FontMetrics boneFm = g.getFontMetrics();
+    int boneX = titleX + fm.stringWidth(title) + 14;
+    int boneY = titleY;
+    g.setColor(new Color(235, 210, 170));
+    g.drawString(boneStr, boneX, boneY);
+
     // Header buttons: Back (left), Reset (right)
     Font btnFont = new Font("Dialog", Font.PLAIN, 13);
     g.setFont(btnFont);

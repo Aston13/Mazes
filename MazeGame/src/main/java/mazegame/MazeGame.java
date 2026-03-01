@@ -106,7 +106,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     audioManager.setMusicVolume(settings.getMusicVolume());
     this.menuManager = new MenuManager(this, ui, this);
     this.inputHandler = new InputHandler(this);
-    this.showTouchControls = "true".equals(System.getProperty("cheerpj.browser"));
+    // Touch controls disabled until mobile performance & viewport issues are resolved.
+    // Original: "true".equals(System.getProperty("cheerpj.browser"))
+    this.showTouchControls = false;
     this.blankCursor =
         Toolkit.getDefaultToolkit()
             .createCustomCursor(

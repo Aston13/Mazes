@@ -35,6 +35,14 @@ All tiles store position (minX, minY) and size. New tile types must implement th
 - Grid size is always odd (enforced). Starting coordinates are random odd numbers.
 - Exit is placed at the furthest reachable point from the start
 
+## Git Workflow
+- **Never push directly to master.** All changes go through pull requests.
+- Create a feature branch for each task: `feat/short-description`, `fix/short-description`, or `chore/short-description`.
+- Commit freely on the branch, then open a PR to `master`.
+- Use squash-merge to keep master history clean (one commit per feature/fix).
+- PR title should follow conventional commits (e.g. `feat: collectible bones`).
+- After merge, delete the feature branch.
+
 ## Code Conventions
 - Java 21 target (use modern features: lambdas, try-with-resources, diamond operator, etc.)
 - Use `.equals()` for String comparison, never `==`

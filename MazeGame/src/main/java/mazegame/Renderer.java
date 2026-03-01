@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Random;
 import java.util.Stack;
 import javax.swing.Timer;
 
@@ -29,6 +30,70 @@ public class Renderer {
   private static final int TIMER_CHECK_MS = 100;
   private static final double KEY_REMOVAL_INTERVAL = 5.00;
   private static final int MAX_ANIMATION_STACK_SIZE = 10;
+
+  // RuneScape-style overhead speech bubble
+  private static final int QUIP_DURATION_MS = 3500;
+  private static final int QUIP_MIN_INTERVAL_MS = 12_000;
+  private static final int QUIP_MAX_INTERVAL_MS = 25_000;
+  private static final Color QUIP_COLOR = new Color(255, 255, 0); // RS yellow
+  private static final int QUIP_FONT_SIZE = 14;
+
+  /** Idle quips Wesley says while exploring. Dog-themed, slightly humorous. */
+  private static final String[] IDLE_QUIPS = {
+    "*sniff sniff* I smell a key!",
+    "Dad would be so proud of me right now",
+    "Aston said there'd be treats...",
+    "These walls all look the same to me",
+    "I'm a good boy on a mission",
+    "Who built this maze anyway?!",
+    "My paws are getting tired...",
+    "Is that... a squirrel?! Oh wait, just a wall.",
+    "Dad better have snacks when I get out",
+    "*tail wagging intensifies*",
+    "Left or right? Eh, I'll follow my nose",
+    "Aston owes me belly rubs for this",
+    "I bet Sasso couldn't do this",
+    "This maze smells like adventure",
+    "Are we there yet?",
+    "I could really go for a nap right now",
+    "Note to self: don't chase tail in a maze",
+    "*panting* Water break?",
+  };
+
+  private static final String[] KEY_PICKUP_QUIPS = {
+    "Ooh shiny! Dad loves shiny things",
+    "Got one! I'm basically a treasure hunter",
+    "*happy bark*",
+    "Keys collected, belly rubs pending",
+    "One step closer to freedom!",
+    "Aston would be impressed",
+    "That's what a good boy does",
+  };
+
+  private static final String[] DOOR_LOCKED_QUIPS = {
+    "Hmm, needs more keys. Classic.",
+    "The door said no. Rude.",
+    "Locked?! Who does that to a dog?",
+    "Dad never locks me out... well, sometimes",
+  };
+
+  private static final String[] ALL_KEYS_QUIPS = {
+    "I got them all! Where's the exit?!",
+    "Full key collection! Dad would cry tears of joy",
+    "Time to find that door!",
+  };
+
+  // Confetti particle system
+  private static final int CONFETTI_COUNT = 60;
+  private static final int CONFETTI_DURATION_MS = 1800;
+  private static final Color[] CONFETTI_COLORS = {
+    new Color(255, 215, 0), // gold
+    new Color(196, 149, 106), // warm accent
+    new Color(255, 120, 80), // coral
+    new Color(120, 220, 160), // mint
+    new Color(100, 180, 255), // sky blue
+    new Color(255, 255, 255), // white
+  };
 
   private final BufferedImage view;
   private final int screenWidth;
@@ -73,6 +138,21 @@ public class Renderer {
   private double gameSecAtLastRemoval;
   private BufferedImage playerImg;
   private Stack<BufferedImage> nextPlayerAnimation = new Stack<>();
+
+  // Speech bubble state
+  private final Random quipRng = new Random();
+  private String currentQuip = "";
+  private long quipActivatedAt = Long.MIN_VALUE;
+  private long nextQuipTime;
+
+  // Confetti state
+  private long confettiStartTime = Long.MIN_VALUE;
+  private double[] confettiX;
+  private double[] confettiY;
+  private double[] confettiVx;
+  private double[] confettiVy;
+  private int[] confettiColorIdx;
+  private double[] confettiRotation;
 
   /**
    * Creates a new renderer for the game view.
@@ -151,6 +231,12 @@ public class Renderer {
                 audioManager.play(AudioManager.Sound.LOW_TIME_WARNING);
               }
             });
+
+    // Schedule first idle quip
+    nextQuipTime =
+        System.currentTimeMillis()
+            + QUIP_MIN_INTERVAL_MS
+            + quipRng.nextInt(QUIP_MAX_INTERVAL_MS - QUIP_MIN_INTERVAL_MS);
   }
 
   /** Starts (or resumes) the in-game timer using wall-clock tracking. */
@@ -464,6 +550,7 @@ public class Renderer {
       return false;
     } else if (tile instanceof TileExit) {
       if (((TileExit) tile).getAccessible()) {
+        spawnConfetti();
         audioManager.play(AudioManager.Sound.DOOR_OPEN);
         game.setGameState(false, "Next Level");
       } else {
@@ -472,6 +559,7 @@ public class Renderer {
         activatedAt = System.currentTimeMillis();
         setPlayerMessage(true);
         lockedDoorFlashStart = System.currentTimeMillis();
+        triggerQuip(randomQuip(DOOR_LOCKED_QUIPS));
         audioManager.play(AudioManager.Sound.LOCKED_DOOR);
       }
     } else {
@@ -481,6 +569,11 @@ public class Renderer {
         keyCount++;
         keyCollectFlashStart = System.currentTimeMillis();
         audioManager.play(AudioManager.Sound.KEY_PICKUP);
+        if (keyCount >= keysRequired) {
+          triggerQuip(randomQuip(ALL_KEYS_QUIPS));
+        } else {
+          triggerQuip(randomQuip(KEY_PICKUP_QUIPS));
+        }
       }
     }
     return true;
@@ -505,11 +598,19 @@ public class Renderer {
 
     renderActionFeedback(g);
 
+    Graphics2D g2 = (Graphics2D) g;
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    g2.setRenderingHint(
+        RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+    // Confetti burst (renders behind speech bubbles)
+    renderConfetti(g2);
+
+    // Idle speech bubble tick & render
+    tickIdleQuip();
+    renderQuip(g2);
+
     if (isMessageVisible()) {
-      Graphics2D g2 = (Graphics2D) g;
-      g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-      g2.setRenderingHint(
-          RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
       long elapsed = System.currentTimeMillis() - activatedAt;
       float fadeAlpha = 1f;
@@ -645,5 +746,126 @@ public class Renderer {
   /** Returns the player's starting y-coordinate. */
   public int getStartingY() {
     return startingY;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Speech bubble helpers
+  // ---------------------------------------------------------------------------
+
+  /** Shows a RuneScape-style overhead quip above Wesley. */
+  private void triggerQuip(String text) {
+    currentQuip = text;
+    quipActivatedAt = System.currentTimeMillis();
+  }
+
+  /** Picks a random quip from the given array. */
+  private String randomQuip(String[] pool) {
+    return pool[quipRng.nextInt(pool.length)];
+  }
+
+  /** Checks whether it's time for an idle quip and triggers one if so. */
+  private void tickIdleQuip() {
+    long now = System.currentTimeMillis();
+    if (now >= nextQuipTime && now - quipActivatedAt > QUIP_DURATION_MS) {
+      triggerQuip(randomQuip(IDLE_QUIPS));
+      nextQuipTime =
+          now + QUIP_MIN_INTERVAL_MS + quipRng.nextInt(QUIP_MAX_INTERVAL_MS - QUIP_MIN_INTERVAL_MS);
+    }
+  }
+
+  /** Returns true if the overhead quip text is still visible. */
+  private boolean isQuipVisible() {
+    long elapsed = System.currentTimeMillis() - quipActivatedAt;
+    return elapsed >= 0 && elapsed <= QUIP_DURATION_MS;
+  }
+
+  /**
+   * Renders the overhead quip in RuneScape style: yellow text with a black drop shadow, no
+   * background. Text floats above the player sprite and fades out near the end.
+   */
+  private void renderQuip(Graphics2D g2) {
+    if (!isQuipVisible()) return;
+
+    long elapsed = System.currentTimeMillis() - quipActivatedAt;
+    float fadeAlpha = 1f;
+    int fadeStart = QUIP_DURATION_MS - 600;
+    if (elapsed > fadeStart) {
+      fadeAlpha = 1f - (float) (elapsed - fadeStart) / 600f;
+      fadeAlpha = Math.max(0f, Math.min(1f, fadeAlpha));
+    }
+
+    // Slight upward drift over lifetime
+    int floatOffset = (int) ((elapsed / (double) QUIP_DURATION_MS) * 8);
+
+    Font quipFont = new Font("Dialog", Font.BOLD, QUIP_FONT_SIZE);
+    g2.setFont(quipFont);
+    FontMetrics fm = g2.getFontMetrics();
+    int textW = fm.stringWidth(currentQuip);
+    int textX = screenWidthHalf + tileWidth / 2 - textW / 2;
+    int textY = screenHeightHalf - 14 - floatOffset;
+
+    Composite oldComp = g2.getComposite();
+
+    // Black drop shadow (1px offset)
+    g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, fadeAlpha));
+    g2.setColor(Color.BLACK);
+    g2.drawString(currentQuip, textX + 1, textY + 1);
+
+    // Yellow main text
+    g2.setColor(QUIP_COLOR);
+    g2.drawString(currentQuip, textX, textY);
+
+    g2.setComposite(oldComp);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Confetti helpers
+  // ---------------------------------------------------------------------------
+
+  /** Spawns a burst of confetti particles centred on the player. */
+  private void spawnConfetti() {
+    confettiStartTime = System.currentTimeMillis();
+    confettiX = new double[CONFETTI_COUNT];
+    confettiY = new double[CONFETTI_COUNT];
+    confettiVx = new double[CONFETTI_COUNT];
+    confettiVy = new double[CONFETTI_COUNT];
+    confettiColorIdx = new int[CONFETTI_COUNT];
+    confettiRotation = new double[CONFETTI_COUNT];
+    Random rng = quipRng;
+    for (int i = 0; i < CONFETTI_COUNT; i++) {
+      confettiX[i] = screenWidthHalf + tileWidth / 2.0;
+      confettiY[i] = screenHeightHalf + tileWidth / 2.0;
+      double angle = rng.nextDouble() * 2 * Math.PI;
+      double speed = 2.0 + rng.nextDouble() * 5.0;
+      confettiVx[i] = Math.cos(angle) * speed;
+      confettiVy[i] = Math.sin(angle) * speed - 3.0; // bias upward
+      confettiColorIdx[i] = rng.nextInt(CONFETTI_COLORS.length);
+      confettiRotation[i] = rng.nextDouble() * 360;
+    }
+  }
+
+  /** Renders active confetti particles with gravity and fade-out. */
+  private void renderConfetti(Graphics2D g2) {
+    long elapsed = System.currentTimeMillis() - confettiStartTime;
+    if (elapsed < 0 || elapsed > CONFETTI_DURATION_MS || confettiX == null) return;
+
+    float progress = (float) elapsed / CONFETTI_DURATION_MS;
+    float alpha = Math.max(0f, 1f - progress * progress); // quadratic fade
+    double gravity = 0.12;
+    double t = elapsed / 16.0; // time in ~frames
+
+    Composite oldComp = g2.getComposite();
+    g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+
+    for (int i = 0; i < CONFETTI_COUNT; i++) {
+      double px = confettiX[i] + confettiVx[i] * t;
+      double py = confettiY[i] + confettiVy[i] * t + 0.5 * gravity * t * t;
+      g2.setColor(CONFETTI_COLORS[confettiColorIdx[i]]);
+      // Small rectangle rotated to look like confetti
+      int size = 4 + (i % 3);
+      g2.fillRect((int) px, (int) py, size, size / 2 + 1);
+    }
+
+    g2.setComposite(oldComp);
   }
 }

@@ -308,6 +308,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     renderer.centerMaze();
     player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);
     renderer.beginTimer();
+    renderer.triggerStartQuip();
 
     // Switch to in-game music
     audioManager.playIngameMusic(levelCount);

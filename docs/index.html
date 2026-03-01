@@ -153,6 +153,15 @@
 
         footer a { color: #c4956a; text-decoration: none; }
         footer a:hover { text-decoration: underline; }
+
+        /* Hide CheerpJ community-edition splash/watermark overlay */
+        #game-container div[style*="Made with"],
+        #game-container div[style*="cheerpj"],
+        #game-container > div:not(#loading-overlay):not(canvas) {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
     </style>
 </head>
 <body>
@@ -185,8 +194,7 @@
     </div>
 
     <footer>
-        <a href="https://github.com/Aston13/Wesleys-Way-Out">View on GitHub</a> &nbsp;·&nbsp;
-        Powered by <a href="https://cheerpj.com">CheerpJ</a>
+        <a href="https://github.com/Aston13/Wesleys-Way-Out">View on GitHub</a>
     </footer>
 
     <script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>

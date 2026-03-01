@@ -41,14 +41,14 @@ public class Renderer {
   /** Idle quips Wesley says while exploring. Dog-themed, slightly humorous. */
   private static final String[] IDLE_QUIPS = {
     "*sniff sniff* I smell a key!",
-    "Dad would be so proud of me right now",
+    "Dad Aston would be so proud of me right now",
     "Aston said there'd be treats...",
     "These walls all look the same to me",
     "I'm a good boy on a mission",
     "Who built this maze anyway?!",
     "My paws are getting tired...",
     "Is that... a squirrel?! Oh wait, just a wall.",
-    "Dad better have snacks when I get out",
+    "Aston — that's Dad — better have snacks when I get out",
     "*tail wagging intensifies*",
     "Left or right? Eh, I'll follow my nose",
     "Aston owes me belly rubs for this",
@@ -61,7 +61,7 @@ public class Renderer {
   };
 
   private static final String[] KEY_PICKUP_QUIPS = {
-    "Ooh shiny! Dad loves shiny things",
+    "Ooh shiny! Dad Aston loves shiny things",
     "Got one! I'm basically a treasure hunter",
     "*happy bark*",
     "Keys collected, belly rubs pending",
@@ -74,13 +74,27 @@ public class Renderer {
     "Hmm, needs more keys. Classic.",
     "The door said no. Rude.",
     "Locked?! Who does that to a dog?",
-    "Dad never locks me out... well, sometimes",
+    "Aston never locks me out... well, sometimes",
   };
 
   private static final String[] ALL_KEYS_QUIPS = {
     "I got them all! Where's the exit?!",
-    "Full key collection! Dad would cry tears of joy",
+    "Full key collection! Dad Aston would cry tears of joy",
     "Time to find that door!",
+  };
+
+  /** Quips Wesley says when a new level starts. */
+  private static final String[] LEVEL_START_QUIPS = {
+    "Alright, new maze! Let's do this!",
+    "*sniff sniff* Fresh maze smell!",
+    "Dad Aston believes in me. I think.",
+    "Okay paws, don't fail me now",
+    "Another one?! I'm not even tired... much",
+    "Woof! Adventure time!",
+    "I was born for this. Literally. I'm a dog.",
+    "This one looks tricky... said no good boy ever",
+    "Let's gooo! *tail helicopter*",
+    "Aston if you're watching — this one's for you!",
   };
 
   // Confetti particle system
@@ -756,6 +770,11 @@ public class Renderer {
   private void triggerQuip(String text) {
     currentQuip = text;
     quipActivatedAt = System.currentTimeMillis();
+  }
+
+  /** Triggers a random level-start quip (called externally when a new level begins). */
+  public void triggerStartQuip() {
+    triggerQuip(randomQuip(LEVEL_START_QUIPS));
   }
 
   /** Picks a random quip from the given array. */

@@ -23,7 +23,7 @@ public class MenuManager {
 
   /** Shows the main menu with custom-painted panel. */
   public void showMainMenu() {
-    MainMenuPanel menuPanel = new MainMenuPanel();
+    MainMenuPanel menuPanel = new MainMenuPanel(game.getAudioManager());
 
     // Use the Wesley pixel-art image as the menu decoration
     BufferedImage dogSprite = game.getAssetManager().getPreloadedImage("wesleyPixel");
@@ -63,7 +63,8 @@ public class MenuManager {
 
   /** Shows the game-over screen for the current level. */
   public void showGameOverScreen(int level) {
-    ResultOverlayPanel overlay = new ResultOverlayPanel("You failed level " + level + "!");
+    ResultOverlayPanel overlay =
+        new ResultOverlayPanel("You failed level " + level + "!", game.getAudioManager());
     overlay.addButton("Retry Level", "[Space]", game::startLevel);
     overlay.addButton("Main Menu", "[Esc]", this::showMainMenu);
 
@@ -78,7 +79,8 @@ public class MenuManager {
   public void showCompletionScreen(int level, double timeTaken) {
     game.recordLevelCompletion(level, timeTaken);
 
-    ResultOverlayPanel overlay = new ResultOverlayPanel("Completed Level " + level + "!");
+    ResultOverlayPanel overlay =
+        new ResultOverlayPanel("Completed Level " + level + "!", game.getAudioManager());
     overlay.addButton(
         "Next Level",
         "[Space]",
@@ -115,7 +117,8 @@ public class MenuManager {
               game.load(true);
               game.save();
               showLevelSelection(); // refresh after reset
-            });
+            },
+            game.getAudioManager());
 
     swapContent(panel);
     panel.requestFocusInWindow();

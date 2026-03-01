@@ -196,7 +196,8 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
   /** Configures the JFrame: resizable, exit-on-close, centred. */
   public void setUpFrame() {
-    setTitle("Wesley's Way Out");
+    boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
+    setTitle(inBrowser ? "" : "Wesley's Way Out");
     setResizable(true);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setContentPane(pane);

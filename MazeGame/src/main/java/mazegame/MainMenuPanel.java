@@ -45,6 +45,7 @@ public class MainMenuPanel extends JPanel {
   private static final int BTN_FONT_SIZE = 18;
 
   private final List<MenuButton> buttons = new ArrayList<>();
+  private final AudioManager audioManager;
   private int hoveredIndex = -1;
   private BufferedImage decorationImage;
 
@@ -73,7 +74,8 @@ public class MainMenuPanel extends JPanel {
     }
   }
 
-  public MainMenuPanel() {
+  public MainMenuPanel(AudioManager audioManager) {
+    this.audioManager = audioManager;
     setOpaque(true);
     setBackground(BG_TOP);
 
@@ -96,6 +98,7 @@ public class MainMenuPanel extends JPanel {
           public void mouseClicked(MouseEvent e) {
             int idx = getButtonIndex(e.getX(), e.getY());
             if (idx >= 0 && idx < buttons.size()) {
+              if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
               buttons.get(idx).action().run();
             }
           }

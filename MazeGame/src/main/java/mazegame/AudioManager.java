@@ -23,7 +23,8 @@ public class AudioManager {
     DOOR_OPEN,
     LEVEL_COMPLETE,
     LEVEL_FAILED,
-    LOW_TIME_WARNING
+    LOW_TIME_WARNING,
+    BUTTON_CLICK
   }
 
   private static final float SAMPLE_RATE = 44100f;
@@ -120,6 +121,9 @@ public class AudioManager {
 
     // Low time warning: short tick
     soundData.put(Sound.LOW_TIME_WARNING, sine(880, 0.05, 0.3));
+
+    // Button click: short soft tap
+    soundData.put(Sound.BUTTON_CLICK, sine(600, 0.04, 0.25));
   }
 
   /**

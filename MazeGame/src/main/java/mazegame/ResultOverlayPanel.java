@@ -42,10 +42,12 @@ public class ResultOverlayPanel extends JPanel {
 
   private final String message;
   private final List<MainMenuPanel.MenuButton> buttons = new ArrayList<MainMenuPanel.MenuButton>();
+  private final AudioManager audioManager;
   private int hoveredIndex = -1;
 
-  public ResultOverlayPanel(String message) {
+  public ResultOverlayPanel(String message, AudioManager audioManager) {
     this.message = message;
+    this.audioManager = audioManager;
     setOpaque(true);
     setBackground(BG_TOP);
 
@@ -68,6 +70,7 @@ public class ResultOverlayPanel extends JPanel {
           public void mouseClicked(MouseEvent e) {
             int idx = getButtonIndex(e.getX(), e.getY());
             if (idx >= 0 && idx < buttons.size()) {
+              if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
               buttons.get(idx).action().run();
             }
           }

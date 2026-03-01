@@ -154,6 +154,15 @@
                     overlay.style.transition = 'opacity 0.5s';
                     overlay.style.opacity = '0';
                     setTimeout(() => overlay.remove(), 500);
+
+                    // Hide the page header to avoid duplicate title with
+                    // the in-game main menu and CheerpJ window title bar
+                    const header = document.querySelector('header');
+                    if (header) {
+                        header.style.transition = 'opacity 0.3s';
+                        header.style.opacity = '0';
+                        setTimeout(() => { header.style.display = 'none'; }, 300);
+                    }
                 }, 3000);
 
                 const exitCode = await runPromise;

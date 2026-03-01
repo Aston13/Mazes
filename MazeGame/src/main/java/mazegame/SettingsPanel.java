@@ -358,11 +358,13 @@ public class SettingsPanel extends JPanel {
   private void handleClick(int mx, int my) {
     int cardIdx = getCardIndex(mx, my);
     if (cardIdx >= 0 && cardIdx < skins.length) {
+      audioManager.play(AudioManager.Sound.BUTTON_CLICK);
       settings.setActiveSkin(skins[cardIdx]);
       repaint();
       return;
     }
     if (isOverMuteToggle(mx, my)) {
+      audioManager.play(AudioManager.Sound.BUTTON_CLICK);
       boolean newMuted = !settings.isSoundMuted();
       settings.setSoundMuted(newMuted);
       audioManager.setMuted(newMuted);
@@ -370,6 +372,7 @@ public class SettingsPanel extends JPanel {
       return;
     }
     if (isOverBackButton(mx, my)) {
+      audioManager.play(AudioManager.Sound.BUTTON_CLICK);
       onBack.run();
     }
   }

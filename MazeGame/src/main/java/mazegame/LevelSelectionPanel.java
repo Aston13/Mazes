@@ -56,6 +56,7 @@ public class LevelSelectionPanel extends JPanel {
   private final MazeGame game;
   private final Runnable onMainMenu;
   private final Runnable onReset;
+  private final AudioManager audioManager;
   private int hoveredCard = -1;
   private int hoveredHeaderBtn = -1; // 0 = back, 1 = reset
   private int scrollOffset = 0;
@@ -69,13 +70,19 @@ public class LevelSelectionPanel extends JPanel {
    * @param game the game instance for launching levels
    * @param onMainMenu callback to return to main menu
    * @param onReset callback to reset progress and refresh
+   * @param audioManager the audio manager for UI sounds
    */
   public LevelSelectionPanel(
-      String[] levelData, MazeGame game, Runnable onMainMenu, Runnable onReset) {
+      String[] levelData,
+      MazeGame game,
+      Runnable onMainMenu,
+      Runnable onReset,
+      AudioManager audioManager) {
     this.levelData = levelData;
     this.game = game;
     this.onMainMenu = onMainMenu;
     this.onReset = onReset;
+    this.audioManager = audioManager;
     setOpaque(true);
     setBackground(BG_TOP);
     setFocusable(true);
@@ -345,11 +352,13 @@ public class LevelSelectionPanel extends JPanel {
     if (my >= btnY && my <= btnY + HEADER_BTN_HEIGHT) {
       int backX = CARD_PAD;
       if (mx >= backX && mx <= backX + HEADER_BTN_WIDTH) {
+        if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
         onMainMenu.run();
         return;
       }
       int resetX = getWidth() - CARD_PAD - HEADER_BTN_WIDTH;
       if (mx >= resetX && mx <= resetX + HEADER_BTN_WIDTH) {
+        if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
         onReset.run();
         return;
       }
@@ -359,6 +368,7 @@ public class LevelSelectionPanel extends JPanel {
     if (my > HEADER_HEIGHT) {
       int cardIdx = getCardIndex(mx, my);
       if (cardIdx >= 0 && isPlayable(cardIdx)) {
+        if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
         int level = cardIdx + 1;
         game.setCurrentLevel(level);
         game.setGameState(true, "Level Select");

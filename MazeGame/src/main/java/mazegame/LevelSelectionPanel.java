@@ -41,7 +41,7 @@ public class LevelSelectionPanel extends JPanel {
   private static final Color STATUS_CURRENT = new Color(220, 180, 30);
   private static final Color STATUS_LOCKED = new Color(100, 90, 80);
 
-  private static final int HEADER_HEIGHT = 70;
+  private static final int HEADER_HEIGHT = 90;
   private static final int HEADER_BTN_WIDTH = 110;
   private static final int HEADER_BTN_HEIGHT = 34;
   private static final int CARD_COLS = 5;
@@ -61,6 +61,8 @@ public class LevelSelectionPanel extends JPanel {
   private final AudioManager audioManager;
   private int hoveredCard = -1;
   private int hoveredHeaderBtn = -1; // 0 = back, 1 = reset
+  private boolean confirmingReset = false;
+  private int hoveredConfirmBtn = -1; // 0 = yes, 1 = cancel
   private int scrollOffset = 0;
   private int maxScroll = 0;
   private int firstIncompleteLevel = -1;
@@ -158,8 +160,20 @@ public class LevelSelectionPanel extends JPanel {
     addMouseMotionListener(mouseHandler);
     addMouseWheelListener(mouseHandler);
 
-    // ESC key binding
-    InputHandler.bindKey(this, KeyEvent.VK_ESCAPE, "Menu", false, evt -> onMainMenu.run());
+    // ESC key binding (dismisses confirmation overlay if active)
+    InputHandler.bindKey(
+        this,
+        KeyEvent.VK_ESCAPE,
+        "Menu",
+        false,
+        evt -> {
+          if (confirmingReset) {
+            confirmingReset = false;
+            repaint();
+          } else {
+            onMainMenu.run();
+          }
+        });
   }
 
   @Override
@@ -214,6 +228,10 @@ public class LevelSelectionPanel extends JPanel {
     g.clipRect(0, HEADER_HEIGHT, w, h - HEADER_HEIGHT);
     paintCards(g, w, h);
     g.setClip(null);
+
+    if (confirmingReset) {
+      paintConfirmOverlay(g, w, h);
+    }
   }
 
   private void paintHeader(Graphics2D g, int panelWidth) {
@@ -229,7 +247,7 @@ public class LevelSelectionPanel extends JPanel {
     g.setColor(TITLE_COLOR);
     g.drawString(title, titleX, titleY);
 
-    // Bone counter (right-aligned in header)
+    // Bone counter (centered sub-row below title)
     int totalBones = game.getTotalBones();
     String boneStr = Messages.fmt("label.golden_bones_header", totalBones);
     Font boneFont = new Font("Dialog", Font.PLAIN, 13);
@@ -238,8 +256,8 @@ public class LevelSelectionPanel extends JPanel {
     int boneIconSize = 16;
     int boneTextW = boneFm.stringWidth(boneStr);
     int boneBlockW = boneIconSize + 4 + boneTextW;
-    int boneX = panelWidth - CARD_PAD - HEADER_BTN_WIDTH - 16 - boneBlockW;
-    int boneY = titleY;
+    int boneX = (panelWidth - boneBlockW) / 2;
+    int boneY = HEADER_HEIGHT - 10;
     BufferedImage boneIcon = UiTheme.generateBoneIcon(boneIconSize);
     g.drawImage(boneIcon, boneX, boneY - boneIconSize + 3, null);
     g.setColor(new Color(235, 210, 170));
@@ -382,6 +400,70 @@ public class LevelSelectionPanel extends JPanel {
     }
   }
 
+  private void paintConfirmOverlay(Graphics2D g, int w, int h) {
+    // Dim background
+    g.setColor(new Color(0, 0, 0, 150));
+    g.fillRect(0, 0, w, h);
+
+    int cardW = 300;
+    int cardH = 150;
+    int cardX = (w - cardW) / 2;
+    int cardY = (h - cardH) / 2;
+
+    RoundRectangle2D.Double card = new RoundRectangle2D.Double(cardX, cardY, cardW, cardH, 12, 12);
+    g.setColor(CARD_BG);
+    g.fill(card);
+    g.setColor(CARD_BORDER);
+    g.draw(card);
+
+    // Title
+    g.setFont(new Font("Dialog", Font.BOLD, 18));
+    FontMetrics fm = g.getFontMetrics();
+    String title = Messages.get("confirm.reset_title");
+    g.setColor(TITLE_COLOR);
+    g.drawString(title, cardX + (cardW - fm.stringWidth(title)) / 2, cardY + 40);
+
+    // Message
+    g.setFont(new Font("Dialog", Font.PLAIN, 13));
+    FontMetrics mfm = g.getFontMetrics();
+    String msg = Messages.get("confirm.reset_message");
+    g.setColor(TEXT_DIM);
+    g.drawString(msg, cardX + (cardW - mfm.stringWidth(msg)) / 2, cardY + 65);
+
+    // Buttons
+    int btnW = 100;
+    int btnH = 34;
+    int gap = 16;
+    int btnY = cardY + cardH - btnH - 20;
+    int yesX = cardX + cardW / 2 - btnW - gap / 2;
+    int noX = cardX + cardW / 2 + gap / 2;
+
+    UiTheme.paintButton(
+        g,
+        yesX,
+        btnY,
+        btnW,
+        btnH,
+        8,
+        Messages.get("button.confirm_yes"),
+        null,
+        hoveredConfirmBtn == 0,
+        13,
+        true);
+    UiTheme.paintButton(
+        g,
+        noX,
+        btnY,
+        btnW,
+        btnH,
+        8,
+        Messages.get("button.cancel"),
+        null,
+        hoveredConfirmBtn == 1,
+        13,
+        true);
+  }
+
   private void resetParticle(int i, boolean randomY) {
     particleX[i] = particleRng.nextDouble() * 800;
     particleY[i] = randomY ? particleRng.nextDouble() * 800 : 780 + particleRng.nextDouble() * 40;
@@ -391,6 +473,17 @@ public class LevelSelectionPanel extends JPanel {
   }
 
   private void updateHover(int mx, int my) {
+    if (confirmingReset) {
+      int oldBtn = hoveredConfirmBtn;
+      hoveredConfirmBtn = getConfirmButton(mx, my);
+      setCursor(
+          hoveredConfirmBtn >= 0
+              ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+              : Cursor.getDefaultCursor());
+      if (oldBtn != hoveredConfirmBtn) repaint();
+      return;
+    }
+
     int oldCard = hoveredCard;
     int oldHeader = hoveredHeaderBtn;
 
@@ -428,6 +521,20 @@ public class LevelSelectionPanel extends JPanel {
   }
 
   private void handleClick(int mx, int my) {
+    if (confirmingReset) {
+      int btn = getConfirmButton(mx, my);
+      if (btn == 0) {
+        if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
+        confirmingReset = false;
+        onReset.run();
+      } else if (btn == 1) {
+        if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
+        confirmingReset = false;
+        repaint();
+      }
+      return;
+    }
+
     // Header buttons
     int btnY = (HEADER_HEIGHT - HEADER_BTN_HEIGHT) / 2;
     if (my >= btnY && my <= btnY + HEADER_BTN_HEIGHT) {
@@ -440,7 +547,8 @@ public class LevelSelectionPanel extends JPanel {
       int resetX = getWidth() - CARD_PAD - HEADER_BTN_WIDTH;
       if (mx >= resetX && mx <= resetX + HEADER_BTN_WIDTH) {
         if (audioManager != null) audioManager.play(AudioManager.Sound.BUTTON_CLICK);
-        onReset.run();
+        confirmingReset = true;
+        repaint();
         return;
       }
     }
@@ -456,6 +564,27 @@ public class LevelSelectionPanel extends JPanel {
         game.playSelectedLevel();
       }
     }
+  }
+
+  private int getConfirmButton(int mx, int my) {
+    int w = getWidth();
+    int h = getHeight();
+    int cardW = 300;
+    int cardH = 150;
+    int cardX = (w - cardW) / 2;
+    int cardY = (h - cardH) / 2;
+    int btnW = 100;
+    int btnH = 34;
+    int gap = 16;
+    int btnY = cardY + cardH - btnH - 20;
+    int yesX = cardX + cardW / 2 - btnW - gap / 2;
+    int noX = cardX + cardW / 2 + gap / 2;
+
+    if (my >= btnY && my <= btnY + btnH) {
+      if (mx >= yesX && mx <= yesX + btnW) return 0;
+      if (mx >= noX && mx <= noX + btnW) return 1;
+    }
+    return -1;
   }
 
   private int getCardIndex(int mx, int my) {

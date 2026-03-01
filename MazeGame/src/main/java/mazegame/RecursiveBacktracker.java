@@ -11,12 +11,9 @@ import java.util.Stack;
  */
 public class RecursiveBacktracker extends Tilemap {
 
-  private int newXPos;
-  private int newYPos;
   private final Tile[][] updateGrid;
   private Tile[][] exitTileSet;
   private Stack<Tile> visitedTiles = new Stack<>();
-  private TilePassage visited;
   private final int rowColAmount;
   private int maxSE;
   private final int minNW;
@@ -54,8 +51,7 @@ public class RecursiveBacktracker extends Tilemap {
             updateGrid[startingY][startingX].getMinX(),
             updateGrid[startingY][startingX].getMinY());
 
-    visited = new TilePassage(0, startingX, startingY);
-    visitedTiles.push(visited);
+    visitedTiles.push(new TilePassage(0, startingX, startingY));
     Tile[][] tiles = setWinningTile(carvePassage(startingX, startingY));
     tiles = addKeys(tiles);
     tiles = addWallIds(tiles);
@@ -192,10 +188,9 @@ public class RecursiveBacktracker extends Tilemap {
     }
 
     shuffleDirection(directions);
-    int direction = directions[1];
 
     for (int i = 0; i < directions.length; i++) {
-      direction = directions[i];
+      int direction = directions[i];
 
       // Checks if the cell in direction[i] is a path cell.
       if (checkPath(direction, cX, cY)) {
@@ -342,8 +337,7 @@ public class RecursiveBacktracker extends Tilemap {
         // If northern cell is within maze range and is not already a passage.
         if (!((y <= minNW) || (updateGrid[y - 2][x] instanceof TilePassage))) {
 
-          visited = new TilePassage(0, x, y);
-          visitedTiles.push(visited);
+          visitedTiles.push(new TilePassage(0, x, y));
 
           updateGrid[y - 2][x] =
               new TilePassage(
@@ -353,17 +347,14 @@ public class RecursiveBacktracker extends Tilemap {
               new TilePassage(
                   tileWH, updateGrid[y - 1][x].getMinX(), updateGrid[y - 1][x].getMinY());
 
-          newYPos = y - 2;
-          newXPos = x;
-          carvePassage(newXPos, newYPos);
+          carvePassage(x, y - 2);
         }
         break;
 
       // East
       case 2:
         if (!((x >= maxSE) || (updateGrid[y][x + 2] instanceof TilePassage))) {
-          visited = new TilePassage(0, x, y);
-          visitedTiles.push(visited);
+          visitedTiles.push(new TilePassage(0, x, y));
 
           updateGrid[y][x + 2] =
               new TilePassage(
@@ -373,17 +364,14 @@ public class RecursiveBacktracker extends Tilemap {
               new TilePassage(
                   tileWH, updateGrid[y][x + 1].getMinX(), updateGrid[y][x + 1].getMinY());
 
-          newYPos = y;
-          newXPos = x + 2;
-          carvePassage(newXPos, newYPos);
+          carvePassage(x + 2, y);
         }
         break;
 
       // South
       case 3:
         if (!((y >= maxSE) || (updateGrid[y + 2][x] instanceof TilePassage))) {
-          visited = new TilePassage(0, x, y);
-          visitedTiles.push(visited);
+          visitedTiles.push(new TilePassage(0, x, y));
 
           updateGrid[y + 2][x] =
               new TilePassage(
@@ -393,17 +381,14 @@ public class RecursiveBacktracker extends Tilemap {
               new TilePassage(
                   tileWH, updateGrid[y + 1][x].getMinX(), updateGrid[y + 1][x].getMinY());
 
-          newYPos = y + 2;
-          newXPos = x;
-          carvePassage(newXPos, newYPos);
+          carvePassage(x, y + 2);
         }
         break;
 
       // West
       case 4:
         if (!((x <= minNW) || (updateGrid[y][x - 2] instanceof TilePassage))) {
-          visited = new TilePassage(0, x, y);
-          visitedTiles.push(visited);
+          visitedTiles.push(new TilePassage(0, x, y));
 
           updateGrid[y][x - 2] =
               new TilePassage(
@@ -413,9 +398,7 @@ public class RecursiveBacktracker extends Tilemap {
               new TilePassage(
                   tileWH, updateGrid[y][x - 1].getMinX(), updateGrid[y][x - 1].getMinY());
 
-          newYPos = y;
-          newXPos = x - 2;
-          carvePassage(newXPos, newYPos);
+          carvePassage(x - 2, y);
         }
     }
   }
@@ -433,7 +416,7 @@ public class RecursiveBacktracker extends Tilemap {
 
       for (int j = 0; j < tileSet.length; j++) {
         if ((tileSet[i][j]) instanceof TileWall) { // If current tile is a wall
-          neighbours = 0000;
+          neighbours = 0;
 
           if (((i - 1) >= 0 && (i - 1) <= tileSet.length)
               && ((tileSet[i - 1][j]) instanceof TilePassage)) { // Check if north tile is a passage

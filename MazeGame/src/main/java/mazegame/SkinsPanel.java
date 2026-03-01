@@ -203,7 +203,7 @@ public class SkinsPanel extends JPanel {
     Font boneCountFont = new Font("Dialog", Font.BOLD, 22);
     g.setFont(boneCountFont);
     FontMetrics bcFm = g.getFontMetrics();
-    String boneStr = "\uD83E\uDDB4  " + totalBones + " / 30  bones";
+    String boneStr = "\uD83E\uDDB4  " + totalBones + " / 30  golden bones";
     int boneX = (w - bcFm.stringWidth(boneStr)) / 2;
     int boneY = titleY + 40;
     g.setColor(new Color(235, 210, 170));

@@ -25,7 +25,6 @@ public class TilePassage implements Tile {
     this.tileWH = tileWH;
     this.xPos = xPos;
     this.yPos = yPos;
-    this.color = Color.WHITE;
     this.passageId = String.valueOf(new Random().nextInt(4));
     setItem(false);
   }

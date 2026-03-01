@@ -230,32 +230,26 @@ public class LevelSelectionPanel extends JPanel {
 
     // Bone counter (right of title)
     int totalBones = game.getTotalBones();
-    String boneStr = "\uD83E\uDDB4 " + totalBones + "/30";
+    String boneStr = "\uD83E\uDDB4 " + totalBones + "/30 Golden Bones";
     Font boneFont = new Font("Dialog", Font.PLAIN, 13);
     g.setFont(boneFont);
-    FontMetrics boneFm = g.getFontMetrics();
     int boneX = titleX + fm.stringWidth(title) + 14;
     int boneY = titleY;
     g.setColor(new Color(235, 210, 170));
     g.drawString(boneStr, boneX, boneY);
 
     // Header buttons: Back (left), Reset (right)
-    Font btnFont = new Font("Dialog", Font.PLAIN, 13);
-    g.setFont(btnFont);
-    FontMetrics bfm = g.getFontMetrics();
-
     // Back button
     int backX = CARD_PAD;
     int btnY = (HEADER_HEIGHT - HEADER_BTN_HEIGHT) / 2;
-    paintHeaderButton(g, "Back [Esc]", backX, btnY, bfm, hoveredHeaderBtn == 0);
+    paintHeaderButton(g, "Back [Esc]", backX, btnY, hoveredHeaderBtn == 0);
 
     // Reset button
     int resetX = panelWidth - CARD_PAD - HEADER_BTN_WIDTH;
-    paintHeaderButton(g, "Reset", resetX, btnY, bfm, hoveredHeaderBtn == 1);
+    paintHeaderButton(g, "Reset", resetX, btnY, hoveredHeaderBtn == 1);
   }
 
-  private void paintHeaderButton(
-      Graphics2D g, String label, int x, int y, FontMetrics fm, boolean hovered) {
+  private void paintHeaderButton(Graphics2D g, String label, int x, int y, boolean hovered) {
     UiTheme.paintButton(
         g, x, y, HEADER_BTN_WIDTH, HEADER_BTN_HEIGHT, 8, label, null, hovered, 13, true);
   }

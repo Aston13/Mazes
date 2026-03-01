@@ -40,11 +40,6 @@ public class LevelSelectionPanel extends JPanel {
   private static final Color STATUS_CURRENT = new Color(220, 180, 30);
   private static final Color STATUS_LOCKED = new Color(100, 90, 80);
 
-  private static final Color BTN_BG = new Color(50, 44, 40);
-  private static final Color BTN_BORDER = new Color(196, 149, 106);
-  private static final Color BTN_HOVER_BG = new Color(100, 75, 50);
-  private static final Color BTN_TEXT = new Color(220, 216, 210);
-
   private static final int HEADER_HEIGHT = 70;
   private static final int HEADER_BTN_WIDTH = 110;
   private static final int HEADER_BTN_HEIGHT = 34;
@@ -233,6 +228,17 @@ public class LevelSelectionPanel extends JPanel {
     g.setColor(TITLE_COLOR);
     g.drawString(title, titleX, titleY);
 
+    // Bone counter (right of title)
+    int totalBones = game.getTotalBones();
+    String boneStr = "\uD83E\uDDB4 " + totalBones + "/30";
+    Font boneFont = new Font("Dialog", Font.PLAIN, 13);
+    g.setFont(boneFont);
+    FontMetrics boneFm = g.getFontMetrics();
+    int boneX = titleX + fm.stringWidth(title) + 14;
+    int boneY = titleY;
+    g.setColor(new Color(235, 210, 170));
+    g.drawString(boneStr, boneX, boneY);
+
     // Header buttons: Back (left), Reset (right)
     Font btnFont = new Font("Dialog", Font.PLAIN, 13);
     g.setFont(btnFont);
@@ -250,17 +256,8 @@ public class LevelSelectionPanel extends JPanel {
 
   private void paintHeaderButton(
       Graphics2D g, String label, int x, int y, FontMetrics fm, boolean hovered) {
-    RoundRectangle2D.Double rect =
-        new RoundRectangle2D.Double(x, y, HEADER_BTN_WIDTH, HEADER_BTN_HEIGHT, 8, 8);
-    g.setColor(hovered ? BTN_HOVER_BG : BTN_BG);
-    g.fill(rect);
-    g.setColor(hovered ? TITLE_COLOR : BTN_BORDER);
-    g.draw(rect);
-    g.setColor(hovered ? Color.WHITE : BTN_TEXT);
-    g.drawString(
-        label,
-        x + (HEADER_BTN_WIDTH - fm.stringWidth(label)) / 2,
-        y + (HEADER_BTN_HEIGHT + fm.getAscent()) / 2 - 2);
+    UiTheme.paintButton(
+        g, x, y, HEADER_BTN_WIDTH, HEADER_BTN_HEIGHT, 8, label, null, hovered, 13, true);
   }
 
   private void paintCards(Graphics2D g, int panelWidth, int panelHeight) {

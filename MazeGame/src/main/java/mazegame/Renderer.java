@@ -17,6 +17,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 import javax.swing.Timer;
@@ -45,7 +48,7 @@ public class Renderer {
   /** Idle quips Wesley says while exploring. Dog-themed, slightly humorous. */
   private static final String[] IDLE_QUIPS = {
     "*sniff sniff* I smell a key!",
-    "Dad Aston would be so proud of me right now",
+    "My dad would be so proud of me right now",
     "Aston said there'd be treats...",
     "These walls all look the same to me",
     "I'm a good boy on a mission",
@@ -62,16 +65,33 @@ public class Renderer {
     "I could really go for a nap right now",
     "Note to self: don't chase tail in a maze",
     "*panting* Water break?",
+    "I wonder what Sasso's doing right now",
+    "Every dead end just means a new sniffing opportunity",
+    "My nose knows the way. Probably.",
+    "If I bark loud enough, will the walls move?",
+    "Aston should really put a map in here",
+    "*scratches ear* Where was I going?",
+    "This maze has no fire hydrants. Disappointing.",
+    "I've definitely been here before... maybe",
+    "Four paws and no GPS. Classic Wesley.",
+    "Do these walls ever end??",
+    "Stay focused, Wesley. Stay focused.",
+    "I smell something... nope, that's just me",
   };
 
   private static final String[] KEY_PICKUP_QUIPS = {
-    "Ooh shiny! Dad Aston loves shiny things",
+    "Ooh shiny! My dad loves shiny things",
     "Got one! I'm basically a treasure hunter",
     "*happy bark*",
     "Keys collected, belly rubs pending",
     "One step closer to freedom!",
     "Aston would be impressed",
     "That's what a good boy does",
+    "Another key! I'm on a roll!",
+    "Jingle jingle! Love that sound",
+    "Key get! ...is that how you say it?",
+    "Fetched! And they said I can't play fetch alone",
+    "Adding that to the collection! *tail wag*",
   };
 
   private static final String[] DOOR_LOCKED_QUIPS = {
@@ -79,19 +99,24 @@ public class Renderer {
     "The door said no. Rude.",
     "Locked?! Who does that to a dog?",
     "Aston never locks me out... well, sometimes",
+    "I'll be back, door. Count on it.",
+    "Not enough keys? This is an outrage!",
+    "*bonks nose on door* Still locked.",
   };
 
   private static final String[] ALL_KEYS_QUIPS = {
     "I got them all! Where's the exit?!",
-    "Full key collection! Dad Aston would cry tears of joy",
+    "Full key collection! My dad Aston would cry tears of joy",
     "Time to find that door!",
+    "All keys! Now where did I see that exit...",
+    "That's the last one! Door, here I come!",
   };
 
   /** Quips Wesley says when a new level starts. */
   private static final String[] LEVEL_START_QUIPS = {
     "Alright, new maze! Let's do this!",
     "*sniff sniff* Fresh maze smell!",
-    "Dad Aston believes in me. I think.",
+    "My dad Aston believes in me. I think.",
     "Okay paws, don't fail me now",
     "Another one?! I'm not even tired... much",
     "Woof! Adventure time!",
@@ -99,6 +124,11 @@ public class Renderer {
     "This one looks tricky... said no good boy ever",
     "Let's gooo! *tail helicopter*",
     "Aston if you're watching — this one's for you!",
+    "New maze, who dis?",
+    "*stretches paws* Alright, round two!",
+    "Bigger maze = more adventure. Bring it on!",
+    "This one smells harder. Is that a thing?",
+    "Focus! Sniff! Run! That's the plan.",
   };
 
   private static final String[] BONE_PICKUP_QUIPS = {
@@ -109,7 +139,15 @@ public class Renderer {
     "BONE! This maze just got 100% better",
     "Finders keepers! That's the law of the maze",
     "*happy tail wag* A bone just for me!",
+    "Buried treasure! Well, not buried, but still!",
+    "That's going straight to my collection",
+    "A bone AND a maze? Best day of my life!",
   };
+
+  /** How many recent quips to remember per pool to avoid repeats. */
+  private static final int QUIP_HISTORY_SIZE = 5;
+
+  private final Map<String[], LinkedList<String>> quipHistory = new HashMap<>();
 
   // Confetti particle system
   private static final int CONFETTI_COUNT = 60;
@@ -185,7 +223,6 @@ public class Renderer {
   // Bone collectible state
   private static final Color BONE_COLOR = new Color(235, 210, 170);
   private static final Color BONE_OUTLINE = new Color(180, 140, 90);
-  private static final Color BONE_GLOW = new Color(255, 220, 150, 60);
   private TilePassage boneTile;
   private boolean boneCollectedThisRun;
   private final boolean boneAlreadyCollected;
@@ -196,6 +233,11 @@ public class Renderer {
   private long boneCollectFlashStart = Long.MIN_VALUE;
   private static final int BONE_FLASH_DURATION_MS = 800;
   private static final Color BONE_FLASH_COLOR = new Color(235, 210, 170, 80);
+
+  // Level-complete delay (for confetti visibility)
+  private boolean pendingLevelComplete;
+  private long levelCompleteTime;
+  private static final int LEVEL_COMPLETE_DELAY_MS = 1500;
 
   /**
    * Creates a new renderer for the game view.
@@ -630,7 +672,9 @@ public class Renderer {
       if (((TileExit) tile).getAccessible()) {
         spawnConfetti();
         audioManager.play(AudioManager.Sound.DOOR_OPEN);
-        game.setGameState(false, "Next Level");
+        // Delay state change so confetti is visible before the screen swaps
+        pendingLevelComplete = true;
+        levelCompleteTime = System.currentTimeMillis();
       } else {
         int remaining = keysRequired - keyCount;
         playerMessage = "The door is locked. Find " + remaining + " more keys.";
@@ -840,6 +884,23 @@ public class Renderer {
     }
   }
 
+  /** Returns true if the exit confetti delay is in progress (player should not move). */
+  public boolean isPendingLevelComplete() {
+    return pendingLevelComplete;
+  }
+
+  /**
+   * Checks whether the confetti delay has elapsed and, if so, fires the level-complete state
+   * change. Call this once per update tick.
+   */
+  public void checkPendingCompletion(MazeGame game) {
+    if (pendingLevelComplete
+        && System.currentTimeMillis() - levelCompleteTime >= LEVEL_COMPLETE_DELAY_MS) {
+      pendingLevelComplete = false;
+      game.setGameState(false, "Next Level");
+    }
+  }
+
   /** Sets whether a player message should be displayed. */
   public void setPlayerMessage(boolean displayMsg) {
     this.displayMsg = displayMsg;
@@ -877,9 +938,31 @@ public class Renderer {
     triggerQuip(randomQuip(LEVEL_START_QUIPS));
   }
 
-  /** Picks a random quip from the given array. */
+  /** Picks a random quip from the given pool, avoiding recent repeats. */
   private String randomQuip(String[] pool) {
-    return pool[quipRng.nextInt(pool.length)];
+    LinkedList<String> history = quipHistory.computeIfAbsent(pool, k -> new LinkedList<>());
+    // Build a list of candidates not in recent history
+    ArrayList<String> candidates = new ArrayList<>(pool.length);
+    for (String q : pool) {
+      if (!history.contains(q)) {
+        candidates.add(q);
+      }
+    }
+    // If all quips were recently used, reset history and pick from full pool
+    if (candidates.isEmpty()) {
+      history.clear();
+      for (String q : pool) {
+        candidates.add(q);
+      }
+    }
+    String pick = candidates.get(quipRng.nextInt(candidates.size()));
+    history.addLast(pick);
+    // Keep history bounded
+    int maxHistory = Math.min(QUIP_HISTORY_SIZE, pool.length - 1);
+    while (history.size() > maxHistory) {
+      history.removeFirst();
+    }
+    return pick;
   }
 
   /** Checks whether it's time for an idle quip and triggers one if so. */
@@ -948,6 +1031,7 @@ public class Renderer {
    * @return a BufferedImage with a rendered bone
    */
   private BufferedImage generateBoneImage(int size) {
+    int spriteSize = size * 3 / 5; // bone is smaller than a full tile
     BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
     Graphics2D g2 = img.createGraphics();
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -956,12 +1040,24 @@ public class Renderer {
     g2.translate(size / 2.0, size / 2.0);
     g2.rotate(Math.toRadians(35));
 
-    int shaft = size * 3 / 8;
-    int thick = size / 7;
-    int bulb = size / 5;
+    int shaft = spriteSize * 3 / 8;
+    int thick = spriteSize / 7;
+    int bulb = spriteSize / 5;
 
-    // Soft glow behind the bone
-    g2.setColor(BONE_GLOW);
+    // Outer glow (larger, softer)
+    for (int i = 3; i >= 1; i--) {
+      int grow = i * 3;
+      g2.setColor(new Color(255, 215, 100, 20 + i * 8));
+      g2.fill(
+          new Ellipse2D.Double(
+              -shaft - bulb - grow,
+              -bulb * 1.5 - grow,
+              (shaft + bulb) * 2 + grow * 2,
+              bulb * 3 + grow * 2));
+    }
+
+    // Inner glow behind the bone
+    g2.setColor(new Color(255, 220, 100, 80));
     g2.fill(new Ellipse2D.Double(-shaft - bulb, -bulb * 1.5, (shaft + bulb) * 2, bulb * 3));
 
     // Shaft
@@ -974,6 +1070,10 @@ public class Renderer {
     g2.fillOval(-shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
     g2.fillOval(shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
     g2.fillOval(shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+
+    // Highlight (light streak on shaft for more golden look)
+    g2.setColor(new Color(255, 245, 220, 120));
+    g2.fillRoundRect(-shaft + 2, -thick / 4, shaft * 2 - 4, thick / 3, 3, 3);
 
     // Outline
     g2.setColor(BONE_OUTLINE);

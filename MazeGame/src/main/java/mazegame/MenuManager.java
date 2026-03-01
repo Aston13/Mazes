@@ -48,6 +48,7 @@ public class MenuManager {
     String playLabel = game.hasProgress() ? "Continue" : "Play";
     menuPanel.addButton(playLabel, "[Space]", game::startLevel);
     menuPanel.addButton("Level Selection", "", this::showLevelSelection);
+    menuPanel.addButton("Collection", "", this::showSkins);
     menuPanel.addButton("Settings", "", this::showSettings);
 
     boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
@@ -150,15 +151,23 @@ public class MenuManager {
     panel.requestFocusInWindow();
   }
 
-  /** Shows the settings screen (skin selection, etc.). */
-  public void showSettings() {
-    SettingsPanel panel =
-        new SettingsPanel(
+  /** Shows the dedicated skins / collection screen. */
+  public void showSkins() {
+    SkinsPanel panel =
+        new SkinsPanel(
             game.getSettings(),
             game.getAssetManager(),
             game.getAudioManager(),
             this::showMainMenu,
             game.getTotalBones());
+    swapContent(panel);
+    panel.requestFocusInWindow();
+  }
+
+  /** Shows the settings screen (audio toggles). */
+  public void showSettings() {
+    SettingsPanel panel =
+        new SettingsPanel(game.getSettings(), game.getAudioManager(), this::showMainMenu);
     swapContent(panel);
     panel.requestFocusInWindow();
   }

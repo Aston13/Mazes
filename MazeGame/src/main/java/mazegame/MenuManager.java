@@ -118,7 +118,7 @@ public class MenuManager {
       sb.append("  \u00B7  \uD83C\uDFC6 New PB!");
     }
     if (totalBones > 0) {
-      sb.append("  \u00B7  Bones: ").append(totalBones).append("/30");
+      sb.append("  \u00B7  Golden Bones: ").append(totalBones).append("/30");
     }
     overlay.setSubtitle(sb.toString());
     overlay.addButton(

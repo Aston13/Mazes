@@ -38,11 +38,14 @@ jobs:
         working-directory: MazeGame
         run: ./gradlew browserJar
 
-      - name: Deploy browser JAR to GitHub Pages
+      - name: Prepare GitHub Pages content
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        run: |
-          cp MazeGame/build/libs/MazeGame-browser-*.jar docs/MazeGame.jar
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/MazeGame.jar
-          git diff --cached --quiet || (git commit -m "ci: auto-deploy browser JAR" && git push)
+        run: cp MazeGame/build/libs/MazeGame-browser-*.jar docs/MazeGame.jar
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages

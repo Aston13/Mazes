@@ -287,7 +287,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     // Set custom app icon (Wesley sprite)
-    java.awt.image.BufferedImage icon = assetManager.getPreloadedImage("wesleyEast0");
+    java.awt.image.BufferedImage icon = assetManager.getPreloadedImage("wesleyPixel");
     if (icon != null) {
       setIconImage(icon);
     }
@@ -633,7 +633,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
               TILE_SIZE,
               TILE_BORDER);
       if (renderer.checkCollision(nextTile, this)) {
-        renderer.moveMazeY(g, rowColAmount, MOVEMENT_SPEED);
+        renderer.moveMazeY(rowColAmount, MOVEMENT_SPEED);
         player.setY(player.getY() - MOVEMENT_SPEED);
       }
     }
@@ -646,7 +646,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
               TILE_SIZE,
               TILE_BORDER);
       if (renderer.checkCollision(nextTile, this)) {
-        renderer.moveMazeX(g, rowColAmount, -MOVEMENT_SPEED);
+        renderer.moveMazeX(rowColAmount, -MOVEMENT_SPEED);
         player.setX(player.getX() + MOVEMENT_SPEED);
       }
     }
@@ -659,7 +659,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
               TILE_SIZE,
               TILE_BORDER);
       if (renderer.checkCollision(nextTile, this)) {
-        renderer.moveMazeY(g, rowColAmount, -MOVEMENT_SPEED);
+        renderer.moveMazeY(rowColAmount, -MOVEMENT_SPEED);
         player.setY(player.getY() + MOVEMENT_SPEED);
       }
     }
@@ -672,7 +672,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
               TILE_SIZE,
               TILE_BORDER);
       if (renderer.checkCollision(nextTile, this)) {
-        renderer.moveMazeX(g, rowColAmount, MOVEMENT_SPEED);
+        renderer.moveMazeX(rowColAmount, MOVEMENT_SPEED);
         player.setX(player.getX() - MOVEMENT_SPEED);
       }
     }
@@ -684,8 +684,8 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     if (g == null) return;
     renderer.renderBackground(g);
     renderer.renderMaze(g, TILE_SIZE);
-    renderer.renderPlayer(g, player, TILE_SIZE);
-    renderer.renderHUD(g, player, levelCount);
+    renderer.renderPlayer(g, TILE_SIZE);
+    renderer.renderHUD(g, levelCount);
     g.dispose();
     showBuffer();
   }
@@ -704,8 +704,8 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     if (g == null) return;
     renderer.renderBackground(g);
     renderer.renderMaze(g, TILE_SIZE);
-    renderer.renderPlayer(g, player, TILE_SIZE);
-    renderer.renderHUD(g, player, levelCount);
+    renderer.renderPlayer(g, TILE_SIZE);
+    renderer.renderHUD(g, levelCount);
 
     Graphics2D g2 = (Graphics2D) g;
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

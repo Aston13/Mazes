@@ -31,7 +31,6 @@ import javax.swing.Timer;
 public class Renderer {
 
   private static final int HUD_HEIGHT = 50;
-  private static final int HUD_FONT_SIZE = 15;
   private static final int MESSAGE_FONT_SIZE = 20;
   private static final int MESSAGE_DURATION_MS = 5000;
   private static final int TIMER_CHECK_MS = 100;
@@ -178,12 +177,10 @@ public class Renderer {
   private int startingY;
   private int tileWidth;
 
-  private int keyRemovalTimer;
   private Timer gameTimer;
   private Stack<Tile> keysOnMap = new Stack<>();
 
   private String playerMessage = "";
-  private boolean displayMsg;
   private long activatedAt = Long.MAX_VALUE;
   private int keyCount;
 
@@ -242,8 +239,8 @@ public class Renderer {
   /**
    * Creates a new renderer for the game view.
    *
-   * @param screenHeight the window height in pixels
    * @param screenWidth the window width in pixels
+   * @param screenHeight the window height in pixels
    * @param rowColAmount the maze grid size (rows and columns)
    * @param tileWH the pixel size of each tile
    * @param assetManager the shared asset manager for image lookup
@@ -253,8 +250,8 @@ public class Renderer {
    * @param boneAlreadyCollected true if the bone for this level was collected in a prior run
    */
   public Renderer(
-      int screenHeight,
       int screenWidth,
+      int screenHeight,
       int rowColAmount,
       int tileWH,
       AssetManager assetManager,
@@ -277,7 +274,6 @@ public class Renderer {
 
     keyCount = 0;
     keysRequired = (rowColAmount / 10) * 2;
-    keyRemovalTimer = keysRequired;
 
     try {
       assetManager.preloadImages();
@@ -287,7 +283,7 @@ public class Renderer {
     playerImg = assetManager.getPreloadedImage(skinPrefix + "East0");
     boneSprite = generateBoneImage(tileWH);
 
-    view = new BufferedImage(screenHeight, screenWidth, BufferedImage.TYPE_INT_RGB);
+    view = new BufferedImage(screenWidth, screenHeight, BufferedImage.TYPE_INT_RGB);
 
     gameTimer =
         new Timer(
@@ -299,6 +295,7 @@ public class Renderer {
 
               // All keys collected — nothing left to remove
               if (keyCount >= keysRequired || keysOnMap.isEmpty()) {
+                timeUntilKeyRemoval = KEY_REMOVAL_INTERVAL;
                 return;
               }
 
@@ -307,7 +304,6 @@ public class Renderer {
 
               if (timeUntilKeyRemoval <= 0) {
                 gameSecAtLastRemoval = totalGameSec;
-                keyRemovalTimer--;
                 TilePassage removedKey = (TilePassage) keysOnMap.pop();
                 removedKey.setItem(false);
                 audioManager.play(AudioManager.Sound.KEY_VANISHED);
@@ -480,7 +476,7 @@ public class Renderer {
    * @param p the player (reserved for future HUD info)
    * @param level the current level number
    */
-  public void renderHUD(Graphics g, Player p, int level) {
+  public void renderHUD(Graphics g, int level) {
     Graphics2D g2 = (Graphics2D) g;
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
     g2.setRenderingHint(
@@ -513,20 +509,25 @@ public class Renderer {
     g2.drawString(keyCount + " / " + keysRequired, pad, botY);
 
     // ---- Left: Bone indicator ----
-    g2.setFont(valueFont);
     int keysTextW = g2.getFontMetrics().stringWidth(keyCount + " / " + keysRequired);
-    int boneIconX = pad + keysTextW + 14;
-    int boneIconSize = 20;
+    int boneX = pad + keysTextW + 20;
+    g2.setFont(labelFont);
+    g2.setColor(labelColor);
+    g2.drawString("BONE", boneX, topY);
+    int boneIconSize = 16;
     if (boneCollectedThisRun || boneAlreadyCollected) {
-      g.drawImage(boneSprite, boneIconX, topY - 4, boneIconSize, boneIconSize, null);
-      g2.setFont(new Font("Dialog", Font.BOLD, 11));
+      g.drawImage(boneSprite, boneX, topY + 4, boneIconSize, boneIconSize, null);
+      g2.setFont(valueFont);
       g2.setColor(BONE_COLOR);
-      g2.drawString("\u2713", boneIconX + boneIconSize + 2, botY - 2);
+      g2.drawString("\u2713", boneX + boneIconSize + 3, botY);
     } else {
       Composite boneOldComp = g2.getComposite();
       g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
-      g.drawImage(boneSprite, boneIconX, topY - 4, boneIconSize, boneIconSize, null);
+      g.drawImage(boneSprite, boneX, topY + 4, boneIconSize, boneIconSize, null);
       g2.setComposite(boneOldComp);
+      g2.setFont(valueFont);
+      g2.setColor(labelColor);
+      g2.drawString("\u2014", boneX + boneIconSize + 3, botY);
     }
 
     // ---- Center: Level ----
@@ -592,11 +593,10 @@ public class Renderer {
   /**
    * Scrolls the maze horizontally and queues the appropriate player walking animation.
    *
-   * @param g the graphics context
    * @param numOfRowCol grid size
    * @param dir scroll direction (negative = east, positive = west)
    */
-  public void moveMazeX(Graphics g, int numOfRowCol, int dir) {
+  public void moveMazeX(int numOfRowCol, int dir) {
     for (int row = 0; row < numOfRowCol; row++) {
       for (int col = 0; col < numOfRowCol; col++) {
         Tile tile = tileArr[col][row];
@@ -616,11 +616,10 @@ public class Renderer {
   /**
    * Scrolls the maze vertically and queues the appropriate player walking animation.
    *
-   * @param g the graphics context
    * @param numOfRowCol grid size
    * @param dir scroll direction (positive = north, negative = south)
    */
-  public void moveMazeY(Graphics g, int numOfRowCol, int dir) {
+  public void moveMazeY(int numOfRowCol, int dir) {
     for (int row = 0; row < numOfRowCol; row++) {
       for (int col = 0; col < numOfRowCol; col++) {
         Tile tile = tileArr[col][row];
@@ -677,9 +676,13 @@ public class Renderer {
         levelCompleteTime = System.currentTimeMillis();
       } else {
         int remaining = keysRequired - keyCount;
-        playerMessage = "The door is locked. Find " + remaining + " more keys.";
+        playerMessage =
+            "The door is locked. Find "
+                + remaining
+                + " more "
+                + (remaining == 1 ? "key" : "keys")
+                + ".";
         activatedAt = System.currentTimeMillis();
-        setPlayerMessage(true);
         lockedDoorFlashStart = System.currentTimeMillis();
         triggerQuip(randomQuip(DOOR_LOCKED_QUIPS));
         audioManager.play(AudioManager.Sound.LOCKED_DOOR);
@@ -720,10 +723,9 @@ public class Renderer {
    * Renders the player sprite at the centre of the screen, plus any active player message.
    *
    * @param g the graphics context
-   * @param player the player instance
    * @param spriteSize the sprite rendering size
    */
-  public void renderPlayer(Graphics g, Player player, int spriteSize) {
+  public void renderPlayer(Graphics g, int spriteSize) {
     g.drawImage(playerImg, screenWidthHalf, screenHeightHalf, spriteSize, spriteSize, null);
 
     renderActionFeedback(g);
@@ -899,11 +901,6 @@ public class Renderer {
       pendingLevelComplete = false;
       game.setGameState(false, "Next Level");
     }
-  }
-
-  /** Sets whether a player message should be displayed. */
-  public void setPlayerMessage(boolean displayMsg) {
-    this.displayMsg = displayMsg;
   }
 
   /** Returns true if the player message is still within its display duration. */

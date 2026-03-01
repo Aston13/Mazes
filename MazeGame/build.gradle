@@ -19,23 +19,10 @@ application {
     mainClass = 'mazegame.Start'
 }
 
-// Use the existing source layout (non-standard, matches the old NetBeans structure)
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src']
-        }
-        resources {
-            srcDirs = ['src']
-            exclude '**/*.java'
-        }
-    }
-    test {
-        java {
-            srcDirs = ['test']
-        }
-    }
-}
+// Standard Maven/Gradle source layout:
+//   src/main/java      — Java sources
+//   src/main/resources  — classpath resources (images, level data)
+//   src/test/java       — JUnit 5 tests
 
 repositories {
     mavenCentral()
@@ -67,7 +54,7 @@ tasks.withType(JavaCompile).configureEach {
 // --- Code formatting (Spotless + Google Java Format) ---
 spotless {
     java {
-        target 'src/**/*.java', 'test/**/*.java'
+        target 'src/main/java/**/*.java', 'src/test/java/**/*.java'
         googleJavaFormat()
         removeUnusedImports()
         trimTrailingWhitespace()

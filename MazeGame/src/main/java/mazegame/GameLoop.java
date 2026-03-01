@@ -99,14 +99,20 @@ public class GameLoop {
     changeTick += elapsed;
     changeAnim += elapsed;
 
+    // Run enough updates to catch up — prevents movement from slowing when rendering is heavy
     while (changeTick >= 1) {
       callbacks.onUpdate();
-      changeTick = 0;
+      changeTick -= 1;
+      // Cap to prevent spiral-of-death after long pauses / lag spikes
+      if (changeTick > 5) {
+        changeTick = 0;
+        break;
+      }
     }
 
     while (changeAnim >= 10) {
       callbacks.onAnimationTick();
-      changeAnim = 0;
+      changeAnim -= 10;
     }
 
     callbacks.onRender();

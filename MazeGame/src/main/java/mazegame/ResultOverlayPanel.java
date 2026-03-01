@@ -1,6 +1,8 @@
 package mazegame;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -26,6 +28,10 @@ public class ResultOverlayPanel extends JPanel {
   private static final Color BG_BOTTOM = new Color(34, 30, 28);
   private static final Color TITLE_COLOR = new Color(240, 236, 232);
   private static final Color TITLE_SHADOW = new Color(80, 60, 40);
+  private static final Color TITLE_GLOW = new Color(196, 149, 106);
+  private static final Color ACCENT_LINE = new Color(196, 149, 106);
+  private static final Color ACCENT_LINE_FADE = new Color(196, 149, 106, 0);
+  private static final Color SUBTITLE_COLOR = new Color(160, 145, 130);
   private static final Color BTN_BG = new Color(50, 44, 40);
   private static final Color BTN_BORDER = new Color(196, 149, 106);
   private static final Color BTN_HOVER_BG = new Color(100, 75, 50);
@@ -41,6 +47,7 @@ public class ResultOverlayPanel extends JPanel {
   private static final int BTN_FONT_SIZE = 18;
 
   private final String message;
+  private String subtitle;
   private final List<MainMenuPanel.MenuButton> buttons = new ArrayList<MainMenuPanel.MenuButton>();
   private final AudioManager audioManager;
   private int hoveredIndex = -1;
@@ -94,6 +101,12 @@ public class ResultOverlayPanel extends JPanel {
     repaint();
   }
 
+  /** Sets optional subtitle text displayed below the title (e.g. time taken). */
+  public void setSubtitle(String subtitle) {
+    this.subtitle = subtitle;
+    repaint();
+  }
+
   @Override
   public Dimension getPreferredSize() {
     java.awt.Container parent = getParent();
@@ -127,21 +140,76 @@ public class ResultOverlayPanel extends JPanel {
       g.drawLine(0, y, w, y);
     }
 
-    // Message
+    // --- Title with glow, shadow, and letter spacing ---
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
     g.setFont(titleFont);
     FontMetrics titleFm = g.getFontMetrics();
-    int titleX = (w - titleFm.stringWidth(message)) / 2;
+
+    int letterSpacing = 2;
+    int totalTitleWidth = 0;
+    for (int i = 0; i < message.length(); i++) {
+      totalTitleWidth += titleFm.charWidth(message.charAt(i));
+      if (i < message.length() - 1) totalTitleWidth += letterSpacing;
+    }
+    int titleX = (w - totalTitleWidth) / 2;
     int titleY = h / 4 + titleFm.getAscent() / 2;
 
-    g.setColor(TITLE_SHADOW);
-    g.drawString(message, titleX + 2, titleY + 2);
-    g.setColor(TITLE_COLOR);
-    g.drawString(message, titleX, titleY);
+    // Warm glow layer
+    Composite origComposite = g.getComposite();
+    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
+    g.setColor(TITLE_GLOW);
+    Font glowFont = titleFont.deriveFont((float) (TITLE_FONT_SIZE + 2));
+    g.setFont(glowFont);
+    FontMetrics glowFm = g.getFontMetrics();
+    int glowTotalWidth = 0;
+    for (int i = 0; i < message.length(); i++) {
+      glowTotalWidth += glowFm.charWidth(message.charAt(i));
+      if (i < message.length() - 1) glowTotalWidth += letterSpacing;
+    }
+    int glowX = (w - glowTotalWidth) / 2;
+    drawStringSpaced(g, message, glowX - 1, titleY + 1, letterSpacing);
+    drawStringSpaced(g, message, glowX + 1, titleY - 1, letterSpacing);
+    g.setComposite(origComposite);
 
-    // Buttons
+    // Shadow layer
+    g.setFont(titleFont);
+    g.setColor(TITLE_SHADOW);
+    drawStringSpaced(g, message, titleX + 2, titleY + 2, letterSpacing);
+
+    // Main title text
+    g.setColor(TITLE_COLOR);
+    drawStringSpaced(g, message, titleX, titleY, letterSpacing);
+
+    // --- Accent line (gradient underline beneath title with diamond) ---
+    int lineY = titleY + 12;
+    int lineHalfW = totalTitleWidth / 2 + 20;
+    int lineCenter = w / 2;
+    g.setPaint(
+        new GradientPaint(
+            lineCenter - lineHalfW, lineY, ACCENT_LINE_FADE, lineCenter, lineY, ACCENT_LINE));
+    g.fillRect(lineCenter - lineHalfW, lineY, lineHalfW, 2);
+    g.setPaint(
+        new GradientPaint(
+            lineCenter, lineY, ACCENT_LINE, lineCenter + lineHalfW, lineY, ACCENT_LINE_FADE));
+    g.fillRect(lineCenter, lineY, lineHalfW, 2);
+    // Small diamond centrepiece
+    g.setColor(ACCENT_LINE);
+    int dx = lineCenter;
+    int dy = lineY + 1;
+    g.fillPolygon(new int[] {dx - 4, dx, dx + 4, dx}, new int[] {dy, dy - 4, dy, dy + 4}, 4);
+
+    // --- Subtitle (e.g. time taken) ---
+    if (subtitle != null && !subtitle.isEmpty()) {
+      Font subtitleFont = new Font("Dialog", Font.PLAIN, 16);
+      g.setFont(subtitleFont);
+      FontMetrics subFm = g.getFontMetrics();
+      g.setColor(SUBTITLE_COLOR);
+      g.drawString(subtitle, (w - subFm.stringWidth(subtitle)) / 2, lineY + 28);
+    }
+
+    // --- Buttons ---
     int totalBtnHeight = buttons.size() * BTN_HEIGHT + (buttons.size() - 1) * BTN_GAP;
-    int startY = (h / 2) + (h / 2 - totalBtnHeight) / 2 - 20;
+    int startY = (h / 2) + (h / 2 - totalBtnHeight) / 2 - 10;
 
     Font btnFont = new Font("Dialog", Font.PLAIN, BTN_FONT_SIZE);
     Font hintFont = new Font("Dialog", Font.PLAIN, 11);
@@ -177,6 +245,16 @@ public class ResultOverlayPanel extends JPanel {
         int hintX = btnX + (BTN_WIDTH - hintFm.stringWidth(btn.hint())) / 2;
         g.drawString(btn.hint(), hintX, textY + 14);
       }
+    }
+  }
+
+  private void drawStringSpaced(Graphics2D g, String text, int x, int y, int spacing) {
+    FontMetrics fm = g.getFontMetrics();
+    int cx = x;
+    for (int i = 0; i < text.length(); i++) {
+      char ch = text.charAt(i);
+      g.drawString(String.valueOf(ch), cx, y);
+      cx += fm.charWidth(ch) + spacing;
     }
   }
 

@@ -127,6 +127,11 @@ public class Renderer {
               double totalGameSec = accumulatedGameSec + (nowMs - wallClockAtResumeMs) / 1000.0;
               timeTaken = totalGameSec;
 
+              // All keys collected — nothing left to remove
+              if (keyCount >= keysRequired || keysOnMap.isEmpty()) {
+                return;
+              }
+
               double sinceLastRemoval = totalGameSec - gameSecAtLastRemoval;
               timeUntilKeyRemoval = KEY_REMOVAL_INTERVAL - sinceLastRemoval;
 

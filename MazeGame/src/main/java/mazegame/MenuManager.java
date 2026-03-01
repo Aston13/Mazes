@@ -44,7 +44,13 @@ public class MenuManager {
 
     boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
     if (!inBrowser) {
-      menuPanel.addButton("Quit", "[Esc]", frame::dispose);
+      menuPanel.addButton(
+          "Quit",
+          "[Esc]",
+          () -> {
+            game.getAudioManager().stopMusic();
+            frame.dispose();
+          });
     }
 
     // Keyboard shortcuts
@@ -56,7 +62,10 @@ public class MenuManager {
         "Exit",
         false,
         evt -> {
-          if (!inBrowser) frame.dispose();
+          if (!inBrowser) {
+            game.getAudioManager().stopMusic();
+            frame.dispose();
+          }
         });
 
     swapContent(menuPanel);
@@ -82,6 +91,8 @@ public class MenuManager {
 
     ResultOverlayPanel overlay =
         new ResultOverlayPanel("Completed Level " + level + "!", game.getAudioManager());
+    String timeStr = String.format("%.1f", timeTaken);
+    overlay.setSubtitle("Time: " + timeStr + "s");
     overlay.addButton(
         "Next Level",
         "[Space]",

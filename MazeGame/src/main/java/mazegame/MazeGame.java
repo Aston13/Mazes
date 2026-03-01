@@ -13,6 +13,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -63,6 +65,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private String stateChange;
   private String[] levelData;
   private GameLoop gameLoop;
+  private boolean closingListenerAdded;
 
   /** Invisible cursor applied during gameplay so the mouse pointer doesn't distract. */
   private final Cursor blankCursor;
@@ -219,6 +222,21 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     }
     setResizable(true);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    // Stop audio and clean up resources before the JVM exits
+    if (!closingListenerAdded) {
+      addWindowListener(
+          new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+              if (audioManager != null) {
+                audioManager.stopMusic();
+              }
+            }
+          });
+      closingListenerAdded = true;
+    }
+
     setContentPane(pane);
     pack();
     setLocationRelativeTo(null);

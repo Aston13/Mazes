@@ -17,7 +17,9 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import javax.swing.JPanel;
+import javax.swing.Timer;
 
 /**
  * A custom-painted main menu panel with gradient background, animated title, and styled buttons
@@ -46,9 +48,18 @@ public class MainMenuPanel extends JPanel {
   private static final int TITLE_FONT_SIZE = 42;
   private static final int SUBTITLE_FONT_SIZE = 14;
   private static final int BTN_FONT_SIZE = 18;
+  private static final int PARTICLE_COUNT = 25;
+  private static final int PARTICLE_TICK_MS = 50;
 
   private final List<MenuButton> buttons = new ArrayList<>();
   private final AudioManager audioManager;
+  private final double[] particleX = new double[PARTICLE_COUNT];
+  private final double[] particleY = new double[PARTICLE_COUNT];
+  private final double[] particleSpeed = new double[PARTICLE_COUNT];
+  private final double[] particleAlpha = new double[PARTICLE_COUNT];
+  private final double[] particleSize = new double[PARTICLE_COUNT];
+  private final Random particleRng = new Random();
+  private Timer particleTimer;
   private int hoveredIndex = -1;
   private BufferedImage decorationImage;
 
@@ -81,6 +92,25 @@ public class MainMenuPanel extends JPanel {
     this.audioManager = audioManager;
     setOpaque(true);
     setBackground(BG_TOP);
+
+    // Initialise floating particles
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      resetParticle(i, true);
+    }
+    particleTimer =
+        new Timer(
+            PARTICLE_TICK_MS,
+            e -> {
+              for (int i = 0; i < PARTICLE_COUNT; i++) {
+                particleY[i] -= particleSpeed[i];
+                particleAlpha[i] -= 0.004;
+                if (particleY[i] < -10 || particleAlpha[i] <= 0) {
+                  resetParticle(i, false);
+                }
+              }
+              repaint();
+            });
+    particleTimer.start();
 
     MouseAdapter mouseHandler =
         new MouseAdapter() {
@@ -125,6 +155,15 @@ public class MainMenuPanel extends JPanel {
     repaint();
   }
 
+  /** Resets a particle to a random starting position. */
+  private void resetParticle(int i, boolean randomY) {
+    particleX[i] = particleRng.nextDouble() * 800;
+    particleY[i] = randomY ? particleRng.nextDouble() * 800 : 780 + particleRng.nextDouble() * 40;
+    particleSpeed[i] = 0.3 + particleRng.nextDouble() * 0.7;
+    particleAlpha[i] = 0.10 + particleRng.nextDouble() * 0.20;
+    particleSize[i] = 2 + particleRng.nextDouble() * 3;
+  }
+
   /** Adds a button to the menu. */
   public void addButton(String label, String hint, Runnable action) {
     buttons.add(new MenuButton(label, hint, action));
@@ -164,6 +203,19 @@ public class MainMenuPanel extends JPanel {
     for (int y = 0; y < h; y += 40) {
       g.drawLine(0, y, w, y);
     }
+
+    // Floating particles (subtle ambient dots drifting upward)
+    Composite origComp = g.getComposite();
+    for (int i = 0; i < PARTICLE_COUNT; i++) {
+      float alpha = (float) Math.max(0, Math.min(1, particleAlpha[i]));
+      g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+      g.setColor(ACCENT_LINE);
+      double px = particleX[i] / 800.0 * w;
+      double py = particleY[i] / 800.0 * h;
+      int sz = (int) particleSize[i];
+      g.fillOval((int) px, (int) py, sz, sz);
+    }
+    g.setComposite(origComp);
 
     // Title — rendered with glow, shadow layers, and letter spacing for a premium feel
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);

@@ -48,7 +48,7 @@ public class Renderer {
   /** Idle quips Wesley says while exploring. Dog-themed, slightly humorous. */
   private static final String[] IDLE_QUIPS = {
     "*sniff sniff* I smell a key!",
-    "Dad Aston would be so proud of me right now",
+    "My dad would be so proud of me right now",
     "Aston said there'd be treats...",
     "These walls all look the same to me",
     "I'm a good boy on a mission",
@@ -80,7 +80,7 @@ public class Renderer {
   };
 
   private static final String[] KEY_PICKUP_QUIPS = {
-    "Ooh shiny! Dad Aston loves shiny things",
+    "Ooh shiny! My dad loves shiny things",
     "Got one! I'm basically a treasure hunter",
     "*happy bark*",
     "Keys collected, belly rubs pending",
@@ -106,7 +106,7 @@ public class Renderer {
 
   private static final String[] ALL_KEYS_QUIPS = {
     "I got them all! Where's the exit?!",
-    "Full key collection! Dad Aston would cry tears of joy",
+    "Full key collection! My dad Aston would cry tears of joy",
     "Time to find that door!",
     "All keys! Now where did I see that exit...",
     "That's the last one! Door, here I come!",
@@ -116,7 +116,7 @@ public class Renderer {
   private static final String[] LEVEL_START_QUIPS = {
     "Alright, new maze! Let's do this!",
     "*sniff sniff* Fresh maze smell!",
-    "Dad Aston believes in me. I think.",
+    "My dad Aston believes in me. I think.",
     "Okay paws, don't fail me now",
     "Another one?! I'm not even tired... much",
     "Woof! Adventure time!",

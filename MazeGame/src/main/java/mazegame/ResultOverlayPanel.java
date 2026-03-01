@@ -13,7 +13,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -34,19 +33,8 @@ public class ResultOverlayPanel extends JPanel {
   private static final Color ACCENT_LINE = new Color(196, 149, 106);
   private static final Color ACCENT_LINE_FADE = new Color(196, 149, 106, 0);
   private static final Color SUBTITLE_COLOR = new Color(160, 145, 130);
-  private static final Color BTN_BG = new Color(50, 44, 40);
-  private static final Color BTN_BORDER = new Color(196, 149, 106);
-  private static final Color BTN_HOVER_BG = new Color(100, 75, 50);
-  private static final Color BTN_TEXT = new Color(220, 216, 210);
-  private static final Color BTN_HOVER_TEXT = Color.WHITE;
-  private static final Color HINT_COLOR = new Color(160, 145, 130);
 
-  private static final int BTN_WIDTH = 240;
-  private static final int BTN_HEIGHT = 50;
-  private static final int BTN_ARC = 12;
-  private static final int BTN_GAP = 18;
   private static final int TITLE_FONT_SIZE = 36;
-  private static final int BTN_FONT_SIZE = 18;
   private static final int PARTICLE_COUNT = 20;
   private static final int PARTICLE_TICK_MS = 50;
 
@@ -259,49 +247,16 @@ public class ResultOverlayPanel extends JPanel {
       g.drawString(subtitle, (w - subFm.stringWidth(subtitle)) / 2, lineY + 28);
     }
 
-    // --- Buttons ---
-    int totalBtnHeight = buttons.size() * BTN_HEIGHT + (buttons.size() - 1) * BTN_GAP;
+    // --- Buttons (rendered via shared UiTheme) ---
+    int totalBtnHeight =
+        buttons.size() * UiTheme.STD_BTN_HEIGHT + (buttons.size() - 1) * UiTheme.STD_BTN_GAP;
     int startY = (h / 2) + (h / 2 - totalBtnHeight) / 2 - 10;
-
-    Font btnFont = new Font("Dialog", Font.PLAIN, BTN_FONT_SIZE);
-    Font hintFont = new Font("Dialog", Font.PLAIN, 11);
 
     for (int i = 0; i < buttons.size(); i++) {
       MainMenuPanel.MenuButton btn = buttons.get(i);
-      int btnX = (w - BTN_WIDTH) / 2;
-      int btnY = startY + i * (BTN_HEIGHT + BTN_GAP);
-      boolean hovered = (i == hoveredIndex);
-
-      RoundRectangle2D.Double rect =
-          new RoundRectangle2D.Double(btnX, btnY, BTN_WIDTH, BTN_HEIGHT, BTN_ARC, BTN_ARC);
-      g.setColor(hovered ? BTN_HOVER_BG : BTN_BG);
-      g.fill(rect);
-      g.setColor(hovered ? TITLE_COLOR : BTN_BORDER);
-      g.draw(rect);
-
-      g.setFont(btnFont);
-      FontMetrics btnFm = g.getFontMetrics();
-      g.setColor(hovered ? BTN_HOVER_TEXT : BTN_TEXT);
-      int textX = btnX + (BTN_WIDTH - btnFm.stringWidth(btn.label())) / 2;
-      int textY = btnY + (BTN_HEIGHT + btnFm.getAscent()) / 2 - 2;
-
-      if (!btn.hint().isEmpty()) {
-        textY -= 6;
-      }
-      g.drawString(btn.label(), textX, textY);
-
-      // Spinning diamond hover indicator
-      if (hovered) {
-        drawHoverDiamonds(g, btnX, btnY, BTN_WIDTH, BTN_HEIGHT);
-      }
-
-      if (!btn.hint().isEmpty()) {
-        g.setFont(hintFont);
-        FontMetrics hintFm = g.getFontMetrics();
-        g.setColor(HINT_COLOR);
-        int hintX = btnX + (BTN_WIDTH - hintFm.stringWidth(btn.hint())) / 2;
-        g.drawString(btn.hint(), hintX, textY + 14);
-      }
+      int btnX = (w - UiTheme.STD_BTN_WIDTH) / 2;
+      int btnY = startY + i * (UiTheme.STD_BTN_HEIGHT + UiTheme.STD_BTN_GAP);
+      UiTheme.paintStdButton(g, btnX, btnY, btn.label(), btn.hint(), i == hoveredIndex);
     }
   }
 
@@ -315,37 +270,20 @@ public class ResultOverlayPanel extends JPanel {
     }
   }
 
-  private void drawHoverDiamonds(Graphics2D g, int btnX, int btnY, int btnW, int btnH) {
-    double angle = (System.currentTimeMillis() % 2000) / 2000.0 * Math.PI * 2;
-    int cy = btnY + btnH / 2;
-    int size = 5;
-    g.setColor(ACCENT_LINE);
-
-    int lx = btnX + 12;
-    java.awt.geom.AffineTransform old = g.getTransform();
-    g.rotate(angle, lx, cy);
-    g.fillPolygon(
-        new int[] {lx - size, lx, lx + size, lx}, new int[] {cy, cy - size, cy, cy + size}, 4);
-    g.setTransform(old);
-
-    int rx = btnX + btnW - 12;
-    old = g.getTransform();
-    g.rotate(-angle, rx, cy);
-    g.fillPolygon(
-        new int[] {rx - size, rx, rx + size, rx}, new int[] {cy, cy - size, cy, cy + size}, 4);
-    g.setTransform(old);
-  }
-
   private int getButtonIndex(int mx, int my) {
     int w = getWidth();
     int h = getHeight();
-    int totalBtnHeight = buttons.size() * BTN_HEIGHT + (buttons.size() - 1) * BTN_GAP;
+    int totalBtnHeight =
+        buttons.size() * UiTheme.STD_BTN_HEIGHT + (buttons.size() - 1) * UiTheme.STD_BTN_GAP;
     int startY = (h / 2) + (h / 2 - totalBtnHeight) / 2 - 20;
 
     for (int i = 0; i < buttons.size(); i++) {
-      int btnX = (w - BTN_WIDTH) / 2;
-      int btnY = startY + i * (BTN_HEIGHT + BTN_GAP);
-      if (mx >= btnX && mx <= btnX + BTN_WIDTH && my >= btnY && my <= btnY + BTN_HEIGHT) {
+      int btnX = (w - UiTheme.STD_BTN_WIDTH) / 2;
+      int btnY = startY + i * (UiTheme.STD_BTN_HEIGHT + UiTheme.STD_BTN_GAP);
+      if (mx >= btnX
+          && mx <= btnX + UiTheme.STD_BTN_WIDTH
+          && my >= btnY
+          && my <= btnY + UiTheme.STD_BTN_HEIGHT) {
         return i;
       }
     }

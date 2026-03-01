@@ -37,9 +37,6 @@ public class SettingsPanel extends JPanel {
   private static final Color CARD_HOVER_BG = new Color(65, 55, 48);
   private static final Color TEXT_PRIMARY = new Color(240, 236, 232);
   private static final Color TEXT_DIM = new Color(160, 145, 130);
-  private static final Color BTN_BG = new Color(50, 44, 40);
-  private static final Color BTN_BORDER = new Color(196, 149, 106);
-  private static final Color BTN_HOVER_BG = new Color(100, 75, 50);
   private static final Color GRID_LINE = new Color(255, 255, 255, 6);
 
   private static final int TITLE_FONT_SIZE = 36;
@@ -365,24 +362,11 @@ public class SettingsPanel extends JPanel {
       noticeY += 20;
     }
 
-    // Back button
+    // Back button (rendered via shared UiTheme with spinning diamonds)
     int btnX = (w - BTN_WIDTH) / 2;
     int btnY = noticeY + 22;
-    RoundRectangle2D.Double backRect =
-        new RoundRectangle2D.Double(btnX, btnY, BTN_WIDTH, BTN_HEIGHT, BTN_ARC, BTN_ARC);
-    g.setColor(hoveredBack ? BTN_HOVER_BG : BTN_BG);
-    g.fill(backRect);
-    g.setColor(hoveredBack ? TITLE_COLOR : BTN_BORDER);
-    g.draw(backRect);
-
-    g.setFont(new Font("Dialog", Font.PLAIN, 16));
-    FontMetrics bfm = g.getFontMetrics();
-    String backLabel = "Back [Esc]";
-    g.setColor(hoveredBack ? Color.WHITE : TEXT_PRIMARY);
-    g.drawString(
-        backLabel,
-        btnX + (BTN_WIDTH - bfm.stringWidth(backLabel)) / 2,
-        btnY + (BTN_HEIGHT + bfm.getAscent()) / 2 - 2);
+    UiTheme.paintButton(
+        g, btnX, btnY, BTN_WIDTH, BTN_HEIGHT, BTN_ARC, "Back [Esc]", null, hoveredBack, 16, true);
   }
 
   // ---- Particles ----

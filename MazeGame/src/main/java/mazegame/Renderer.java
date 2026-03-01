@@ -185,7 +185,6 @@ public class Renderer {
   // Bone collectible state
   private static final Color BONE_COLOR = new Color(235, 210, 170);
   private static final Color BONE_OUTLINE = new Color(180, 140, 90);
-  private static final Color BONE_GLOW = new Color(255, 220, 150, 60);
   private TilePassage boneTile;
   private boolean boneCollectedThisRun;
   private final boolean boneAlreadyCollected;
@@ -196,6 +195,11 @@ public class Renderer {
   private long boneCollectFlashStart = Long.MIN_VALUE;
   private static final int BONE_FLASH_DURATION_MS = 800;
   private static final Color BONE_FLASH_COLOR = new Color(235, 210, 170, 80);
+
+  // Level-complete delay (for confetti visibility)
+  private boolean pendingLevelComplete;
+  private long levelCompleteTime;
+  private static final int LEVEL_COMPLETE_DELAY_MS = 1500;
 
   /**
    * Creates a new renderer for the game view.
@@ -630,7 +634,9 @@ public class Renderer {
       if (((TileExit) tile).getAccessible()) {
         spawnConfetti();
         audioManager.play(AudioManager.Sound.DOOR_OPEN);
-        game.setGameState(false, "Next Level");
+        // Delay state change so confetti is visible before the screen swaps
+        pendingLevelComplete = true;
+        levelCompleteTime = System.currentTimeMillis();
       } else {
         int remaining = keysRequired - keyCount;
         playerMessage = "The door is locked. Find " + remaining + " more keys.";
@@ -840,6 +846,23 @@ public class Renderer {
     }
   }
 
+  /** Returns true if the exit confetti delay is in progress (player should not move). */
+  public boolean isPendingLevelComplete() {
+    return pendingLevelComplete;
+  }
+
+  /**
+   * Checks whether the confetti delay has elapsed and, if so, fires the level-complete state
+   * change. Call this once per update tick.
+   */
+  public void checkPendingCompletion(MazeGame game) {
+    if (pendingLevelComplete
+        && System.currentTimeMillis() - levelCompleteTime >= LEVEL_COMPLETE_DELAY_MS) {
+      pendingLevelComplete = false;
+      game.setGameState(false, "Next Level");
+    }
+  }
+
   /** Sets whether a player message should be displayed. */
   public void setPlayerMessage(boolean displayMsg) {
     this.displayMsg = displayMsg;
@@ -948,6 +971,7 @@ public class Renderer {
    * @return a BufferedImage with a rendered bone
    */
   private BufferedImage generateBoneImage(int size) {
+    int spriteSize = size * 3 / 5; // bone is smaller than a full tile
     BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
     Graphics2D g2 = img.createGraphics();
     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -956,12 +980,24 @@ public class Renderer {
     g2.translate(size / 2.0, size / 2.0);
     g2.rotate(Math.toRadians(35));
 
-    int shaft = size * 3 / 8;
-    int thick = size / 7;
-    int bulb = size / 5;
+    int shaft = spriteSize * 3 / 8;
+    int thick = spriteSize / 7;
+    int bulb = spriteSize / 5;
 
-    // Soft glow behind the bone
-    g2.setColor(BONE_GLOW);
+    // Outer glow (larger, softer)
+    for (int i = 3; i >= 1; i--) {
+      int grow = i * 3;
+      g2.setColor(new Color(255, 215, 100, 20 + i * 8));
+      g2.fill(
+          new Ellipse2D.Double(
+              -shaft - bulb - grow,
+              -bulb * 1.5 - grow,
+              (shaft + bulb) * 2 + grow * 2,
+              bulb * 3 + grow * 2));
+    }
+
+    // Inner glow behind the bone
+    g2.setColor(new Color(255, 220, 100, 80));
     g2.fill(new Ellipse2D.Double(-shaft - bulb, -bulb * 1.5, (shaft + bulb) * 2, bulb * 3));
 
     // Shaft
@@ -974,6 +1010,10 @@ public class Renderer {
     g2.fillOval(-shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
     g2.fillOval(shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
     g2.fillOval(shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+
+    // Highlight (light streak on shaft for more golden look)
+    g2.setColor(new Color(255, 245, 220, 120));
+    g2.fillRoundRect(-shaft + 2, -thick / 4, shaft * 2 - 4, thick / 3, 3, 3);
 
     // Outline
     g2.setColor(BONE_OUTLINE);

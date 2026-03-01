@@ -273,6 +273,12 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     setResizable(true);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+    // Set custom app icon (Wesley sprite)
+    java.awt.image.BufferedImage icon = assetManager.getPreloadedImage("wesleyEast0");
+    if (icon != null) {
+      setIconImage(icon);
+    }
+
     // Stop audio and clean up resources before the JVM exits
     if (!closingListenerAdded) {
       addWindowListener(
@@ -596,6 +602,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   }
 
   public void update() {
+    // Check if confetti delay has elapsed → trigger level complete
+    renderer.checkPendingCompletion(this);
+    // Block movement while confetti plays
+    if (renderer.isPendingLevelComplete()) return;
+
     int halfPlayer = player.getSize() / 2;
     Graphics g = getGameGraphics();
     if (g == null) return;

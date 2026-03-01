@@ -50,27 +50,80 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #000;
+            background: linear-gradient(180deg, #1a1a1a 0%, #22201e 100%);
             z-index: 10;
         }
 
+        #loading-overlay .load-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #f0ece8;
+            letter-spacing: 3px;
+            margin-bottom: 0.3rem;
+        }
+
+        #loading-overlay .load-subtitle {
+            font-size: 0.85rem;
+            color: #a09080;
+            margin-bottom: 2rem;
+        }
+
         #loading-overlay p {
-            margin-top: 1rem;
-            font-size: 1rem;
+            margin-top: 1.2rem;
+            font-size: 0.9rem;
             color: #c4956a;
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #333;
-            border-top: 4px solid #c4956a;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        /* Paw-print walking animation */
+        .paw-track {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 0.5rem;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .paw-track .paw {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #c4956a;
+            opacity: 0.15;
+            animation: pawStep 1.6s ease-in-out infinite;
+        }
+
+        .paw-track .paw:nth-child(1) { animation-delay: 0s; }
+        .paw-track .paw:nth-child(2) { animation-delay: 0.2s; }
+        .paw-track .paw:nth-child(3) { animation-delay: 0.4s; }
+        .paw-track .paw:nth-child(4) { animation-delay: 0.6s; }
+        .paw-track .paw:nth-child(5) { animation-delay: 0.8s; }
+
+        @keyframes pawStep {
+            0%, 100% { opacity: 0.15; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1.1); }
+            60% { opacity: 0.4; transform: scale(1); }
+        }
+
+        /* Progress bar */
+        .load-bar {
+            width: 220px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.2rem;
+        }
+
+        .load-bar-fill {
+            width: 30%;
+            height: 100%;
+            background: linear-gradient(90deg, #c4956a, #d4a878);
+            border-radius: 2px;
+            animation: barPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes barPulse {
+            0% { width: 15%; }
+            50% { width: 70%; }
+            100% { width: 15%; }
         }
 
         .controls {
@@ -110,7 +163,16 @@
 
     <div id="game-container">
         <div id="loading-overlay">
-            <div class="spinner"></div>
+            <div class="load-title">Wesley's Way Out</div>
+            <div class="load-subtitle">A procedurally generated maze adventure</div>
+            <div class="paw-track">
+                <div class="paw"></div>
+                <div class="paw"></div>
+                <div class="paw"></div>
+                <div class="paw"></div>
+                <div class="paw"></div>
+            </div>
+            <div class="load-bar"><div class="load-bar-fill"></div></div>
             <p>Loading game engine...</p>
         </div>
     </div>

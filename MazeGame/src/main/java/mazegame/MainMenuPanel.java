@@ -29,6 +29,9 @@ public class MainMenuPanel extends JPanel {
   private static final Color BG_BOTTOM = new Color(34, 30, 28);
   private static final Color TITLE_COLOR = new Color(240, 236, 232);
   private static final Color TITLE_SHADOW = new Color(80, 60, 40);
+  private static final Color TITLE_GLOW = new Color(196, 149, 106, 60);
+  private static final Color ACCENT_LINE = new Color(196, 149, 106);
+  private static final Color ACCENT_LINE_FADE = new Color(196, 149, 106, 0);
   private static final Color BTN_BG = new Color(50, 44, 40);
   private static final Color BTN_BORDER = new Color(196, 149, 106);
   private static final Color BTN_HOVER_BG = new Color(100, 75, 50);
@@ -162,20 +165,65 @@ public class MainMenuPanel extends JPanel {
       g.drawLine(0, y, w, y);
     }
 
-    // Title
+    // Title — rendered with glow, shadow layers, and letter spacing for a premium feel
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
     g.setFont(titleFont);
     FontMetrics titleFm = g.getFontMetrics();
     String title = "Wesley's Way Out";
-    int titleX = (w - titleFm.stringWidth(title)) / 2;
     int titleY = h / 5 + titleFm.getAscent() / 2;
 
-    // Shadow
+    // Measure total width with letter spacing
+    int letterSpacing = 3;
+    int totalTitleWidth = 0;
+    for (int i = 0; i < title.length(); i++) {
+      totalTitleWidth += titleFm.charWidth(title.charAt(i));
+      if (i < title.length() - 1) totalTitleWidth += letterSpacing;
+    }
+    int titleX = (w - totalTitleWidth) / 2;
+
+    // Warm glow layer (drawn slightly larger behind)
+    Composite origComposite = g.getComposite();
+    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
+    g.setColor(TITLE_GLOW);
+    Font glowFont = titleFont.deriveFont((float) (TITLE_FONT_SIZE + 2));
+    g.setFont(glowFont);
+    FontMetrics glowFm = g.getFontMetrics();
+    int glowTotalWidth = 0;
+    for (int i = 0; i < title.length(); i++) {
+      glowTotalWidth += glowFm.charWidth(title.charAt(i));
+      if (i < title.length() - 1) glowTotalWidth += letterSpacing;
+    }
+    int glowX = (w - glowTotalWidth) / 2;
+    drawStringSpaced(g, title, glowX - 1, titleY + 1, letterSpacing);
+    drawStringSpaced(g, title, glowX + 1, titleY - 1, letterSpacing);
+    g.setComposite(origComposite);
+
+    // Shadow layer
+    g.setFont(titleFont);
     g.setColor(TITLE_SHADOW);
-    g.drawString(title, titleX + 2, titleY + 2);
-    // Main title
+    drawStringSpaced(g, title, titleX + 2, titleY + 2, letterSpacing);
+
+    // Main title text
     g.setColor(TITLE_COLOR);
-    g.drawString(title, titleX, titleY);
+    drawStringSpaced(g, title, titleX, titleY, letterSpacing);
+
+    // Accent line (horizontal gradient underline beneath title)
+    int lineY = titleY + 10;
+    int lineHalfW = totalTitleWidth / 2 + 20;
+    int lineCenter = w / 2;
+    g.setPaint(
+        new GradientPaint(
+            lineCenter - lineHalfW, lineY, ACCENT_LINE_FADE, lineCenter, lineY, ACCENT_LINE));
+    g.fillRect(lineCenter - lineHalfW, lineY, lineHalfW, 2);
+    g.setPaint(
+        new GradientPaint(
+            lineCenter, lineY, ACCENT_LINE, lineCenter + lineHalfW, lineY, ACCENT_LINE_FADE));
+    g.fillRect(lineCenter, lineY, lineHalfW, 2);
+    // Small diamond accent at centre
+    g.setColor(ACCENT_LINE);
+    int dx = lineCenter;
+    int dy = lineY + 1;
+    g.fillPolygon(new int[] {dx - 4, dx, dx + 4, dx}, new int[] {dy, dy - 4, dy, dy + 4}, 4);
 
     // Subtitle
     Font subtitleFont = new Font("Dialog", Font.PLAIN, SUBTITLE_FONT_SIZE);
@@ -267,5 +315,24 @@ public class MainMenuPanel extends JPanel {
       }
     }
     return -1;
+  }
+
+  /**
+   * Draws a string with custom letter spacing.
+   *
+   * @param g the graphics context (font and color must already be set)
+   * @param text the string to draw
+   * @param x starting x position
+   * @param y baseline y position
+   * @param spacing extra pixels between each character
+   */
+  private void drawStringSpaced(Graphics2D g, String text, int x, int y, int spacing) {
+    FontMetrics fm = g.getFontMetrics();
+    int cx = x;
+    for (int i = 0; i < text.length(); i++) {
+      char ch = text.charAt(i);
+      g.drawString(String.valueOf(ch), cx, y);
+      cx += fm.charWidth(ch) + spacing;
+    }
   }
 }

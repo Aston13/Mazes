@@ -63,7 +63,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
   private Player player;
   private Renderer renderer;
-  private JPanel pane = new JPanel(new GridLayout());
+  private JPanel pane = newPane();
   private int levelCount = 1;
   private int rowColAmount;
   private String stateChange;
@@ -106,7 +106,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     audioManager.setMusicVolume(settings.getMusicVolume());
     this.menuManager = new MenuManager(this, ui, this);
     this.inputHandler = new InputHandler(this);
-    this.showTouchControls = "true".equals(System.getProperty("cheerpj.browser"));
+    // Touch controls disabled until mobile performance & viewport issues are resolved.
+    // Original: "true".equals(System.getProperty("cheerpj.browser"))
+    this.showTouchControls = false;
     this.blankCursor =
         Toolkit.getDefaultToolkit()
             .createCustomCursor(
@@ -356,7 +358,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     pauseAction = null;
 
     // Set up content
-    pane = new JPanel(new GridLayout());
+    pane = newPane();
     setUpFrame();
 
     inputHandler.bindMovementKeys(pane);
@@ -450,7 +452,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
       // Ignore cleanup errors
     }
 
-    pane = new JPanel(new GridLayout());
+    pane = newPane();
     pane.setBackground(new Color(10, 10, 10));
     setUpFrame();
     if (!splashShown) {
@@ -789,22 +791,25 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     restartBtn = new Rectangle(btnX, restartY, btnW, btnH);
     menuBtn = new Rectangle(btnX, menuY, btnW, btnH);
 
+    BufferedImage keyFrame = assetManager.getKeyFrame();
     UiTheme.paintStdButton(
         g2,
         btnX,
         resumeY,
         Messages.get("button.resume"),
         Messages.get("hint.space_or_esc"),
-        hoveredPauseBtn == 0);
+        hoveredPauseBtn == 0,
+        keyFrame);
     UiTheme.paintStdButton(
         g2,
         btnX,
         restartY,
         Messages.get("button.restart_level"),
         Messages.get("hint.r"),
-        hoveredPauseBtn == 1);
+        hoveredPauseBtn == 1,
+        keyFrame);
     UiTheme.paintStdButton(
-        g2, btnX, menuY, Messages.get("button.main_menu"), "", hoveredPauseBtn == 2);
+        g2, btnX, menuY, Messages.get("button.main_menu"), "", hoveredPauseBtn == 2, keyFrame);
 
     g2.dispose();
     showBuffer();
@@ -819,8 +824,14 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     rowColAmount += ((level - 1) * 2);
   }
 
-  @Override
-  public Dimension getPreferredSize() {
-    return new Dimension(windowWidth, windowHeight);
+  /**
+   * Creates a new content pane with an explicit preferred size matching the logical game
+   * resolution. This ensures {@code pack()} sizes the frame's content area correctly on all
+   * platforms (fixes black bars caused by content pane reporting 0×0 before layout).
+   */
+  private JPanel newPane() {
+    JPanel p = new JPanel(new GridLayout());
+    p.setPreferredSize(new Dimension(windowWidth, windowHeight));
+    return p;
   }
 }

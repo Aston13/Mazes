@@ -150,6 +150,36 @@ public final class UiTheme {
   }
 
   /**
+   * Convenience overload that uses the standard menu button dimensions and draws spinning key
+   * sprites instead of diamonds when the button is hovered and {@code keyFrame} is non-null.
+   */
+  public static void paintStdButton(
+      Graphics2D g,
+      int x,
+      int y,
+      String label,
+      String hint,
+      boolean hovered,
+      BufferedImage keyFrame) {
+    boolean useKeys = keyFrame != null;
+    paintButton(
+        g,
+        x,
+        y,
+        STD_BTN_WIDTH,
+        STD_BTN_HEIGHT,
+        STD_BTN_ARC,
+        label,
+        hint,
+        hovered,
+        STD_BTN_FONT_SIZE,
+        !useKeys);
+    if (useKeys && hovered) {
+      drawHoverKeys(g, x, y, STD_BTN_WIDTH, STD_BTN_HEIGHT, keyFrame);
+    }
+  }
+
+  /**
    * Draws small spinning diamond accents on either side of a button.
    *
    * @param g the graphics context
@@ -179,6 +209,24 @@ public final class UiTheme {
     g.fillPolygon(
         new int[] {rx - size, rx, rx + size, rx}, new int[] {cy, cy - size, cy, cy + size}, 4);
     g.setTransform(old);
+  }
+
+  /**
+   * Draws spinning key-sprite accents on either side of a button.
+   *
+   * @param g the graphics context
+   * @param btnX button left x
+   * @param btnY button top y
+   * @param btnW button width
+   * @param btnH button height
+   * @param keyFrame the current key animation frame
+   */
+  public static void drawHoverKeys(
+      Graphics2D g, int btnX, int btnY, int btnW, int btnH, BufferedImage keyFrame) {
+    int keySize = Math.max(16, btnH - 16);
+    int keyY = btnY + (btnH - keySize) / 2;
+    g.drawImage(keyFrame, btnX - keySize - 8, keyY, keySize, keySize, null);
+    g.drawImage(keyFrame, btnX + btnW + 8, keyY, keySize, keySize, null);
   }
 
   // ---------------------------------------------------------------------------

@@ -42,6 +42,7 @@ public class MainMenuPanel extends JPanel {
 
   private final List<MenuButton> buttons = new ArrayList<>();
   private final AudioManager audioManager;
+  private final AssetManager assetManager;
   private final double[] particleX = new double[PARTICLE_COUNT];
   private final double[] particleY = new double[PARTICLE_COUNT];
   private final double[] particleSpeed = new double[PARTICLE_COUNT];
@@ -77,8 +78,9 @@ public class MainMenuPanel extends JPanel {
     }
   }
 
-  public MainMenuPanel(AudioManager audioManager) {
+  public MainMenuPanel(AudioManager audioManager, AssetManager assetManager) {
     this.audioManager = audioManager;
+    this.assetManager = assetManager;
     setOpaque(true);
     setBackground(BG_TOP);
 
@@ -296,7 +298,14 @@ public class MainMenuPanel extends JPanel {
       MenuButton btn = buttons.get(i);
       int btnX = (w - UiTheme.STD_BTN_WIDTH) / 2;
       int btnY = startY + i * (UiTheme.STD_BTN_HEIGHT + UiTheme.STD_BTN_GAP);
-      UiTheme.paintStdButton(g, btnX, btnY, btn.label(), btn.hint(), i == hoveredIndex);
+      UiTheme.paintStdButton(
+          g,
+          btnX,
+          btnY,
+          btn.label(),
+          btn.hint(),
+          i == hoveredIndex,
+          assetManager != null ? assetManager.getKeyFrame() : null);
     }
 
     // Version label (bottom-right corner)

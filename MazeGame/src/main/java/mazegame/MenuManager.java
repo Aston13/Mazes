@@ -32,7 +32,7 @@ public class MenuManager {
   /** Shows the main menu with custom-painted panel. */
   public void showMainMenu() {
     game.getAudioManager().playMenuMusic();
-    MainMenuPanel menuPanel = new MainMenuPanel(game.getAudioManager());
+    MainMenuPanel menuPanel = new MainMenuPanel(game.getAudioManager(), game.getAssetManager());
 
     // Use the Wesley pixel-art image as the menu decoration
     BufferedImage dogSprite = game.getAssetManager().getPreloadedImage("wesleyPixel");

@@ -173,30 +173,30 @@ public class AssetManager {
 
     // Dog animation frames (Sasso skin — original)
     for (int i = 0; i < DOG_NORTH_FRAME_COUNT; i++) {
-      loadImage("sassoNorth" + i, "Assets/AnimationFrames/Dog/north_" + i + ".png");
+      loadImage("sassoNorth" + i, "Assets/skins/sasso/north_" + i + ".png");
     }
     for (int i = 0; i < DOG_EAST_FRAME_COUNT; i++) {
-      loadImage("sassoEast" + i, "Assets/AnimationFrames/Dog/right_" + i + ".png");
+      loadImage("sassoEast" + i, "Assets/skins/sasso/right_" + i + ".png");
     }
     for (int i = 0; i < DOG_SOUTH_FRAME_COUNT; i++) {
-      loadImage("sassoSouth" + i, "Assets/AnimationFrames/Dog/south_" + i + ".png");
+      loadImage("sassoSouth" + i, "Assets/skins/sasso/south_" + i + ".png");
     }
     for (int i = 0; i < DOG_WEST_FRAME_COUNT; i++) {
-      loadImage("sassoWest" + i, "Assets/AnimationFrames/Dog/left_" + i + ".png");
+      loadImage("sassoWest" + i, "Assets/skins/sasso/left_" + i + ".png");
     }
 
     // Dog animation frames (Wesley skin — new default)
     for (int i = 0; i < DOG_NORTH_FRAME_COUNT; i++) {
-      loadImage("wesleyNorth" + i, "Assets/wesley/north_" + i + ".png");
+      loadImage("wesleyNorth" + i, "Assets/skins/wesley/north_" + i + ".png");
     }
     for (int i = 0; i < DOG_EAST_FRAME_COUNT; i++) {
-      loadImage("wesleyEast" + i, "Assets/wesley/right_" + i + ".png");
+      loadImage("wesleyEast" + i, "Assets/skins/wesley/right_" + i + ".png");
     }
     for (int i = 0; i < DOG_SOUTH_FRAME_COUNT; i++) {
-      loadImage("wesleySouth" + i, "Assets/wesley/south_" + i + ".png");
+      loadImage("wesleySouth" + i, "Assets/skins/wesley/south_" + i + ".png");
     }
     for (int i = 0; i < DOG_WEST_FRAME_COUNT; i++) {
-      loadImage("wesleyWest" + i, "Assets/wesley/left_" + i + ".png");
+      loadImage("wesleyWest" + i, "Assets/skins/wesley/left_" + i + ".png");
     }
 
     // Wall variants — all 16 NESW neighbour combinations

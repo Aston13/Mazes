@@ -15,7 +15,6 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.swing.JFrame;
@@ -35,11 +34,6 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private static final int MOVEMENT_SPEED = 8;
   private static final int INITIAL_GRID_SIZE = 10;
   private static final int PAUSE_TITLE_FONT_SIZE = 40;
-  private static final int PAUSE_BUTTON_FONT_SIZE = 18;
-  private static final int PAUSE_BUTTON_WIDTH = 240;
-  private static final int PAUSE_BUTTON_HEIGHT = 50;
-  private static final int PAUSE_BTN_ARC = 12;
-  private static final int PAUSE_BTN_GAP = 18;
 
   private final GamePanel gameView = new GamePanel();
   private final int windowWidth;
@@ -57,6 +51,16 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private Rectangle resumeBtn;
   private Rectangle restartBtn;
   private Rectangle menuBtn;
+
+  /** Index of the currently hovered pause-overlay button (0=resume, 1=restart, 2=menu, -1=none). */
+  private volatile int hoveredPauseBtn = -1;
+
+  /** Current D-pad direction pressed on touch overlay (-1=none). */
+  volatile int touchDir = TouchDpad.NONE;
+
+  /** Whether to show on-screen touch controls (browser / mobile). */
+  private final boolean showTouchControls;
+
   private Player player;
   private Renderer renderer;
   private JPanel pane = new JPanel(new GridLayout());
@@ -102,6 +106,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     audioManager.setMusicVolume(settings.getMusicVolume());
     this.menuManager = new MenuManager(this, ui, this);
     this.inputHandler = new InputHandler(this);
+    this.showTouchControls = "true".equals(System.getProperty("cheerpj.browser"));
     this.blankCursor =
         Toolkit.getDefaultToolkit()
             .createCustomCursor(
@@ -279,7 +284,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   /** Configures the JFrame: resizable, exit-on-close, centred. */
   public void setUpFrame() {
     boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
-    setTitle(inBrowser ? "" : "Wesley's Way Out");
+    setTitle(inBrowser ? "" : Messages.get("title.game_name"));
     if (inBrowser && !isDisplayable()) {
       setUndecorated(true);
     }
@@ -386,6 +391,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     render();
 
     inputHandler.bindPauseMouseClicks(gameView);
+    inputHandler.bindTouchControls(gameView);
 
     gameLoop = new GameLoop(this);
     gameLoop.setOnComplete(
@@ -564,6 +570,31 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     return menuBtn;
   }
 
+  @Override
+  public void setHoveredPauseBtn(int index) {
+    hoveredPauseBtn = index;
+  }
+
+  @Override
+  public int getGameWidth() {
+    return windowWidth;
+  }
+
+  @Override
+  public int getGameHeight() {
+    return windowHeight;
+  }
+
+  @Override
+  public void onTouchDirection(int dir) {
+    touchDir = dir;
+  }
+
+  @Override
+  public boolean showTouchControls() {
+    return showTouchControls;
+  }
+
   // ---------------------------------------------------------------------------
   // Rendering
   // ---------------------------------------------------------------------------
@@ -686,6 +717,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     renderer.renderMaze(g, TILE_SIZE);
     renderer.renderPlayer(g, TILE_SIZE);
     renderer.renderHUD(g, levelCount);
+    if (showTouchControls) {
+      Graphics2D g2 = (Graphics2D) g;
+      TouchDpad.drawDpad(g2, windowWidth, windowHeight, touchDir);
+      TouchDpad.drawPauseIcon(g2, windowWidth);
+    }
     g.dispose();
     showBuffer();
   }
@@ -731,7 +767,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     Font titleFont = new Font("Dialog", Font.BOLD, PAUSE_TITLE_FONT_SIZE);
     g2.setFont(titleFont);
     FontMetrics fmTitle = g2.getFontMetrics();
-    String title = "Paused";
+    String title = Messages.get("screen.paused");
     int titleX = (windowWidth - fmTitle.stringWidth(title)) / 2;
     int titleY = windowHeight / 4;
     g2.setColor(new Color(80, 60, 40));
@@ -739,11 +775,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     g2.setColor(new Color(240, 236, 232));
     g2.drawString(title, titleX, titleY);
 
-    // Rounded buttons matching main menu style
-    int btnW = PAUSE_BUTTON_WIDTH;
-    int btnH = PAUSE_BUTTON_HEIGHT;
+    // Rounded buttons matching main menu style (via shared UiTheme)
+    int btnW = UiTheme.STD_BTN_WIDTH;
+    int btnH = UiTheme.STD_BTN_HEIGHT;
     int btnX = (windowWidth - btnW) / 2;
-    int gap = btnH + PAUSE_BTN_GAP;
+    int gap = btnH + UiTheme.STD_BTN_GAP;
 
     int resumeY = windowHeight / 2 - btnH - gap / 2;
     int restartY = resumeY + gap;
@@ -753,43 +789,25 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     restartBtn = new Rectangle(btnX, restartY, btnW, btnH);
     menuBtn = new Rectangle(btnX, menuY, btnW, btnH);
 
-    drawPauseButton(g2, btnX, resumeY, btnW, btnH, "Resume", "[Space / Esc]");
-    drawPauseButton(g2, btnX, restartY, btnW, btnH, "Restart Level", "[R]");
-    drawPauseButton(g2, btnX, menuY, btnW, btnH, "Main Menu", "");
+    UiTheme.paintStdButton(
+        g2,
+        btnX,
+        resumeY,
+        Messages.get("button.resume"),
+        Messages.get("hint.space_or_esc"),
+        hoveredPauseBtn == 0);
+    UiTheme.paintStdButton(
+        g2,
+        btnX,
+        restartY,
+        Messages.get("button.restart_level"),
+        Messages.get("hint.r"),
+        hoveredPauseBtn == 1);
+    UiTheme.paintStdButton(
+        g2, btnX, menuY, Messages.get("button.main_menu"), "", hoveredPauseBtn == 2);
 
     g2.dispose();
     showBuffer();
-  }
-
-  private void drawPauseButton(
-      Graphics2D g2, int x, int y, int w, int h, String label, String hint) {
-    RoundRectangle2D.Double rect =
-        new RoundRectangle2D.Double(x, y, w, h, PAUSE_BTN_ARC, PAUSE_BTN_ARC);
-    g2.setColor(new Color(50, 44, 40));
-    g2.fill(rect);
-    g2.setColor(new Color(196, 149, 106));
-    g2.draw(rect);
-
-    Font btnFont = new Font("Dialog", Font.PLAIN, PAUSE_BUTTON_FONT_SIZE);
-    g2.setFont(btnFont);
-    FontMetrics fm = g2.getFontMetrics();
-    g2.setColor(new Color(220, 220, 220));
-    int textX = x + (w - fm.stringWidth(label)) / 2;
-    int textY = y + (h + fm.getAscent()) / 2 - 2;
-
-    if (!hint.isEmpty()) {
-      textY -= 6;
-    }
-    g2.drawString(label, textX, textY);
-
-    if (!hint.isEmpty()) {
-      Font hintFont = new Font("Dialog", Font.PLAIN, 11);
-      g2.setFont(hintFont);
-      FontMetrics hfm = g2.getFontMetrics();
-      g2.setColor(new Color(160, 145, 130));
-      int hintX = x + (w - hfm.stringWidth(hint)) / 2;
-      g2.drawString(hint, hintX, textY + 14);
-    }
   }
 
   // ---------------------------------------------------------------------------

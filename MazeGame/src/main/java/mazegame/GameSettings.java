@@ -37,6 +37,7 @@ public class GameSettings {
   private boolean soundMuted;
   private boolean musicMuted;
   private float musicVolume = 0.5f;
+  private String language = "en";
 
   /** Returns the currently selected dog skin. */
   public DogSkin getActiveSkin() {
@@ -89,6 +90,16 @@ public class GameSettings {
   /** Sets the music volume (clamped to 0.0 – 1.0). */
   public void setMusicVolume(float volume) {
     this.musicVolume = Math.max(0f, Math.min(1f, volume));
+  }
+
+  /** Returns the language tag (e.g. "en", "nb"). */
+  public String getLanguage() {
+    return language;
+  }
+
+  /** Sets the language tag and updates the active message locale. */
+  public void setLanguage(String lang) {
+    this.language = lang;
   }
 
   /**

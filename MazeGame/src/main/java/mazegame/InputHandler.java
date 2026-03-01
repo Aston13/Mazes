@@ -45,6 +45,21 @@ public class InputHandler {
 
     /** Converts canvas-space coords to logical-space coords (for scaled rendering). */
     int[] toLogicalCoords(int screenX, int screenY);
+
+    /** Sets the hovered pause-button index (0=resume, 1=restart, 2=menu, -1=none). */
+    void setHoveredPauseBtn(int index);
+
+    /** Returns the logical game width (for touch D-pad hit testing). */
+    int getGameWidth();
+
+    /** Returns the logical game height (for touch D-pad hit testing). */
+    int getGameHeight();
+
+    /** Called when a touch/mouse direction changes on the D-pad. */
+    void onTouchDirection(int dir);
+
+    /** Returns true if on-screen touch controls should be active. */
+    boolean showTouchControls();
   }
 
   private final Listener listener;
@@ -163,6 +178,7 @@ public class InputHandler {
           public void mouseMoved(MouseEvent e) {
             if (!listener.isPaused()) {
               target.setCursor(java.awt.Cursor.getDefaultCursor());
+              listener.setHoveredPauseBtn(-1);
               return;
             }
             int[] logical = listener.toLogicalCoords(e.getX(), e.getY());
@@ -170,16 +186,107 @@ public class InputHandler {
             Rectangle resume = listener.getResumeBtn();
             Rectangle restart = listener.getRestartBtn();
             Rectangle menu = listener.getMenuBtn();
-            boolean overButton =
-                (resume != null && resume.contains(pt))
-                    || (restart != null && restart.contains(pt))
-                    || (menu != null && menu.contains(pt));
+            int idx = -1;
+            if (resume != null && resume.contains(pt)) idx = 0;
+            else if (restart != null && restart.contains(pt)) idx = 1;
+            else if (menu != null && menu.contains(pt)) idx = 2;
+            listener.setHoveredPauseBtn(idx);
             target.setCursor(
-                overButton
+                idx >= 0
                     ? java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR)
                     : java.awt.Cursor.getDefaultCursor());
           }
         });
+  }
+
+  /**
+   * Installs mouse press/release/drag listeners for touch D-pad and pause icon. CheerpJ maps mobile
+   * touch events to Swing mouse events, so this works on both desktop and mobile browsers.
+   */
+  public void bindTouchControls(java.awt.Component target) {
+    if (!listener.showTouchControls()) return;
+
+    MouseAdapter touchHandler =
+        new MouseAdapter() {
+          @Override
+          public void mousePressed(MouseEvent e) {
+            if (listener.isPaused()) return;
+            int[] logical = listener.toLogicalCoords(e.getX(), e.getY());
+            int lx = logical[0];
+            int ly = logical[1];
+            int gw = listener.getGameWidth();
+            int gh = listener.getGameHeight();
+
+            // Check pause icon first
+            if (TouchDpad.hitTestPause(lx, ly, gw)) {
+              if (listener.isGameInProgress() && !listener.isPaused()) {
+                listener.onPauseRequested();
+              }
+              return;
+            }
+
+            // Check D-pad
+            int dir = TouchDpad.hitTestDpad(lx, ly, gw, gh);
+            if (dir != TouchDpad.NONE) {
+              applyDirection(dir, true);
+              listener.onTouchDirection(dir);
+            }
+          }
+
+          @Override
+          public void mouseReleased(MouseEvent e) {
+            // Release all directions
+            clearAllDirections();
+            listener.onTouchDirection(TouchDpad.NONE);
+          }
+
+          @Override
+          public void mouseDragged(MouseEvent e) {
+            if (listener.isPaused()) return;
+            int[] logical = listener.toLogicalCoords(e.getX(), e.getY());
+            int dir =
+                TouchDpad.hitTestDpad(
+                    logical[0], logical[1], listener.getGameWidth(), listener.getGameHeight());
+            // Update direction: clear old, apply new
+            clearAllDirections();
+            if (dir != TouchDpad.NONE) {
+              applyDirection(dir, true);
+            }
+            listener.onTouchDirection(dir);
+          }
+        };
+    target.addMouseListener(touchHandler);
+    target.addMouseMotionListener(touchHandler);
+  }
+
+  private void applyDirection(int dir, boolean active) {
+    Player p = listener.getPlayer();
+    if (p == null) return;
+    switch (dir) {
+      case TouchDpad.NORTH:
+        p.setMoveN(active);
+        break;
+      case TouchDpad.EAST:
+        p.setMoveE(active);
+        break;
+      case TouchDpad.SOUTH:
+        p.setMoveS(active);
+        break;
+      case TouchDpad.WEST:
+        p.setMoveW(active);
+        break;
+      default:
+        break;
+    }
+  }
+
+  private void clearAllDirections() {
+    Player p = listener.getPlayer();
+    if (p == null) return;
+    p.setMoveN(false);
+    p.setMoveE(false);
+    p.setMoveS(false);
+    p.setMoveW(false);
   }
 
   /** Utility: binds a key action on a Swing component. */

@@ -45,17 +45,18 @@ public class MenuManager {
       menuPanel.setDecorationImage(dogSprite);
     }
 
-    String playLabel = game.hasProgress() ? "Continue" : "Play";
-    menuPanel.addButton(playLabel, "[Space]", game::startLevel);
-    menuPanel.addButton("Level Selection", "", this::showLevelSelection);
-    menuPanel.addButton("Collection", "", this::showSkins);
-    menuPanel.addButton("Settings", "", this::showSettings);
+    String playLabel =
+        game.hasProgress() ? Messages.get("button.continue") : Messages.get("button.play");
+    menuPanel.addButton(playLabel, Messages.get("hint.space"), game::startLevel);
+    menuPanel.addButton(Messages.get("button.level_selection"), "", this::showLevelSelection);
+    menuPanel.addButton(Messages.get("button.collection"), "", this::showSkins);
+    menuPanel.addButton(Messages.get("button.settings"), "", this::showSettings);
 
     boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
     if (!inBrowser) {
       menuPanel.addButton(
-          "Quit",
-          "[Esc]",
+          Messages.get("button.quit"),
+          Messages.get("hint.esc"),
           () -> {
             game.getAudioManager().stopMusic();
             frame.dispose();
@@ -83,9 +84,11 @@ public class MenuManager {
   /** Shows the game-over screen for the current level. */
   public void showGameOverScreen(int level) {
     ResultOverlayPanel overlay =
-        new ResultOverlayPanel("You failed level " + level + "!", game.getAudioManager());
-    overlay.addButton("Retry Level", "[Space]", game::startLevel);
-    overlay.addButton("Main Menu", "[Esc]", this::showMainMenu);
+        new ResultOverlayPanel(Messages.fmt("message.level_failed", level), game.getAudioManager());
+    overlay.addButton(
+        Messages.get("button.retry_level"), Messages.get("hint.space"), game::startLevel);
+    overlay.addButton(
+        Messages.get("button.main_menu"), Messages.get("hint.esc"), this::showMainMenu);
 
     InputHandler.bindKey(
         overlay, KeyEvent.VK_SPACE, "Retry Level", false, evt -> game.startLevel());
@@ -101,34 +104,35 @@ public class MenuManager {
     game.recordLevelCompletion(level, timeTaken);
 
     ResultOverlayPanel overlay =
-        new ResultOverlayPanel("Completed Level " + level + "!", game.getAudioManager());
+        new ResultOverlayPanel(
+            Messages.fmt("message.level_completed", level), game.getAudioManager());
     String timeStr = String.format("%.1f", timeTaken);
     int totalBones = game.getTotalBones();
 
     // Build subtitle: current time + personal best + bones
     StringBuilder sb = new StringBuilder();
-    sb.append("Time: ").append(timeStr).append('s');
+    sb.append(Messages.fmt("label.time_value", timeStr));
     if (previousBest > 0 && previousBest < timeTaken) {
       // Previous PB still stands
-      sb.append("  \u00B7  \uD83C\uDFC6 PB: ")
-          .append(String.format("%.1f", previousBest))
-          .append('s');
+      sb.append("  ")
+          .append(Messages.fmt("label.personal_best", String.format("%.1f", previousBest)));
     } else {
       // New PB (first completion or improved)
-      sb.append("  \u00B7  \uD83C\uDFC6 New PB!");
+      sb.append("  ").append(Messages.get("label.new_personal_best"));
     }
     if (totalBones > 0) {
-      sb.append("  \u00B7  Golden Bones: ").append(totalBones).append("/30");
+      sb.append("  ").append(Messages.fmt("label.golden_bones_count", totalBones));
     }
     overlay.setSubtitle(sb.toString());
     overlay.addButton(
-        "Next Level",
-        "[Space]",
+        Messages.get("button.next_level"),
+        Messages.get("hint.space"),
         () -> {
           game.increaseLevel();
           game.startLevel();
         });
-    overlay.addButton("Main Menu", "[Esc]", this::showMainMenu);
+    overlay.addButton(
+        Messages.get("button.main_menu"), Messages.get("hint.esc"), this::showMainMenu);
 
     InputHandler.bindKey(
         overlay,

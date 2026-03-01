@@ -49,9 +49,12 @@ public class SettingsPanel extends JPanel {
   private final AudioManager audioManager;
   private final Runnable onBack;
 
+  private static final String[] LANG_CODES = {"en", "nb"};
+
   private boolean hoveredBack = false;
   private boolean hoveredMuteToggle = false;
   private boolean hoveredMusicToggle = false;
+  private boolean hoveredLanguageToggle = false;
   private final double[] particleX = new double[PARTICLE_COUNT];
   private final double[] particleY = new double[PARTICLE_COUNT];
   private final double[] particleSpeed = new double[PARTICLE_COUNT];
@@ -108,10 +111,11 @@ public class SettingsPanel extends JPanel {
 
           @Override
           public void mouseExited(MouseEvent e) {
-            if (hoveredBack || hoveredMuteToggle || hoveredMusicToggle) {
+            if (hoveredBack || hoveredMuteToggle || hoveredMusicToggle || hoveredLanguageToggle) {
               hoveredBack = false;
               hoveredMuteToggle = false;
               hoveredMusicToggle = false;
+              hoveredLanguageToggle = false;
               setCursor(Cursor.getDefaultCursor());
               repaint();
             }
@@ -173,7 +177,7 @@ public class SettingsPanel extends JPanel {
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
     g.setFont(titleFont);
     FontMetrics titleFm = g.getFontMetrics();
-    String title = "Settings";
+    String title = Messages.get("screen.settings");
     int titleX = (w - titleFm.stringWidth(title)) / 2;
     int titleY = h / 4 + titleFm.getAscent() / 2;
     g.setColor(TITLE_SHADOW);
@@ -185,7 +189,7 @@ public class SettingsPanel extends JPanel {
     Font sectionFont = new Font("Dialog", Font.BOLD, SECTION_FONT_SIZE);
     g.setFont(sectionFont);
     FontMetrics secFm = g.getFontMetrics();
-    String soundLabel = "Sound";
+    String soundLabel = Messages.get("label.sound_section");
     int soundSecX = (w - secFm.stringWidth(soundLabel)) / 2;
     int soundSecY = titleY + 55;
     g.setColor(SECTION_LABEL);
@@ -206,7 +210,7 @@ public class SettingsPanel extends JPanel {
 
     g.setFont(new Font("Dialog", Font.PLAIN, 14));
     FontMetrics mfm = g.getFontMetrics();
-    String muteLabel = muted ? "\uD83D\uDD07 Sound: OFF" : "\uD83D\uDD0A Sound: ON";
+    String muteLabel = muted ? Messages.get("toggle.sound_off") : Messages.get("toggle.sound_on");
     g.setColor(muted ? TEXT_DIM : TEXT_PRIMARY);
     g.drawString(
         muteLabel,
@@ -225,7 +229,8 @@ public class SettingsPanel extends JPanel {
 
     g.setFont(new Font("Dialog", Font.PLAIN, 14));
     FontMetrics mmfm = g.getFontMetrics();
-    String musicLabel = musicMuted ? "\uD83D\uDD07 Music: OFF" : "\u266A Music: ON";
+    String musicLabel =
+        musicMuted ? Messages.get("toggle.music_off") : Messages.get("toggle.music_on");
     g.setColor(musicMuted ? TEXT_DIM : TEXT_PRIMARY);
     g.drawString(
         musicLabel,
@@ -237,17 +242,54 @@ public class SettingsPanel extends JPanel {
     if ("true".equals(System.getProperty("cheerpj.browser"))) {
       g.setFont(new Font("Dialog", Font.ITALIC, 11));
       FontMetrics nfm2 = g.getFontMetrics();
-      String notice = "\u26A0 Audio is not available in the browser";
+      String notice = Messages.get("notice.browser_no_audio");
       g.setColor(TEXT_DIM);
       g.drawString(notice, (w - nfm2.stringWidth(notice)) / 2, noticeY + nfm2.getAscent() + 2);
       noticeY += 20;
     }
 
+    // Language section label
+    int langSecY = noticeY + 22;
+    g.setFont(sectionFont);
+    String langLabel = Messages.get("label.language_section");
+    int langSecX = (w - secFm.stringWidth(langLabel)) / 2;
+    g.setColor(SECTION_LABEL);
+    g.drawString(langLabel, langSecX, langSecY);
+
+    // Language toggle
+    int langToggleY = langSecY + 15;
+    RoundRectangle2D.Double langRect =
+        new RoundRectangle2D.Double(toggleX, langToggleY, toggleW, toggleH, BTN_ARC, BTN_ARC);
+    g.setColor(hoveredLanguageToggle ? CARD_HOVER_BG : CARD_BG);
+    g.fill(langRect);
+    g.setColor(hoveredLanguageToggle ? SECTION_LABEL : CARD_BORDER);
+    g.draw(langRect);
+
+    g.setFont(new Font("Dialog", Font.PLAIN, 14));
+    FontMetrics lfm = g.getFontMetrics();
+    String langCode = settings.getLanguage();
+    String langDisplayLabel = Messages.get("language." + langCode);
+    g.setColor(TEXT_PRIMARY);
+    g.drawString(
+        langDisplayLabel,
+        toggleX + (toggleW - lfm.stringWidth(langDisplayLabel)) / 2,
+        langToggleY + (toggleH + lfm.getAscent()) / 2 - 2);
+
     // Back button
     int btnX = (w - BTN_WIDTH) / 2;
-    int btnY = noticeY + 22;
+    int btnY = langToggleY + toggleH + 22;
     UiTheme.paintButton(
-        g, btnX, btnY, BTN_WIDTH, BTN_HEIGHT, BTN_ARC, "Back [Esc]", null, hoveredBack, 16, true);
+        g,
+        btnX,
+        btnY,
+        BTN_WIDTH,
+        BTN_HEIGHT,
+        BTN_ARC,
+        Messages.get("button.back_esc"),
+        null,
+        hoveredBack,
+        16,
+        true);
   }
 
   // ---- Particles ----
@@ -274,16 +316,18 @@ public class SettingsPanel extends JPanel {
   private boolean isOverBackButton(int mx, int my) {
     int w = getWidth();
     int soundSecY = computeSoundSecY();
-    int toggleY = soundSecY + 15;
     int toggleH = 42;
+    int toggleY = soundSecY + 15;
     int musicToggleY = toggleY + toggleH + 12;
     int noticeY = musicToggleY + toggleH + 8;
     if ("true".equals(System.getProperty("cheerpj.browser"))) {
       noticeY += 20;
     }
+    int langSecY = noticeY + 22;
+    int langToggleY = langSecY + 15;
 
     int btnX = (w - BTN_WIDTH) / 2;
-    int btnY = noticeY + 22;
+    int btnY = langToggleY + toggleH + 22;
     return mx >= btnX && mx <= btnX + BTN_WIDTH && my >= btnY && my <= btnY + BTN_HEIGHT;
   }
 
@@ -311,20 +355,46 @@ public class SettingsPanel extends JPanel {
         && my <= musicToggleY + toggleH;
   }
 
+  private boolean isOverLanguageToggle(int mx, int my) {
+    int w = getWidth();
+    int soundSecY = computeSoundSecY();
+    int toggleW = 200;
+    int toggleH = 42;
+    int toggleX = (w - toggleW) / 2;
+    int toggleY = soundSecY + 15;
+    int musicToggleY = toggleY + toggleH + 12;
+    int noticeY = musicToggleY + toggleH + 8;
+    if ("true".equals(System.getProperty("cheerpj.browser"))) {
+      noticeY += 20;
+    }
+    int langSecY = noticeY + 22;
+    int langToggleY = langSecY + 15;
+    return mx >= toggleX
+        && mx <= toggleX + toggleW
+        && my >= langToggleY
+        && my <= langToggleY + toggleH;
+  }
+
   private void updateHover(int mx, int my) {
     boolean oldBack = hoveredBack;
     boolean oldMute = hoveredMuteToggle;
     boolean oldMusic = hoveredMusicToggle;
+    boolean oldLang = hoveredLanguageToggle;
 
     hoveredBack = isOverBackButton(mx, my);
     hoveredMuteToggle = isOverMuteToggle(mx, my);
     hoveredMusicToggle = isOverMusicToggle(mx, my);
+    hoveredLanguageToggle = isOverLanguageToggle(mx, my);
 
-    boolean interactable = hoveredBack || hoveredMuteToggle || hoveredMusicToggle;
+    boolean interactable =
+        hoveredBack || hoveredMuteToggle || hoveredMusicToggle || hoveredLanguageToggle;
     setCursor(
         interactable ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
 
-    if (oldBack != hoveredBack || oldMute != hoveredMuteToggle || oldMusic != hoveredMusicToggle) {
+    if (oldBack != hoveredBack
+        || oldMute != hoveredMuteToggle
+        || oldMusic != hoveredMusicToggle
+        || oldLang != hoveredLanguageToggle) {
       repaint();
     }
   }
@@ -343,6 +413,22 @@ public class SettingsPanel extends JPanel {
       boolean newMusicMuted = !settings.isMusicMuted();
       settings.setMusicMuted(newMusicMuted);
       audioManager.setMusicMuted(newMusicMuted);
+      repaint();
+      return;
+    }
+    if (isOverLanguageToggle(mx, my)) {
+      audioManager.play(AudioManager.Sound.BUTTON_CLICK);
+      String current = settings.getLanguage();
+      int idx = 0;
+      for (int i = 0; i < LANG_CODES.length; i++) {
+        if (LANG_CODES[i].equals(current)) {
+          idx = i;
+          break;
+        }
+      }
+      String next = LANG_CODES[(idx + 1) % LANG_CODES.length];
+      settings.setLanguage(next);
+      Messages.setLocale(new java.util.Locale(next));
       repaint();
       return;
     }

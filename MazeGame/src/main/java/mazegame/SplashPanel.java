@@ -156,7 +156,7 @@ public class SplashPanel extends JPanel {
     Font quoteFont = new Font("Dialog", Font.BOLD | Font.ITALIC, 28);
     g.setFont(quoteFont);
     FontMetrics qfm = g.getFontMetrics();
-    String quote = "\"Somebody stop me!\"";
+    String quote = Messages.get("splash.quote");
     int quoteX = (w - qfm.stringWidth(quote)) / 2;
 
     // Shadow
@@ -171,7 +171,7 @@ public class SplashPanel extends JPanel {
     Font creditFont = new Font("Dialog", Font.BOLD, 16);
     g.setFont(creditFont);
     FontMetrics cfm = g.getFontMetrics();
-    String credit = "An Aston13 Production";
+    String credit = Messages.get("splash.credit");
     int creditX = (w - cfm.stringWidth(credit)) / 2;
     g.setColor(CREDIT_COLOR);
     g.drawString(credit, creditX, creditY);
@@ -182,7 +182,7 @@ public class SplashPanel extends JPanel {
     Font hintFont = new Font("Dialog", Font.PLAIN, 11);
     g.setFont(hintFont);
     FontMetrics hfm = g.getFontMetrics();
-    String hint = "Click or press any key to skip";
+    String hint = Messages.get("splash.skip_hint");
     g.setColor(SKIP_HINT);
     g.drawString(hint, (w - hfm.stringWidth(hint)) / 2, h - 20);
   }

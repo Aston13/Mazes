@@ -277,9 +277,20 @@ public class SettingsPanel extends JPanel {
         toggleX + (toggleW - mmfm.stringWidth(musicLabel)) / 2,
         musicToggleY + (toggleH + mmfm.getAscent()) / 2 - 2);
 
+    // Browser audio notice
+    int noticeY = musicToggleY + toggleH + 8;
+    if ("true".equals(System.getProperty("cheerpj.browser"))) {
+      g.setFont(new Font("Dialog", Font.ITALIC, 11));
+      FontMetrics nfm2 = g.getFontMetrics();
+      String notice = "\u26A0 Audio is not available in the browser";
+      g.setColor(TEXT_DIM);
+      g.drawString(notice, (w - nfm2.stringWidth(notice)) / 2, noticeY + nfm2.getAscent() + 2);
+      noticeY += 20;
+    }
+
     // Back button
     int btnX = (w - BTN_WIDTH) / 2;
-    int btnY = musicToggleY + toggleH + 30;
+    int btnY = noticeY + 22;
     RoundRectangle2D.Double backRect =
         new RoundRectangle2D.Double(btnX, btnY, BTN_WIDTH, BTN_HEIGHT, BTN_ARC, BTN_ARC);
     g.setColor(hoveredBack ? BTN_HOVER_BG : BTN_BG);
@@ -329,14 +340,19 @@ public class SettingsPanel extends JPanel {
     int titleY = h / 7 + titleFm.getAscent() / 2;
     int cardsY = titleY + 80;
 
-    // Account for sound section + mute toggle + music toggle above back button
+    // Account for sound section + mute toggle + music toggle + notice above back button
     int soundSecY = cardsY + CARD_HEIGHT + 40;
     int toggleY = soundSecY + 15;
     int toggleH = 42;
     int musicToggleY = toggleY + toggleH + 12;
+    int noticeY = musicToggleY + toggleH + 8;
+    boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
+    if (inBrowser) {
+      noticeY += 20;
+    }
 
     int btnX = (w - BTN_WIDTH) / 2;
-    int btnY = musicToggleY + toggleH + 30;
+    int btnY = noticeY + 22;
 
     return mx >= btnX && mx <= btnX + BTN_WIDTH && my >= btnY && my <= btnY + BTN_HEIGHT;
   }

@@ -210,6 +210,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   public void setUpFrame() {
     boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));
     setTitle(inBrowser ? "" : "Wesley's Way Out");
+    if (inBrowser && !isDisplayable()) {
+      setUndecorated(true);
+    }
     setResizable(true);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setContentPane(pane);

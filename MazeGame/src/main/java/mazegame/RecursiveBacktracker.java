@@ -151,11 +151,11 @@ public class RecursiveBacktracker extends Tilemap {
   public Tile[][] setWinningTile(Tile[][] tileSet) {
     TilePassage tile = new TilePassage(0, 0, 0);
     visitedTiles.clear();
-    if (tileSet[startingX][startingY] instanceof TilePassage) {
-      tile = (TilePassage) tileSet[startingX][startingY];
+    if (tileSet[startingY][startingX] instanceof TilePassage) {
+      tile = (TilePassage) tileSet[startingY][startingX];
     }
-    tile.setRowNo(startingX);
-    tile.setColNo(startingY);
+    tile.setRowNo(startingY);
+    tile.setColNo(startingX);
 
     visitedTiles.push(tile);
     exitTileSet = tileSet;
@@ -164,11 +164,11 @@ public class RecursiveBacktracker extends Tilemap {
     // Y-2 == West
     // Y+2 == East
 
-    TilePassage tp = (TilePassage) exitTileSet[startingX][startingY];
+    TilePassage tp = (TilePassage) exitTileSet[startingY][startingX];
     tp.setCheckedExitPath(true);
-    exitTileSet[startingX][startingY] = tp;
+    exitTileSet[startingY][startingX] = tp;
 
-    setExitPath(startingX, startingY);
+    setExitPath(startingY, startingX);
     return exitTileSet;
   }
 

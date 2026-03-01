@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Wesley's Way Out — Play in Browser</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #1a1a1a;
+            color: #f0ece8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            color: #c4956a;
+            margin-bottom: 0.3rem;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        #game-container {
+            width: 650px;
+            height: 650px;
+            background: #000;
+            border: 2px solid #c4956a40;
+            position: relative;
+        }
+
+        #loading-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #1a1a1a 0%, #22201e 100%);
+            z-index: 10;
+        }
+
+        #loading-overlay .load-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #f0ece8;
+            letter-spacing: 3px;
+            margin-bottom: 0.3rem;
+        }
+
+        #loading-overlay .load-subtitle {
+            font-size: 0.85rem;
+            color: #a09080;
+            margin-bottom: 2rem;
+        }
+
+        #loading-overlay p {
+            margin-top: 1.2rem;
+            font-size: 0.9rem;
+            color: #c4956a;
+        }
+
+        /* Paw-print walking animation */
+        .paw-track {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 0.5rem;
+        }
+
+        .paw-track .paw {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #c4956a;
+            opacity: 0.15;
+            animation: pawStep 1.6s ease-in-out infinite;
+        }
+
+        .paw-track .paw:nth-child(1) { animation-delay: 0s; }
+        .paw-track .paw:nth-child(2) { animation-delay: 0.2s; }
+        .paw-track .paw:nth-child(3) { animation-delay: 0.4s; }
+        .paw-track .paw:nth-child(4) { animation-delay: 0.6s; }
+        .paw-track .paw:nth-child(5) { animation-delay: 0.8s; }
+
+        @keyframes pawStep {
+            0%, 100% { opacity: 0.15; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1.1); }
+            60% { opacity: 0.4; transform: scale(1); }
+        }
+
+        /* Progress bar */
+        .load-bar {
+            width: 220px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.2rem;
+        }
+
+        .load-bar-fill {
+            width: 30%;
+            height: 100%;
+            background: linear-gradient(90deg, #c4956a, #d4a878);
+            border-radius: 2px;
+            animation: barPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes barPulse {
+            0% { width: 15%; }
+            50% { width: 70%; }
+            100% { width: 15%; }
+        }
+
+        .controls {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #888;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .controls kbd {
+            background: #333;
+            color: #eee;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #555;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+
+        footer {
+            margin-top: 2rem;
+            padding: 1rem;
+            font-size: 0.8rem;
+            color: #555;
+        }
+
+        footer a { color: #c4956a; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Wesley's Way Out</h1>
+        <p>A procedurally generated maze adventure — playable in your browser</p>
+    </header>
+
+    <div id="game-container">
+        <div id="loading-overlay">
+            <div class="load-title">Wesley's Way Out</div>
+            <div class="load-subtitle">A procedurally generated maze adventure</div>
+            <div class="paw-track">
+                <div class="paw"></div>
+                <div class="paw"></div>
+                <div class="paw"></div>
+                <div class="paw"></div>
+                <div class="paw"></div>
+            </div>
+            <div class="load-bar"><div class="load-bar-fill"></div></div>
+            <p>Loading game engine...</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> Move &nbsp;|&nbsp;
+        <kbd>Space</kbd> Continue &nbsp;|&nbsp;
+        <kbd>Esc</kbd> Menu
+        <div style="margin-top: 0.6rem; font-size: 0.78rem; color: #665; font-style: italic;">⚠ Audio is not supported in the browser version</div>
+    </div>
+
+    <footer>
+        <a href="https://github.com/Aston13/Wesleys-Way-Out">View on GitHub</a>
+    </footer>
+
+    <script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>
+    <script>
+        async function startGame() {
+            const container = document.getElementById('game-container');
+            const overlay = document.getElementById('loading-overlay');
+
+            try {
+                await cheerpjInit({
+                    clipboardMode: 'system',
+                    status: 'none',
+                    javaProperties: ['cheerpj.browser=true'],
+                });
+
+                // Display element for the Swing window
+                cheerpjCreateDisplay(650, 650, container);
+
+                overlay.querySelector('p').textContent = 'Starting game...';
+
+                // /app/ maps to server root; project Pages live under /Wesleys-Way-Out/
+                // Don't await — cheerpjRunJar resolves only when the app exits.
+                // Hide the overlay after a short delay to let Swing paint.
+                const runPromise = cheerpjRunJar('/app/Wesleys-Way-Out/MazeGame.jar');
+
+                // Give the JVM a moment to start rendering, then fade out overlay
+                setTimeout(() => {
+                    overlay.style.transition = 'opacity 0.5s';
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 500);
+
+                    // Hide the page header to avoid duplicate title with
+                    // the in-game main menu and CheerpJ window title bar
+                    const header = document.querySelector('header');
+                    if (header) {
+                        header.style.transition = 'opacity 0.3s';
+                        header.style.opacity = '0';
+                        setTimeout(() => { header.style.display = 'none'; }, 300);
+                    }
+                }, 3000);
+
+                const exitCode = await runPromise;
+                console.log('CheerpJ exit code:', exitCode);
+            } catch (err) {
+                const msg = err?.message || String(err);
+                overlay.querySelector('p').textContent =
+                    'Failed to load: ' + msg;
+                console.error('CheerpJ error:', err);
+            }
+        }
+        startGame();
+    </script>
+</body>
+</html>

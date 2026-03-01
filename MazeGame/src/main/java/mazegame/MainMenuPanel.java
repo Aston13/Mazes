@@ -1,6 +1,8 @@
 package mazegame;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -12,6 +14,7 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JPanel;
@@ -43,6 +46,7 @@ public class MainMenuPanel extends JPanel {
 
   private final List<MenuButton> buttons = new ArrayList<>();
   private int hoveredIndex = -1;
+  private BufferedImage decorationImage;
 
   /** Describes a clickable button on a custom-painted menu. */
   static class MenuButton {
@@ -109,6 +113,12 @@ public class MainMenuPanel extends JPanel {
     addMouseMotionListener(mouseHandler);
   }
 
+  /** Sets a decorative sprite image (e.g. Wesley) to display between the subtitle and buttons. */
+  public void setDecorationImage(BufferedImage image) {
+    this.decorationImage = image;
+    repaint();
+  }
+
   /** Adds a button to the menu. */
   public void addButton(String label, String hint, Runnable action) {
     buttons.add(new MenuButton(label, hint, action));
@@ -171,6 +181,19 @@ public class MainMenuPanel extends JPanel {
     String subtitle = "A maze adventure";
     g.setColor(SUBTITLE_COLOR);
     g.drawString(subtitle, (w - subFm.stringWidth(subtitle)) / 2, titleY + 30);
+
+    // Wesley decoration sprite (pixel-art, centered between subtitle and buttons)
+    if (decorationImage != null) {
+      int imgSize = Math.max(80, h / 6);
+      int imgX = (w - imgSize) / 2;
+      int imgY = titleY + 40;
+      Composite oldComposite = g.getComposite();
+      g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.85f));
+      g.setRenderingHint(
+          RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+      g.drawImage(decorationImage, imgX, imgY, imgSize, imgSize, null);
+      g.setComposite(oldComposite);
+    }
 
     // Buttons
     int totalBtnHeight = buttons.size() * BTN_HEIGHT + (buttons.size() - 1) * BTN_GAP;

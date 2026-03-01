@@ -3,7 +3,10 @@ package mazegame;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -21,8 +24,7 @@ public class Renderer {
   private static final int HUD_FONT_SIZE = 15;
   private static final int MESSAGE_FONT_SIZE = 20;
   private static final int MESSAGE_DURATION_MS = 5000;
-  private static final double TIMER_TICK_SECONDS = 0.01;
-  private static final int TIMER_TICK_MS = 10;
+  private static final int TIMER_CHECK_MS = 100;
   private static final double KEY_REMOVAL_INTERVAL = 5.00;
   private static final int MAX_ANIMATION_STACK_SIZE = 10;
 
@@ -52,6 +54,9 @@ public class Renderer {
 
   private double timeTaken;
   private double timeUntilKeyRemoval = KEY_REMOVAL_INTERVAL;
+  private long wallClockAtResumeMs;
+  private double accumulatedGameSec;
+  private double gameSecAtLastRemoval;
   private BufferedImage playerImg;
   private Stack<BufferedImage> nextPlayerAnimation = new Stack<>();
 
@@ -96,12 +101,17 @@ public class Renderer {
 
     gameTimer =
         new Timer(
-            TIMER_TICK_MS,
+            TIMER_CHECK_MS,
             (ActionEvent e) -> {
-              timeTaken += TIMER_TICK_SECONDS;
-              timeUntilKeyRemoval -= TIMER_TICK_SECONDS;
+              long nowMs = System.currentTimeMillis();
+              double totalGameSec = accumulatedGameSec + (nowMs - wallClockAtResumeMs) / 1000.0;
+              timeTaken = totalGameSec;
+
+              double sinceLastRemoval = totalGameSec - gameSecAtLastRemoval;
+              timeUntilKeyRemoval = KEY_REMOVAL_INTERVAL - sinceLastRemoval;
 
               if (timeUntilKeyRemoval <= 0) {
+                gameSecAtLastRemoval = totalGameSec;
                 keyRemovalTimer--;
                 TilePassage removedKey = (TilePassage) keysOnMap.pop();
                 removedKey.setItem(false);
@@ -110,18 +120,22 @@ public class Renderer {
                   game.setGameState(false, "Level Failed");
                   gameTimer.stop();
                 }
-                timeUntilKeyRemoval = KEY_REMOVAL_INTERVAL;
               }
             });
   }
 
-  /** Starts the in-game timer (key removal countdown and elapsed time). */
+  /** Starts (or resumes) the in-game timer using wall-clock tracking. */
   public void beginTimer() {
+    wallClockAtResumeMs = System.currentTimeMillis();
     gameTimer.start();
   }
 
-  /** Stops the in-game timer. */
+  /** Pauses the in-game timer, accumulating elapsed game time. */
   public void stopTimer() {
+    if (gameTimer.isRunning()) {
+      accumulatedGameSec += (System.currentTimeMillis() - wallClockAtResumeMs) / 1000.0;
+    }
+    timeTaken = accumulatedGameSec;
     gameTimer.stop();
   }
 
@@ -241,41 +255,103 @@ public class Renderer {
   }
 
   /**
-   * Renders the heads-up display showing key count and current level.
+   * Renders a modern heads-up display showing key count, level, elapsed time, and key-removal
+   * countdown with gradient background and accent styling.
    *
    * @param g the graphics context
-   * @param p the player (unused, reserved for future HUD info)
+   * @param p the player (reserved for future HUD info)
    * @param level the current level number
    */
   public void renderHUD(Graphics g, Player p, int level) {
-    g.setColor(Color.DARK_GRAY);
-    g.fillRect(0, 0, screenWidth, HUD_HEIGHT);
-    g.setColor(Color.WHITE);
-    g.setFont(new Font("Serif", Font.PLAIN, HUD_FONT_SIZE));
-    g.drawString("Keys: " + keyCount + "/" + keysRequired, 25, 20);
-    g.drawString("Level: " + level, 25, 40);
+    Graphics2D g2 = (Graphics2D) g;
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    g2.setRenderingHint(
+        RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-    // Countdown timer until next key removal (right-aligned)
+    int hudH = HUD_HEIGHT;
+
+    // Gradient background
+    g2.setPaint(
+        new GradientPaint(0, 0, new Color(12, 12, 35, 240), 0, hudH, new Color(22, 22, 50, 240)));
+    g2.fillRect(0, 0, screenWidth, hudH);
+
+    // Bottom accent line
+    g2.setColor(new Color(0, 200, 200, 150));
+    g2.fillRect(0, hudH - 2, screenWidth, 2);
+
+    int pad = 20;
+    int topY = 19;
+    int botY = 39;
+    Font labelFont = new Font("Dialog", Font.PLAIN, 11);
+    Font valueFont = new Font("Dialog", Font.BOLD, 16);
+    Color labelColor = new Color(140, 140, 160);
+
+    // ---- Left: Keys ----
+    g2.setFont(labelFont);
+    g2.setColor(labelColor);
+    g2.drawString("KEYS", pad, topY);
+    g2.setFont(valueFont);
+    g2.setColor(new Color(0, 230, 230));
+    g2.drawString(keyCount + " / " + keysRequired, pad, botY);
+
+    // ---- Center: Level ----
+    g2.setFont(labelFont);
+    g2.setColor(labelColor);
+    FontMetrics lfm = g2.getFontMetrics();
+    String lvlLabel = "LEVEL";
+    g2.drawString(lvlLabel, (screenWidth - lfm.stringWidth(lvlLabel)) / 2, topY);
+    g2.setFont(valueFont);
+    g2.setColor(Color.WHITE);
+    FontMetrics vfm = g2.getFontMetrics();
+    String lvlVal = String.valueOf(level);
+    g2.drawString(lvlVal, (screenWidth - vfm.stringWidth(lvlVal)) / 2, botY);
+
+    // ---- Right area ----
     DecimalFormat df = new DecimalFormat("0.0");
-    String countdown = "Next key loss: " + df.format(Math.max(0, timeUntilKeyRemoval)) + "s";
-    FontMetrics fm = g.getFontMetrics();
-    int countdownX = screenWidth - fm.stringWidth(countdown) - 25;
 
-    // Colour shifts from white → yellow → red as time runs out
+    // Key-removal countdown (far right)
+    String countdownVal = df.format(Math.max(0, timeUntilKeyRemoval)) + "s";
     double ratio = timeUntilKeyRemoval / KEY_REMOVAL_INTERVAL;
+    Color countdownColor;
     if (ratio < 0.3) {
-      g.setColor(Color.RED);
+      countdownColor = new Color(255, 80, 80);
     } else if (ratio < 0.6) {
-      g.setColor(Color.YELLOW);
+      countdownColor = new Color(255, 220, 80);
     } else {
-      g.setColor(Color.WHITE);
+      countdownColor = new Color(0, 230, 230);
     }
-    g.drawString(countdown, countdownX, 20);
 
-    // Elapsed time
-    g.setColor(Color.WHITE);
-    String elapsed = "Time: " + df.format(timeTaken) + "s";
-    g.drawString(elapsed, countdownX, 40);
+    g2.setFont(labelFont);
+    FontMetrics sfm = g2.getFontMetrics();
+    String cdLabel = "KEY TIMER";
+    int cdLabelX = screenWidth - pad - sfm.stringWidth(cdLabel);
+    g2.setColor(labelColor);
+    g2.drawString(cdLabel, cdLabelX, topY);
+    g2.setFont(valueFont);
+    g2.setColor(countdownColor);
+    FontMetrics cvfm = g2.getFontMetrics();
+    g2.drawString(countdownVal, screenWidth - pad - cvfm.stringWidth(countdownVal), botY);
+
+    // Countdown progress bar
+    int barW = 80;
+    int barH = 3;
+    int barX = screenWidth - pad - barW;
+    int barY = botY + 4;
+    g2.setColor(new Color(40, 40, 60));
+    g2.fillRect(barX, barY, barW, barH);
+    int filledW = (int) (barW * Math.max(0, Math.min(1, ratio)));
+    g2.setColor(countdownColor);
+    g2.fillRect(barX, barY, filledW, barH);
+
+    // Elapsed time (left of key timer)
+    g2.setFont(labelFont);
+    String timeLabel = "TIME";
+    int timeX = cdLabelX - 110;
+    g2.setColor(labelColor);
+    g2.drawString(timeLabel, timeX, topY);
+    g2.setFont(valueFont);
+    g2.setColor(new Color(200, 200, 220));
+    g2.drawString(df.format(timeTaken) + "s", timeX, botY);
   }
 
   /**

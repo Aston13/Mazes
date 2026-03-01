@@ -1,6 +1,7 @@
 package mazegame;
 
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 
 /**
@@ -24,7 +25,14 @@ public class MenuManager {
   public void showMainMenu() {
     MainMenuPanel menuPanel = new MainMenuPanel();
 
-    menuPanel.addButton("Continue", "[Space]", game::startLevel);
+    // Use the dog sprite as a decoration on the menu background
+    BufferedImage dogSprite = game.getAssetManager().getPreloadedImage("dogEast0");
+    if (dogSprite != null) {
+      menuPanel.setDecorationImage(dogSprite);
+    }
+
+    String playLabel = game.hasProgress() ? "Continue" : "Play";
+    menuPanel.addButton(playLabel, "[Space]", game::startLevel);
     menuPanel.addButton("Level Selection", "", this::showLevelSelection);
 
     boolean inBrowser = "true".equals(System.getProperty("cheerpj.browser"));

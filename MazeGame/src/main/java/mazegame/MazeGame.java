@@ -4,9 +4,13 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.swing.JFrame;
@@ -23,13 +27,14 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
   private static final int TILE_SIZE = 100;
   private static final int TILE_BORDER = 0;
-  private static final int MOVEMENT_SPEED = 5;
+  private static final int MOVEMENT_SPEED = 8;
   private static final int INITIAL_GRID_SIZE = 10;
-  private static final int PAUSE_OVERLAY_ALPHA = 200;
   private static final int PAUSE_TITLE_FONT_SIZE = 40;
-  private static final int PAUSE_BUTTON_FONT_SIZE = 20;
-  private static final int PAUSE_BUTTON_WIDTH = 200;
-  private static final int PAUSE_BUTTON_HEIGHT = 45;
+  private static final int PAUSE_BUTTON_FONT_SIZE = 18;
+  private static final int PAUSE_BUTTON_WIDTH = 240;
+  private static final int PAUSE_BUTTON_HEIGHT = 50;
+  private static final int PAUSE_BTN_ARC = 12;
+  private static final int PAUSE_BTN_GAP = 18;
 
   private final GamePanel gameView = new GamePanel();
   private final int windowWidth;
@@ -74,6 +79,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     }
     this.rowColAmount = rowColAmount;
     this.assetManager = new AssetManager();
+    try {
+      assetManager.preloadImages();
+    } catch (IOException e) {
+      System.err.println("Failed to preload images: " + e.getMessage());
+    }
     this.menuManager = new MenuManager(this, ui, this);
     this.inputHandler = new InputHandler(this);
     load(false);
@@ -131,6 +141,20 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   /** Returns the current level data array. */
   public String[] getLevelData() {
     return levelData;
+  }
+
+  /** Returns true if the player has completed at least one level. */
+  public boolean hasProgress() {
+    if (levelData == null) return false;
+    for (int i = 1; i < levelData.length; i++) {
+      if (levelData[i].contains("completed")) return true;
+    }
+    return false;
+  }
+
+  /** Returns the shared asset manager. */
+  public AssetManager getAssetManager() {
+    return assetManager;
   }
 
   /** Records a level completion, updating best time if improved. */
@@ -524,56 +548,97 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   }
 
   private void renderPauseScreen() {
+    // Render the game frame underneath so the overlay shows through
     Graphics g = getGameGraphics();
     if (g == null) return;
+    renderer.renderBackground(g);
+    renderer.renderMaze(g, TILE_SIZE);
+    renderer.renderPlayer(g, player, TILE_SIZE);
+    renderer.renderHUD(g, player, levelCount);
 
-    // Dark overlay
-    g.setColor(new Color(0, 0, 0, PAUSE_OVERLAY_ALPHA));
-    g.fillRect(0, 0, windowWidth, windowHeight);
+    Graphics2D g2 = (Graphics2D) g;
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    g2.setRenderingHint(
+        RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-    // Title
-    g.setColor(Color.CYAN);
-    g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_TITLE_FONT_SIZE));
-    FontMetrics fmTitle = g.getFontMetrics();
+    // Semi-transparent gradient overlay matching main menu palette
+    g2.setPaint(
+        new GradientPaint(
+            0, 0, new Color(10, 10, 30, 210), 0, windowHeight, new Color(20, 20, 50, 210)));
+    g2.fillRect(0, 0, windowWidth, windowHeight);
+
+    // Subtle grid decoration
+    g2.setColor(new Color(255, 255, 255, 8));
+    for (int x = 0; x < windowWidth; x += 40) {
+      g2.drawLine(x, 0, x, windowHeight);
+    }
+    for (int y = 0; y < windowHeight; y += 40) {
+      g2.drawLine(0, y, windowWidth, y);
+    }
+
+    // Title with shadow
+    Font titleFont = new Font("Dialog", Font.BOLD, PAUSE_TITLE_FONT_SIZE);
+    g2.setFont(titleFont);
+    FontMetrics fmTitle = g2.getFontMetrics();
     String title = "Paused";
-    g.drawString(title, (windowWidth - fmTitle.stringWidth(title)) / 2, windowHeight / 4);
+    int titleX = (windowWidth - fmTitle.stringWidth(title)) / 2;
+    int titleY = windowHeight / 4;
+    g2.setColor(new Color(0, 80, 80));
+    g2.drawString(title, titleX + 2, titleY + 2);
+    g2.setColor(new Color(0, 255, 255));
+    g2.drawString(title, titleX, titleY);
 
-    // Buttons
-    g.setFont(new Font("Dialog", Font.PLAIN, PAUSE_BUTTON_FONT_SIZE));
-    FontMetrics fm = g.getFontMetrics();
+    // Rounded buttons matching main menu style
+    int btnW = PAUSE_BUTTON_WIDTH;
+    int btnH = PAUSE_BUTTON_HEIGHT;
+    int btnX = (windowWidth - btnW) / 2;
+    int gap = btnH + PAUSE_BTN_GAP;
 
-    int btnX = (windowWidth - PAUSE_BUTTON_WIDTH) / 2;
-    int btnGap = PAUSE_BUTTON_HEIGHT + 15;
+    int resumeY = windowHeight / 2 - btnH - gap / 2;
+    int restartY = resumeY + gap;
+    int menuY = restartY + gap;
 
-    int resumeY = windowHeight / 2 - PAUSE_BUTTON_HEIGHT - btnGap / 2;
-    resumeBtn = new Rectangle(btnX, resumeY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
-    g.setColor(Color.DARK_GRAY);
-    g.fillRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
-    g.setColor(Color.WHITE);
-    g.drawRect(resumeBtn.x, resumeBtn.y, resumeBtn.width, resumeBtn.height);
-    String rText = "Resume [Space/Esc]";
-    g.drawString(rText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rText)) / 2, resumeY + 30);
+    resumeBtn = new Rectangle(btnX, resumeY, btnW, btnH);
+    restartBtn = new Rectangle(btnX, restartY, btnW, btnH);
+    menuBtn = new Rectangle(btnX, menuY, btnW, btnH);
 
-    int restartY = resumeY + btnGap;
-    restartBtn = new Rectangle(btnX, restartY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
-    g.setColor(Color.DARK_GRAY);
-    g.fillRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
-    g.setColor(Color.WHITE);
-    g.drawRect(restartBtn.x, restartBtn.y, restartBtn.width, restartBtn.height);
-    String rstText = "Restart Level [R]";
-    g.drawString(rstText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(rstText)) / 2, restartY + 30);
+    drawPauseButton(g2, btnX, resumeY, btnW, btnH, "Resume", "[Space / Esc]");
+    drawPauseButton(g2, btnX, restartY, btnW, btnH, "Restart Level", "[R]");
+    drawPauseButton(g2, btnX, menuY, btnW, btnH, "Main Menu", "");
 
-    int menuY = restartY + btnGap;
-    menuBtn = new Rectangle(btnX, menuY, PAUSE_BUTTON_WIDTH, PAUSE_BUTTON_HEIGHT);
-    g.setColor(Color.DARK_GRAY);
-    g.fillRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
-    g.setColor(Color.WHITE);
-    g.drawRect(menuBtn.x, menuBtn.y, menuBtn.width, menuBtn.height);
-    String mText = "Main Menu";
-    g.drawString(mText, btnX + (PAUSE_BUTTON_WIDTH - fm.stringWidth(mText)) / 2, menuY + 30);
-
-    g.dispose();
+    g2.dispose();
     showBuffer();
+  }
+
+  private void drawPauseButton(
+      Graphics2D g2, int x, int y, int w, int h, String label, String hint) {
+    RoundRectangle2D.Double rect =
+        new RoundRectangle2D.Double(x, y, w, h, PAUSE_BTN_ARC, PAUSE_BTN_ARC);
+    g2.setColor(new Color(40, 40, 60));
+    g2.fill(rect);
+    g2.setColor(new Color(0, 200, 200));
+    g2.draw(rect);
+
+    Font btnFont = new Font("Dialog", Font.PLAIN, PAUSE_BUTTON_FONT_SIZE);
+    g2.setFont(btnFont);
+    FontMetrics fm = g2.getFontMetrics();
+    g2.setColor(new Color(220, 220, 220));
+    int textX = x + (w - fm.stringWidth(label)) / 2;
+    int textY = y + (h + fm.getAscent()) / 2 - 2;
+
+    if (!hint.isEmpty()) {
+      textY -= 6;
+    }
+    g2.drawString(label, textX, textY);
+
+    if (!hint.isEmpty()) {
+      Font hintFont = new Font("Dialog", Font.PLAIN, 11);
+      g2.setFont(hintFont);
+      FontMetrics hfm = g2.getFontMetrics();
+      g2.setColor(new Color(120, 120, 140));
+      int hintX = x + (w - hfm.stringWidth(hint)) / 2;
+      g2.drawString(hint, hintX, textY + 14);
+    }
   }
 
   // ---------------------------------------------------------------------------

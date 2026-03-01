@@ -1,11 +1,15 @@
 package mazegame;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
 
 /**
  * Shared colour palette, font sizes, and button-rendering utilities used across all custom-painted
@@ -175,5 +179,106 @@ public final class UiTheme {
     g.fillPolygon(
         new int[] {rx - size, rx, rx + size, rx}, new int[] {cy, cy - size, cy, cy + size}, 4);
     g.setTransform(old);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Bone icon
+  // ---------------------------------------------------------------------------
+
+  public static final Color BONE_COLOR = new Color(235, 210, 170);
+  public static final Color BONE_OUTLINE = new Color(180, 140, 90);
+
+  /**
+   * Generates a golden bone icon as a BufferedImage. Suitable for inline display in menus and HUD.
+   *
+   * @param size the width and height of the returned image
+   * @return a BufferedImage containing the bone icon
+   */
+  public static BufferedImage generateBoneIcon(int size) {
+    BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+    Graphics2D g2 = img.createGraphics();
+    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+    int spriteSize = size * 3 / 5;
+    AffineTransform old = g2.getTransform();
+    g2.translate(size / 2.0, size / 2.0);
+    g2.rotate(Math.toRadians(35));
+
+    int shaft = spriteSize * 3 / 8;
+    int thick = spriteSize / 7;
+    int bulb = spriteSize / 5;
+
+    // Outer glow
+    for (int i = 3; i >= 1; i--) {
+      int grow = i * 3;
+      g2.setColor(new Color(255, 215, 100, 20 + i * 8));
+      g2.fill(
+          new Ellipse2D.Double(
+              -shaft - bulb - grow,
+              -bulb * 1.5 - grow,
+              (shaft + bulb) * 2 + grow * 2,
+              bulb * 3 + grow * 2));
+    }
+
+    // Inner glow
+    g2.setColor(new Color(255, 220, 100, 80));
+    g2.fill(new Ellipse2D.Double(-shaft - bulb, -bulb * 1.5, (shaft + bulb) * 2, bulb * 3));
+
+    // Shaft
+    g2.setColor(BONE_COLOR);
+    g2.fillRoundRect(-shaft, -thick / 2, shaft * 2, thick, thick / 2, thick / 2);
+
+    // Bulbs
+    int bOff = thick / 2 + bulb / 3;
+    g2.fillOval(-shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.fillOval(-shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+    g2.fillOval(shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.fillOval(shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+
+    // Highlight
+    g2.setColor(new Color(255, 245, 220, 120));
+    g2.fillRoundRect(-shaft + 2, -thick / 4, shaft * 2 - 4, thick / 3, 3, 3);
+
+    // Outline
+    g2.setColor(BONE_OUTLINE);
+    g2.setStroke(new BasicStroke(1.5f));
+    g2.drawRoundRect(-shaft, -thick / 2, shaft * 2, thick, thick / 2, thick / 2);
+    g2.drawOval(-shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.drawOval(-shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+    g2.drawOval(shaft - bulb / 2, -bOff - bulb / 2, bulb, bulb);
+    g2.drawOval(shaft - bulb / 2, bOff - bulb / 2, bulb, bulb);
+
+    g2.setTransform(old);
+    g2.dispose();
+    return img;
+  }
+
+  /**
+   * Draws a simple padlock icon at the given position. Used as a cross-platform replacement for the
+   * lock emoji (U+1F512) which may not render on all systems.
+   *
+   * @param g the graphics context
+   * @param x left edge of the icon
+   * @param y top edge of the icon
+   * @param size the width and height of the icon
+   * @param color the fill color
+   */
+  public static void drawLockIcon(Graphics2D g, int x, int y, int size, Color color) {
+    int bodyW = size * 3 / 5;
+    int bodyH = size * 2 / 5;
+    int bodyX = x + (size - bodyW) / 2;
+    int bodyY = y + size - bodyH - size / 10;
+
+    // Shackle (arc above body)
+    int shackleW = bodyW * 2 / 3;
+    int shackleH = size - bodyH - size / 5;
+    int shackleX = bodyX + (bodyW - shackleW) / 2;
+    g.setColor(color);
+    g.setStroke(new BasicStroke(Math.max(1.5f, size / 10f)));
+    g.drawArc(shackleX, y + size / 10, shackleW, shackleH * 2, 0, 180);
+
+    // Body
+    g.setStroke(new BasicStroke(1f));
+    g.fillRoundRect(bodyX, bodyY, bodyW, bodyH, 3, 3);
   }
 }

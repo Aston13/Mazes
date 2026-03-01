@@ -16,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.Random;
 import javax.swing.JPanel;
 import javax.swing.Timer;
@@ -220,7 +221,7 @@ public class LevelSelectionPanel extends JPanel {
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
     g.setFont(titleFont);
     FontMetrics fm = g.getFontMetrics();
-    String title = "Level Selection";
+    String title = Messages.get("screen.level_selection");
     int titleX = (panelWidth - fm.stringWidth(title)) / 2;
     int titleY = HEADER_HEIGHT / 2 + fm.getAscent() / 2 - 2;
     g.setColor(TITLE_SHADOW);
@@ -228,25 +229,31 @@ public class LevelSelectionPanel extends JPanel {
     g.setColor(TITLE_COLOR);
     g.drawString(title, titleX, titleY);
 
-    // Bone counter (right of title)
+    // Bone counter (right-aligned in header)
     int totalBones = game.getTotalBones();
-    String boneStr = "\uD83E\uDDB4 " + totalBones + "/30 Golden Bones";
+    String boneStr = Messages.fmt("label.golden_bones_header", totalBones);
     Font boneFont = new Font("Dialog", Font.PLAIN, 13);
     g.setFont(boneFont);
-    int boneX = titleX + fm.stringWidth(title) + 14;
+    FontMetrics boneFm = g.getFontMetrics();
+    int boneIconSize = 16;
+    int boneTextW = boneFm.stringWidth(boneStr);
+    int boneBlockW = boneIconSize + 4 + boneTextW;
+    int boneX = panelWidth - CARD_PAD - HEADER_BTN_WIDTH - 16 - boneBlockW;
     int boneY = titleY;
+    BufferedImage boneIcon = UiTheme.generateBoneIcon(boneIconSize);
+    g.drawImage(boneIcon, boneX, boneY - boneIconSize + 3, null);
     g.setColor(new Color(235, 210, 170));
-    g.drawString(boneStr, boneX, boneY);
+    g.drawString(boneStr, boneX + boneIconSize + 4, boneY);
 
     // Header buttons: Back (left), Reset (right)
     // Back button
     int backX = CARD_PAD;
     int btnY = (HEADER_HEIGHT - HEADER_BTN_HEIGHT) / 2;
-    paintHeaderButton(g, "Back [Esc]", backX, btnY, hoveredHeaderBtn == 0);
+    paintHeaderButton(g, Messages.get("button.back_esc"), backX, btnY, hoveredHeaderBtn == 0);
 
     // Reset button
     int resetX = panelWidth - CARD_PAD - HEADER_BTN_WIDTH;
-    paintHeaderButton(g, "Reset", resetX, btnY, hoveredHeaderBtn == 1);
+    paintHeaderButton(g, Messages.get("button.reset"), resetX, btnY, hoveredHeaderBtn == 1);
   }
 
   private void paintHeaderButton(Graphics2D g, String label, int x, int y, boolean hovered) {
@@ -294,15 +301,15 @@ public class LevelSelectionPanel extends JPanel {
       switch (category) {
         case 1:
           borderColor = STATUS_COMPLETED;
-          statusLabel = "\u2713 Completed";
+          statusLabel = Messages.get("status.completed");
           break;
         case 2:
           borderColor = STATUS_CURRENT;
-          statusLabel = "\u25B6 Current";
+          statusLabel = Messages.get("status.current");
           break;
         default:
           borderColor = STATUS_LOCKED;
-          statusLabel = "\uD83D\uDD12 Locked";
+          statusLabel = Messages.get("status.locked");
           break;
       }
 

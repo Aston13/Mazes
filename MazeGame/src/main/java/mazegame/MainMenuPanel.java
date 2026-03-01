@@ -210,7 +210,7 @@ public class MainMenuPanel extends JPanel {
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
     g.setFont(titleFont);
     FontMetrics titleFm = g.getFontMetrics();
-    String title = "Wesley's Way Out";
+    String title = Messages.get("title.game_name");
     int titleY = h / 5 + titleFm.getAscent() / 2;
 
     // Measure total width with letter spacing
@@ -270,7 +270,7 @@ public class MainMenuPanel extends JPanel {
     Font subtitleFont = new Font("Dialog", Font.PLAIN, SUBTITLE_FONT_SIZE);
     g.setFont(subtitleFont);
     FontMetrics subFm = g.getFontMetrics();
-    String subtitle = "A procedurally generated maze adventure";
+    String subtitle = Messages.get("title.subtitle");
     g.setColor(SUBTITLE_COLOR);
     g.drawString(subtitle, (w - subFm.stringWidth(subtitle)) / 2, titleY + 30);
 
@@ -300,7 +300,7 @@ public class MainMenuPanel extends JPanel {
     }
 
     // Version label (bottom-right corner)
-    String versionText = "v" + BuildInfo.getVersion();
+    String versionText = Messages.fmt("label.version", BuildInfo.getVersion());
     Font versionFont = new Font("Dialog", Font.PLAIN, 11);
     g.setFont(versionFont);
     FontMetrics vFm = g.getFontMetrics();

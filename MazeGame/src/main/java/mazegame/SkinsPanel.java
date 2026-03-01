@@ -191,7 +191,7 @@ public class SkinsPanel extends JPanel {
     Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
     g.setFont(titleFont);
     FontMetrics titleFm = g.getFontMetrics();
-    String title = "Collection";
+    String title = Messages.get("screen.collection");
     int titleX = (w - titleFm.stringWidth(title)) / 2;
     int titleY = h / 8 + titleFm.getAscent() / 2;
     g.setColor(TITLE_SHADOW);
@@ -203,11 +203,16 @@ public class SkinsPanel extends JPanel {
     Font boneCountFont = new Font("Dialog", Font.BOLD, 22);
     g.setFont(boneCountFont);
     FontMetrics bcFm = g.getFontMetrics();
-    String boneStr = "\uD83E\uDDB4  " + totalBones + " / 30  golden bones";
-    int boneX = (w - bcFm.stringWidth(boneStr)) / 2;
+    String boneStr = Messages.fmt("label.golden_bones_total", totalBones);
+    int boneIconSize = 24;
+    int boneTextW = bcFm.stringWidth(boneStr);
+    int boneBlockW = boneIconSize + 6 + boneTextW;
+    int boneX = (w - boneBlockW) / 2;
     int boneY = titleY + 40;
+    java.awt.image.BufferedImage boneIcon = UiTheme.generateBoneIcon(boneIconSize);
+    g.drawImage(boneIcon, boneX, boneY - boneIconSize + 4, null);
     g.setColor(new Color(235, 210, 170));
-    g.drawString(boneStr, boneX, boneY);
+    g.drawString(boneStr, boneX + boneIconSize + 6, boneY);
 
     // Overall progress bar
     int barW = 300;
@@ -229,7 +234,7 @@ public class SkinsPanel extends JPanel {
     Font sectionFont = new Font("Dialog", Font.BOLD, 16);
     g.setFont(sectionFont);
     FontMetrics secFm = g.getFontMetrics();
-    String sectionLabel = "Dog Skins";
+    String sectionLabel = Messages.get("label.dog_skins");
     int secX = (w - secFm.stringWidth(sectionLabel)) / 2;
     int secY = barY + barH + 35;
     g.setColor(SECTION_LABEL);
@@ -296,15 +301,11 @@ public class SkinsPanel extends JPanel {
         g.fill(card);
         g.setComposite(lockComp);
 
-        // Lock icon
-        g.setFont(new Font("Dialog", Font.BOLD, 28));
-        FontMetrics lockFm = g.getFontMetrics();
-        String lockIcon = "\uD83D\uDD12";
-        g.setColor(TEXT_DIM);
-        g.drawString(
-            lockIcon,
-            cx + (CARD_WIDTH - lockFm.stringWidth(lockIcon)) / 2,
-            cardsY + CARD_HEIGHT / 2 - 16);
+        // Lock icon (drawn padlock)
+        int lockSize = 28;
+        int lockX = cx + (CARD_WIDTH - lockSize) / 2;
+        int lockY = cardsY + CARD_HEIGHT / 2 - lockSize / 2 - 16;
+        UiTheme.drawLockIcon(g, lockX, lockY, lockSize, TEXT_DIM);
 
         // Progress bar inside the locked card
         int unlockBarW = CARD_WIDTH - 40;
@@ -332,7 +333,9 @@ public class SkinsPanel extends JPanel {
         // Requirement text below bar
         g.setFont(new Font("Dialog", Font.PLAIN, 11));
         FontMetrics reqFm = g.getFontMetrics();
-        String reqText = totalBones + "/" + GameSettings.SASSO_UNLOCK_BONES + " bones collected";
+        String reqText =
+            Messages.fmt(
+                "label.bones_collected_progress", totalBones, GameSettings.SASSO_UNLOCK_BONES);
         g.setColor(SECTION_LABEL);
         g.drawString(
             reqText,
@@ -341,7 +344,10 @@ public class SkinsPanel extends JPanel {
       } else {
         g.setFont(descFont);
         FontMetrics dfm = g.getFontMetrics();
-        String desc = selected ? "\u2713 Selected" : "Click to select";
+        String desc =
+            selected
+                ? Messages.get("label.skin_selected")
+                : Messages.get("label.skin_click_to_select");
         g.setColor(selected ? CARD_SELECTED_BORDER : TEXT_DIM);
         g.drawString(
             desc, cx + (CARD_WIDTH - dfm.stringWidth(desc)) / 2, cardsY + CARD_HEIGHT - 28);
@@ -352,7 +358,17 @@ public class SkinsPanel extends JPanel {
     int btnX = (w - BTN_WIDTH) / 2;
     int btnY = cardsY + CARD_HEIGHT + 35;
     UiTheme.paintButton(
-        g, btnX, btnY, BTN_WIDTH, BTN_HEIGHT, BTN_ARC, "Back [Esc]", null, hoveredBack, 16, true);
+        g,
+        btnX,
+        btnY,
+        BTN_WIDTH,
+        BTN_HEIGHT,
+        BTN_ARC,
+        Messages.get("button.back_esc"),
+        null,
+        hoveredBack,
+        16,
+        true);
   }
 
   // ---- Particles ----

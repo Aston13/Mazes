@@ -218,8 +218,8 @@ public class Renderer {
   private double[] confettiRotation;
 
   // Bone collectible state
-  private static final Color BONE_COLOR = new Color(235, 210, 170);
-  private static final Color BONE_OUTLINE = new Color(180, 140, 90);
+  private static final Color BONE_COLOR = UiTheme.BONE_COLOR;
+  private static final Color BONE_OUTLINE = UiTheme.BONE_OUTLINE;
   private TilePassage boneTile;
   private boolean boneCollectedThisRun;
   private final boolean boneAlreadyCollected;
@@ -503,17 +503,18 @@ public class Renderer {
     // ---- Left: Keys ----
     g2.setFont(labelFont);
     g2.setColor(labelColor);
-    g2.drawString("KEYS", pad, topY);
+    g2.drawString(Messages.get("hud.keys_label"), pad, topY);
     g2.setFont(valueFont);
     g2.setColor(new Color(196, 149, 106));
-    g2.drawString(keyCount + " / " + keysRequired, pad, botY);
+    g2.drawString(Messages.fmt("hud.keys_value", keyCount, keysRequired), pad, botY);
 
     // ---- Left: Bone indicator ----
-    int keysTextW = g2.getFontMetrics().stringWidth(keyCount + " / " + keysRequired);
+    int keysTextW =
+        g2.getFontMetrics().stringWidth(Messages.fmt("hud.keys_value", keyCount, keysRequired));
     int boneX = pad + keysTextW + 20;
     g2.setFont(labelFont);
     g2.setColor(labelColor);
-    g2.drawString("BONE", boneX, topY);
+    g2.drawString(Messages.get("hud.bone_label"), boneX, topY);
     int boneIconSize = 16;
     if (boneCollectedThisRun || boneAlreadyCollected) {
       g.drawImage(boneSprite, boneX, topY + 4, boneIconSize, boneIconSize, null);
@@ -534,7 +535,7 @@ public class Renderer {
     g2.setFont(labelFont);
     g2.setColor(labelColor);
     FontMetrics lfm = g2.getFontMetrics();
-    String lvlLabel = "LEVEL";
+    String lvlLabel = Messages.get("hud.level_label");
     g2.drawString(lvlLabel, (screenWidth - lfm.stringWidth(lvlLabel)) / 2, topY);
     g2.setFont(valueFont);
     g2.setColor(Color.WHITE);
@@ -559,7 +560,7 @@ public class Renderer {
 
     g2.setFont(labelFont);
     FontMetrics sfm = g2.getFontMetrics();
-    String cdLabel = "KEY TIMER";
+    String cdLabel = Messages.get("hud.key_timer_label");
     int cdLabelX = screenWidth - pad - sfm.stringWidth(cdLabel);
     g2.setColor(labelColor);
     g2.drawString(cdLabel, cdLabelX, topY);
@@ -581,7 +582,7 @@ public class Renderer {
 
     // Elapsed time (left of key timer)
     g2.setFont(labelFont);
-    String timeLabel = "TIME";
+    String timeLabel = Messages.get("hud.time_label");
     int timeX = cdLabelX - 110;
     g2.setColor(labelColor);
     g2.drawString(timeLabel, timeX, topY);
@@ -676,12 +677,7 @@ public class Renderer {
         levelCompleteTime = System.currentTimeMillis();
       } else {
         int remaining = keysRequired - keyCount;
-        playerMessage =
-            "The door is locked. Find "
-                + remaining
-                + " more "
-                + (remaining == 1 ? "key" : "keys")
-                + ".";
+        playerMessage = Messages.fmt("message.door_locked", remaining);
         activatedAt = System.currentTimeMillis();
         lockedDoorFlashStart = System.currentTimeMillis();
         triggerQuip(randomQuip(DOOR_LOCKED_QUIPS));
@@ -832,7 +828,7 @@ public class Renderer {
       int textAlpha = (int) (alpha * 255);
       g2.setFont(new Font("Dialog", Font.BOLD, 20));
       g2.setColor(new Color(255, 220, 160, Math.max(0, Math.min(255, textAlpha))));
-      String collectText = "+1 Key";
+      String collectText = Messages.get("feedback.key_collected");
       FontMetrics fm = g2.getFontMetrics();
       int textX = screenWidthHalf + tileWidth / 2 - fm.stringWidth(collectText) / 2;
       int textY = screenHeightHalf - 12 - floatOffset;
@@ -875,7 +871,7 @@ public class Renderer {
       int floatOffset = (int) (progress * 50);
       int textAlpha = Math.max(0, Math.min(255, (int) (alpha * 255)));
       g2.setFont(new Font("Dialog", Font.BOLD, 22));
-      String boneText = "Bone Found!";
+      String boneText = Messages.get("feedback.bone_found");
       FontMetrics bfm = g2.getFontMetrics();
       int btx = screenWidthHalf + tileWidth / 2 - bfm.stringWidth(boneText) / 2;
       int bty = screenHeightHalf - 16 - floatOffset;

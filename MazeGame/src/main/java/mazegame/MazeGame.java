@@ -376,6 +376,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     }
 
     pane = new JPanel(new GridLayout());
+    pane.setBackground(new Color(10, 10, 10));
     setUpFrame();
     if (!splashShown) {
       splashShown = true;

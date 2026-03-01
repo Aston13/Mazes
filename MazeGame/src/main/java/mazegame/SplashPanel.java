@@ -29,7 +29,6 @@ public class SplashPanel extends JPanel {
   private static final Color QUOTE_COLOR = new Color(80, 220, 80);
   private static final Color QUOTE_SHADOW = new Color(0, 60, 0);
   private static final Color CREDIT_COLOR = new Color(196, 149, 106);
-  private static final Color CREDIT_DIM = new Color(120, 110, 100);
   private static final Color SKIP_HINT = new Color(100, 95, 90);
 
   /** Total splash duration in milliseconds (fade-in + hold + fade-out). */
@@ -167,7 +166,7 @@ public class SplashPanel extends JPanel {
     g.setColor(QUOTE_COLOR);
     g.drawString(quote, quoteX, quoteY);
 
-    // --- Credits ---
+    // --- Credit ---
     int creditY = quoteY + 50;
     Font creditFont = new Font("Dialog", Font.BOLD, 16);
     g.setFont(creditFont);
@@ -176,15 +175,6 @@ public class SplashPanel extends JPanel {
     int creditX = (w - cfm.stringWidth(credit)) / 2;
     g.setColor(CREDIT_COLOR);
     g.drawString(credit, creditX, creditY);
-
-    // Developer line
-    Font devFont = new Font("Dialog", Font.PLAIN, 13);
-    g.setFont(devFont);
-    FontMetrics dfm = g.getFontMetrics();
-    String devLine = "Developed by Aston13";
-    int devX = (w - dfm.stringWidth(devLine)) / 2;
-    g.setColor(CREDIT_DIM);
-    g.drawString(devLine, devX, creditY + 26);
 
     g.setComposite(origComposite);
 

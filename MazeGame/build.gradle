@@ -98,7 +98,6 @@ tasks.register('browserJar', Jar) {
     archiveBaseName = 'MazeGame-browser'
     from(tasks.named('compileJava8').get().destinationDirectory)
     from(sourceSets.main.resources)
-    from(layout.buildDirectory.dir('generated/resources/version'))
     manifest {
         attributes('Main-Class': application.mainClass)
     }

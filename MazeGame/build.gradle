@@ -31,6 +31,10 @@ repositories {
 }
 
 dependencies {
+    // Audio format support (MP3 / OGG Vorbis via javax.sound.sampled SPI)
+    implementation 'com.googlecode.soundlibs:mp3spi:1.9.5.4'
+    implementation 'com.googlecode.soundlibs:vorbisspi:1.0.3.3'
+
     // Testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.14.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

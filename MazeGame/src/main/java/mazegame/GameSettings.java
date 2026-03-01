@@ -32,6 +32,8 @@ public class GameSettings {
 
   private DogSkin activeSkin = DogSkin.WESLEY;
   private boolean soundMuted;
+  private boolean musicMuted;
+  private float musicVolume = 0.5f;
 
   /** Returns the currently selected dog skin. */
   public DogSkin getActiveSkin() {
@@ -51,6 +53,26 @@ public class GameSettings {
   /** Sets whether sound effects are muted. */
   public void setSoundMuted(boolean muted) {
     this.soundMuted = muted;
+  }
+
+  /** Returns whether music is muted. */
+  public boolean isMusicMuted() {
+    return musicMuted;
+  }
+
+  /** Sets whether music is muted. */
+  public void setMusicMuted(boolean muted) {
+    this.musicMuted = muted;
+  }
+
+  /** Returns the music volume (0.0 – 1.0). */
+  public float getMusicVolume() {
+    return musicVolume;
+  }
+
+  /** Sets the music volume (clamped to 0.0 – 1.0). */
+  public void setMusicVolume(float volume) {
+    this.musicVolume = Math.max(0f, Math.min(1f, volume));
   }
 
   /**

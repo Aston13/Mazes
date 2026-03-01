@@ -1,6 +1,7 @@
 package mazegame;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -8,8 +9,10 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -61,6 +64,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private String[] levelData;
   private GameLoop gameLoop;
 
+  /** Invisible cursor applied during gameplay so the mouse pointer doesn't distract. */
+  private final Cursor blankCursor;
+
   // Always render to an offscreen buffer at the logical resolution, then scale to the canvas.
   private BufferedImage offscreenBuffer = null;
 
@@ -88,8 +94,14 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     }
     this.settings = new GameSettings();
     this.audioManager = new AudioManager();
+    audioManager.setMusicMuted(settings.isMusicMuted());
+    audioManager.setMusicVolume(settings.getMusicVolume());
     this.menuManager = new MenuManager(this, ui, this);
     this.inputHandler = new InputHandler(this);
+    this.blankCursor =
+        Toolkit.getDefaultToolkit()
+            .createCustomCursor(
+                new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), new Point(0, 0), "blank");
     load(false);
     setCurrentLevel(-1);
   }
@@ -253,6 +265,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
     pane.add(gameView);
     gameView.setFocusable(true);
+    gameView.setCursor(blankCursor);
     validate(); // Force layout so gameView has non-zero dimensions before first render
 
     renderer =
@@ -269,6 +282,9 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     renderer.centerMaze();
     player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);
     renderer.beginTimer();
+
+    // Switch to in-game music
+    audioManager.playIngameMusic(levelCount);
 
     setGameState(true, "");
     render();
@@ -291,6 +307,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   }
 
   private void cleanUpGameView() {
+    gameView.setCursor(Cursor.getDefaultCursor());
     renderBackground();
     if (renderer != null) {
       renderer.stopTimer();

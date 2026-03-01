@@ -60,6 +60,7 @@ public class SettingsPanel extends JPanel {
   private int hoveredCard = -1;
   private boolean hoveredBack = false;
   private boolean hoveredMuteToggle = false;
+  private boolean hoveredMusicToggle = false;
 
   /**
    * Creates a new settings panel.
@@ -96,10 +97,11 @@ public class SettingsPanel extends JPanel {
 
           @Override
           public void mouseExited(MouseEvent e) {
-            if (hoveredCard != -1 || hoveredBack || hoveredMuteToggle) {
+            if (hoveredCard != -1 || hoveredBack || hoveredMuteToggle || hoveredMusicToggle) {
               hoveredCard = -1;
               hoveredBack = false;
               hoveredMuteToggle = false;
+              hoveredMusicToggle = false;
               setCursor(Cursor.getDefaultCursor());
               repaint();
             }
@@ -256,9 +258,28 @@ public class SettingsPanel extends JPanel {
         toggleX + (toggleW - mfm.stringWidth(muteLabel)) / 2,
         toggleY + (toggleH + mfm.getAscent()) / 2 - 2);
 
+    // Music mute toggle
+    int musicToggleY = toggleY + toggleH + 12;
+    RoundRectangle2D.Double musicRect =
+        new RoundRectangle2D.Double(toggleX, musicToggleY, toggleW, toggleH, BTN_ARC, BTN_ARC);
+    boolean musicMuted = settings.isMusicMuted();
+    g.setColor(hoveredMusicToggle ? CARD_HOVER_BG : CARD_BG);
+    g.fill(musicRect);
+    g.setColor(hoveredMusicToggle ? SECTION_LABEL : CARD_BORDER);
+    g.draw(musicRect);
+
+    g.setFont(new Font("Dialog", Font.PLAIN, 14));
+    FontMetrics mmfm = g.getFontMetrics();
+    String musicLabel = musicMuted ? "\uD83D\uDD07 Music: OFF" : "\uD83C\uDFB5 Music: ON";
+    g.setColor(musicMuted ? TEXT_DIM : TEXT_PRIMARY);
+    g.drawString(
+        musicLabel,
+        toggleX + (toggleW - mmfm.stringWidth(musicLabel)) / 2,
+        musicToggleY + (toggleH + mmfm.getAscent()) / 2 - 2);
+
     // Back button
     int btnX = (w - BTN_WIDTH) / 2;
-    int btnY = toggleY + toggleH + 30;
+    int btnY = musicToggleY + toggleH + 30;
     RoundRectangle2D.Double backRect =
         new RoundRectangle2D.Double(btnX, btnY, BTN_WIDTH, BTN_HEIGHT, BTN_ARC, BTN_ARC);
     g.setColor(hoveredBack ? BTN_HOVER_BG : BTN_BG);
@@ -308,13 +329,14 @@ public class SettingsPanel extends JPanel {
     int titleY = h / 7 + titleFm.getAscent() / 2;
     int cardsY = titleY + 80;
 
-    // Account for sound section + mute toggle above back button
+    // Account for sound section + mute toggle + music toggle above back button
     int soundSecY = cardsY + CARD_HEIGHT + 40;
     int toggleY = soundSecY + 15;
     int toggleH = 42;
+    int musicToggleY = toggleY + toggleH + 12;
 
     int btnX = (w - BTN_WIDTH) / 2;
-    int btnY = toggleY + toggleH + 30;
+    int btnY = musicToggleY + toggleH + 30;
 
     return mx >= btnX && mx <= btnX + BTN_WIDTH && my >= btnY && my <= btnY + BTN_HEIGHT;
   }
@@ -337,20 +359,48 @@ public class SettingsPanel extends JPanel {
     return mx >= toggleX && mx <= toggleX + toggleW && my >= toggleY && my <= toggleY + toggleH;
   }
 
+  private boolean isOverMusicToggle(int mx, int my) {
+    int w = getWidth();
+    int h = getHeight();
+
+    Font titleFont = new Font("Dialog", Font.BOLD, TITLE_FONT_SIZE);
+    FontMetrics titleFm = getFontMetrics(titleFont);
+    int titleY = h / 7 + titleFm.getAscent() / 2;
+    int cardsY = titleY + 80;
+
+    int soundSecY = cardsY + CARD_HEIGHT + 40;
+    int toggleW = 200;
+    int toggleH = 42;
+    int toggleX = (w - toggleW) / 2;
+    int toggleY = soundSecY + 15;
+    int musicToggleY = toggleY + toggleH + 12;
+
+    return mx >= toggleX
+        && mx <= toggleX + toggleW
+        && my >= musicToggleY
+        && my <= musicToggleY + toggleH;
+  }
+
   private void updateHover(int mx, int my) {
     int oldCard = hoveredCard;
     boolean oldBack = hoveredBack;
     boolean oldMute = hoveredMuteToggle;
+    boolean oldMusic = hoveredMusicToggle;
 
     hoveredCard = getCardIndex(mx, my);
     hoveredBack = isOverBackButton(mx, my);
     hoveredMuteToggle = isOverMuteToggle(mx, my);
+    hoveredMusicToggle = isOverMusicToggle(mx, my);
 
-    boolean interactable = hoveredCard >= 0 || hoveredBack || hoveredMuteToggle;
+    boolean interactable =
+        hoveredCard >= 0 || hoveredBack || hoveredMuteToggle || hoveredMusicToggle;
     setCursor(
         interactable ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
 
-    if (oldCard != hoveredCard || oldBack != hoveredBack || oldMute != hoveredMuteToggle) {
+    if (oldCard != hoveredCard
+        || oldBack != hoveredBack
+        || oldMute != hoveredMuteToggle
+        || oldMusic != hoveredMusicToggle) {
       repaint();
     }
   }
@@ -368,6 +418,14 @@ public class SettingsPanel extends JPanel {
       boolean newMuted = !settings.isSoundMuted();
       settings.setSoundMuted(newMuted);
       audioManager.setMuted(newMuted);
+      repaint();
+      return;
+    }
+    if (isOverMusicToggle(mx, my)) {
+      audioManager.play(AudioManager.Sound.BUTTON_CLICK);
+      boolean newMusicMuted = !settings.isMusicMuted();
+      settings.setMusicMuted(newMusicMuted);
+      audioManager.setMusicMuted(newMusicMuted);
       repaint();
       return;
     }

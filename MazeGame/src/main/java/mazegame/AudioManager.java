@@ -1,14 +1,19 @@
 package mazegame;
 
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 
 /**
- * Manages synthesised sound effects and ambient audio for the game. Uses {@link
- * javax.sound.sampled} to generate short tones — no external audio files required.
+ * Manages synthesised sound effects and music playback for the game. Uses {@link
+ * javax.sound.sampled} to generate short tones and play looping background music from classpath
+ * audio files (MP3/OGG via SPI).
  *
  * <p>All playback is wrapped in try/catch so environments without audio support (e.g. CheerpJ)
  * degrade silently.
@@ -33,9 +38,20 @@ public class AudioManager {
   private static final AudioFormat FORMAT =
       new AudioFormat(SAMPLE_RATE, BITS, CHANNELS, true, false);
 
+  /** Classpath resource path for the menu music loop. */
+  private static final String MENU_MUSIC = "Assets/music/menu/Game-Menu_Looping.ogg";
+
+  /** Classpath resource paths for in-game music tracks (alternated between levels). */
+  private static final String[] INGAME_MUSIC = {
+    "Assets/music/ingame/Strange-Nature_Looping.mp3", "Assets/music/ingame/The-Trees-Wake-Up.mp3",
+  };
+
   private final HashMap<Sound, byte[]> soundData = new HashMap<>();
   private boolean muted;
+  private boolean musicMuted;
+  private float musicVolume = 0.5f; // 0.0 – 1.0
   private boolean audioAvailable = true;
+  private Clip musicClip;
 
   /** Creates a new AudioManager and pre-generates all sound effect samples. */
   public AudioManager() {
@@ -94,6 +110,137 @@ public class AudioManager {
             });
     playThread.setDaemon(true);
     playThread.start();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Music playback
+  // ---------------------------------------------------------------------------
+
+  /** Returns whether music is currently muted. */
+  public boolean isMusicMuted() {
+    return musicMuted;
+  }
+
+  /** Sets whether music is muted. Stops/resumes the current track accordingly. */
+  public void setMusicMuted(boolean muted) {
+    this.musicMuted = muted;
+    if (musicClip != null && musicClip.isOpen()) {
+      if (muted) {
+        musicClip.stop();
+      } else {
+        applyMusicVolume();
+        musicClip.loop(Clip.LOOP_CONTINUOUSLY);
+      }
+    }
+  }
+
+  /** Returns the music volume (0.0 – 1.0). */
+  public float getMusicVolume() {
+    return musicVolume;
+  }
+
+  /**
+   * Sets the music volume.
+   *
+   * @param volume a value between 0.0 (silent) and 1.0 (full)
+   */
+  public void setMusicVolume(float volume) {
+    this.musicVolume = Math.max(0f, Math.min(1f, volume));
+    if (musicClip != null && musicClip.isOpen()) {
+      applyMusicVolume();
+    }
+  }
+
+  /** Starts looping the main-menu music track. Stops any currently playing music first. */
+  public void playMenuMusic() {
+    playMusic(MENU_MUSIC);
+  }
+
+  /**
+   * Starts looping an in-game music track, alternating between available tracks based on the level
+   * number.
+   *
+   * @param level the current level number (1-based)
+   */
+  public void playIngameMusic(int level) {
+    int idx = (level - 1) % INGAME_MUSIC.length;
+    playMusic(INGAME_MUSIC[idx]);
+  }
+
+  /** Stops the currently playing music, if any. */
+  public void stopMusic() {
+    if (musicClip != null) {
+      musicClip.stop();
+      musicClip.close();
+      musicClip = null;
+    }
+  }
+
+  /**
+   * Loads an audio file from the classpath, opens a Clip, and loops it continuously. The SPI
+   * providers (mp3spi, vorbisspi) handle MP3/OGG decoding transparently.
+   */
+  private void playMusic(String resourcePath) {
+    stopMusic();
+    if (!audioAvailable || musicMuted) return;
+
+    Thread loadThread =
+        new Thread(
+            () -> {
+              try {
+                InputStream raw = getClass().getResourceAsStream(resourcePath);
+                if (raw == null) {
+                  System.err.println("Music not found: " + resourcePath);
+                  return;
+                }
+                BufferedInputStream buffered = new BufferedInputStream(raw);
+                AudioInputStream sourceStream = AudioSystem.getAudioInputStream(buffered);
+
+                // Decode to PCM so javax.sound.sampled can play it
+                AudioFormat baseFormat = sourceStream.getFormat();
+                AudioFormat decodedFormat =
+                    new AudioFormat(
+                        AudioFormat.Encoding.PCM_SIGNED,
+                        baseFormat.getSampleRate(),
+                        16,
+                        baseFormat.getChannels(),
+                        baseFormat.getChannels() * 2,
+                        baseFormat.getSampleRate(),
+                        false);
+                AudioInputStream decodedStream =
+                    AudioSystem.getAudioInputStream(decodedFormat, sourceStream);
+
+                Clip clip = AudioSystem.getClip();
+                clip.open(decodedStream);
+                musicClip = clip;
+                applyMusicVolume();
+                clip.loop(Clip.LOOP_CONTINUOUSLY);
+              } catch (Exception e) {
+                System.err.println("Music playback failed: " + e.getMessage());
+              }
+            });
+    loadThread.setDaemon(true);
+    loadThread.start();
+  }
+
+  /** Applies the current {@link #musicVolume} to the active music clip's gain control. */
+  private void applyMusicVolume() {
+    if (musicClip == null || !musicClip.isOpen()) return;
+    try {
+      FloatControl gain = (FloatControl) musicClip.getControl(FloatControl.Type.MASTER_GAIN);
+      // Convert linear 0–1 to decibels (−40 dB silence … 0 dB full)
+      float dB;
+      if (musicVolume <= 0f) {
+        dB = gain.getMinimum();
+      } else {
+        dB = (float) (20.0 * Math.log10(musicVolume));
+        dB = Math.max(dB, gain.getMinimum());
+        dB = Math.min(dB, gain.getMaximum());
+      }
+      gain.setValue(dB);
+    } catch (IllegalArgumentException e) {
+      // Gain control not available — ignore
+    }
   }
 
   // ---------------------------------------------------------------------------

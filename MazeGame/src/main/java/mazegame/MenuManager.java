@@ -23,6 +23,7 @@ public class MenuManager {
 
   /** Shows the main menu with custom-painted panel. */
   public void showMainMenu() {
+    game.getAudioManager().playMenuMusic();
     MainMenuPanel menuPanel = new MainMenuPanel(game.getAudioManager());
 
     // Use the Wesley pixel-art image as the menu decoration

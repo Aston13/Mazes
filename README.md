@@ -43,7 +43,7 @@ cd MazeGame
 | `gradlew build` | Compile, test, and package into a JAR |
 | `gradlew run` | Launch the game |
 | `gradlew test` | Run JUnit 5 tests only |
-| `gradlew jar` | Build the JAR (output: `build/libs/MazeGame-1.0.0.jar`) |
+| `gradlew jar` | Build the JAR (output: `build/libs/MazeGame-<version>.jar`) |
 | `gradlew browserJar` | Build Java-8 JAR for CheerpJ browser play |
 | `gradlew runBrowser` | Build browser JAR, copy to `docs/`, and start local HTTP server |
 | `gradlew clean` | Delete all build artifacts |
@@ -51,39 +51,57 @@ cd MazeGame
 ## Running the JAR Directly
 
 ```bash
-java -jar MazeGame/build/libs/MazeGame-1.0.0.jar
+java -jar MazeGame/build/libs/MazeGame-<version>.jar
 ```
 
 ## Project Structure
 
 ```
 MazeGame/
-├── build.gradle                  # Gradle build config (Java 21, JUnit 5)
-├── settings.gradle               # Project name + Foojay toolchain resolver
-├── gradlew / gradlew.bat         # Gradle wrapper scripts
+├── build.gradle                      # Gradle build config (Java 21, JUnit 5)
+├── settings.gradle                   # Project name + Foojay toolchain resolver
+├── gradlew / gradlew.bat             # Gradle wrapper scripts
 ├── src/
-│   └── mazegame/
-│       ├── Start.java            # Entry point
-│       ├── MazeGame.java         # JFrame, game loop, menus
-│       ├── Renderer.java         # Rendering, collision, animation
-│       ├── Player.java           # Player position & movement state
-│       ├── RecursiveBacktracker.java  # Maze generation algorithm
-│       ├── Tilemap.java          # Grid data structure
-│       ├── Tile.java             # Tile interface
-│       ├── TileWall.java         # Impassable wall tile
-│       ├── TilePassage.java      # Passable tile (can hold key items)
-│       ├── TileExit.java         # Exit tile (lockable/unlockable)
-│       ├── AssetManager.java     # Image loading & level data I/O
-│       ├── UI.java               # Swing component factory for menus
-│       └── Assets/               # Sprites, animation frames, level data
-└── test/
-    └── mazegame/
-        ├── AssetManagerTest.java
-        ├── MazeGameStateTest.java
-        ├── PlayerTest.java
-        ├── RecursiveBacktrackerTest.java
-        ├── TileTest.java
-        └── TilemapTest.java
+│   ├── main/java/mazegame/
+│   │   ├── Start.java                # Entry point
+│   │   ├── MazeGame.java             # JFrame owner, pause screen
+│   │   ├── GameLoop.java             # Fixed-timestep game loop
+│   │   ├── GamePanel.java            # Canvas JPanel for rendering
+│   │   ├── InputHandler.java         # Keyboard & mouse input
+│   │   ├── Renderer.java             # Maze/player rendering, HUD, collision
+│   │   ├── Player.java               # Player position & movement state
+│   │   ├── RecursiveBacktracker.java  # Maze generation algorithm
+│   │   ├── Tilemap.java              # Grid data structure
+│   │   ├── Tile.java                 # Tile interface
+│   │   ├── TileWall.java             # Impassable wall tile
+│   │   ├── TilePassage.java          # Passable tile (can hold key items)
+│   │   ├── TileExit.java             # Exit tile (lockable/unlockable)
+│   │   ├── AssetManager.java         # Image loading & level data I/O
+│   │   ├── AudioManager.java         # Synthesised sound effects
+│   │   ├── GameSettings.java         # User preferences (skin, mute)
+│   │   ├── MenuManager.java          # Screen navigation (menu/results)
+│   │   ├── MainMenuPanel.java        # Custom-painted main menu
+│   │   ├── LevelSelectionPanel.java   # Level selection grid
+│   │   ├── SettingsPanel.java        # Skin & audio settings
+│   │   ├── ResultOverlayPanel.java   # Game-over / level-complete overlay
+│   │   └── UI.java                   # Swing component factory
+│   ├── main/resources/mazegame/Assets/
+│   │   ├── data/                     # LevelData.txt, ResetData.txt
+│   │   ├── items/keys/               # Key animation frames (20 PNGs)
+│   │   ├── skins/wesley/             # Wesley sprite frames
+│   │   ├── skins/sasso/              # Sasso sprite frames
+│   │   ├── tiles/walls/              # 16 wall variants (NESW combos)
+│   │   ├── tiles/passages/           # 4 grass passage variants
+│   │   ├── tiles/exits/              # Locked & unlocked exit sprites
+│   │   └── ui/                       # wesley-pixel.png (menu decoration)
+│   └── test/java/mazegame/
+│       ├── AssetManagerTest.java
+│       ├── MazeGameStateTest.java
+│       ├── PlayerTest.java
+│       ├── RecursiveBacktrackerTest.java
+│       ├── TileTest.java
+│       └── TilemapTest.java
+docs/                                  # GitHub Pages (CheerpJ browser player)
 ```
 
 ## How the Maze Works
@@ -135,7 +153,7 @@ The game runs in the browser via [CheerpJ 3.0](https://cheerpj.com/), which requ
 ```bash
 # Build the Java-8-compatible JAR for CheerpJ
 ./gradlew browserJar
-# Output: build/libs/MazeGame-browser-1.0.0.jar
+# Output: build/libs/MazeGame-browser-<version>.jar
 
 # One-step local testing: builds JAR, copies to docs/, starts HTTP server
 ./gradlew runBrowser
@@ -159,16 +177,12 @@ The workflow (`.github/workflows/release.yml`) will:
 
 ### Source Layout
 
-This project uses a non-standard source layout inherited from the original NetBeans project:
-
 | Path | Content |
-|------|---------|
-| `MazeGame/src/mazegame/` | Java sources |
-| `MazeGame/src/mazegame/Assets/` | Sprites, animation frames, level data (loaded via classpath) |
-| `MazeGame/test/mazegame/` | JUnit 5 tests |
+|------|--------|
+| `MazeGame/src/main/java/mazegame/` | Java sources |
+| `MazeGame/src/main/resources/mazegame/Assets/` | Sprites, animation frames, level data (loaded via classpath) |
+| `MazeGame/src/test/java/mazegame/` | JUnit 5 tests |
 | `docs/` | GitHub Pages site (CheerpJ browser player) |
-
-This is configured in `build.gradle` via custom `sourceSets` blocks.
 
 ## License
 

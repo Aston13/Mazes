@@ -25,9 +25,13 @@ public class MenuManager {
   public void showMainMenu() {
     MainMenuPanel menuPanel = new MainMenuPanel();
 
-    // Use the active dog skin sprite as a decoration on the menu background
-    String spriteKey = game.getSettings().getSpritePrefix() + "East0";
-    BufferedImage dogSprite = game.getAssetManager().getPreloadedImage(spriteKey);
+    // Use the Wesley pixel-art image as the menu decoration
+    BufferedImage dogSprite = game.getAssetManager().getPreloadedImage("wesleyPixel");
+    if (dogSprite == null) {
+      // Fallback to active dog skin walking frame
+      String spriteKey = game.getSettings().getSpritePrefix() + "East0";
+      dogSprite = game.getAssetManager().getPreloadedImage(spriteKey);
+    }
     if (dogSprite != null) {
       menuPanel.setDecorationImage(dogSprite);
     }
@@ -120,7 +124,8 @@ public class MenuManager {
   /** Shows the settings screen (skin selection, etc.). */
   public void showSettings() {
     SettingsPanel panel =
-        new SettingsPanel(game.getSettings(), game.getAssetManager(), this::showMainMenu);
+        new SettingsPanel(
+            game.getSettings(), game.getAssetManager(), game.getAudioManager(), this::showMainMenu);
     swapContent(panel);
     panel.requestFocusInWindow();
   }

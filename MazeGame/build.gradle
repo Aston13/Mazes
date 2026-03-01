@@ -5,7 +5,9 @@ plugins {
 }
 
 group = 'mazegame'
-version = '1.0.0'
+// Version can be overridden via -Pversion=x.y.z or VERSION_OVERRIDE env var
+// (set automatically by the release workflow from the git tag).
+version = System.getenv('VERSION_OVERRIDE') ?: '1.0.0'
 
 java {
     // Target Java 21 LTS. If JDK 21 is not installed locally,

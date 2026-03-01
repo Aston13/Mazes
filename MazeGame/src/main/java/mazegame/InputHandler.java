@@ -157,6 +157,29 @@ public class InputHandler {
             }
           }
         });
+    target.addMouseMotionListener(
+        new MouseAdapter() {
+          @Override
+          public void mouseMoved(MouseEvent e) {
+            if (!listener.isPaused()) {
+              target.setCursor(java.awt.Cursor.getDefaultCursor());
+              return;
+            }
+            int[] logical = listener.toLogicalCoords(e.getX(), e.getY());
+            java.awt.Point pt = new java.awt.Point(logical[0], logical[1]);
+            Rectangle resume = listener.getResumeBtn();
+            Rectangle restart = listener.getRestartBtn();
+            Rectangle menu = listener.getMenuBtn();
+            boolean overButton =
+                (resume != null && resume.contains(pt))
+                    || (restart != null && restart.contains(pt))
+                    || (menu != null && menu.contains(pt));
+            target.setCursor(
+                overButton
+                    ? java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR)
+                    : java.awt.Cursor.getDefaultCursor());
+          }
+        });
   }
 
   /** Utility: binds a key action on a Swing component. */

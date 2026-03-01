@@ -42,6 +42,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   private final UI ui;
   private final AssetManager assetManager;
   private final GameSettings settings;
+  private final AudioManager audioManager;
   private final MenuManager menuManager;
   private final InputHandler inputHandler;
 
@@ -86,6 +87,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
       System.err.println("Failed to preload images: " + e.getMessage());
     }
     this.settings = new GameSettings();
+    this.audioManager = new AudioManager();
     this.menuManager = new MenuManager(this, ui, this);
     this.inputHandler = new InputHandler(this);
     load(false);
@@ -164,6 +166,11 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     return settings;
   }
 
+  /** Returns the audio manager for sound effects. */
+  public AudioManager getAudioManager() {
+    return audioManager;
+  }
+
   /** Records a level completion, updating best time if improved. */
   public void recordLevelCompletion(int level, double timeTaken) {
     String[] lineWords = levelData[level].split(",");
@@ -189,6 +196,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
   /** Configures the JFrame: resizable, exit-on-close, centred. */
   public void setUpFrame() {
+    setTitle("Wesley's Way Out");
     setResizable(true);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setContentPane(pane);
@@ -248,7 +256,14 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
     renderer =
         new Renderer(
-            windowWidth, windowHeight, rowColAmount, TILE_SIZE, assetManager, settings, this);
+            windowWidth,
+            windowHeight,
+            rowColAmount,
+            TILE_SIZE,
+            assetManager,
+            audioManager,
+            settings,
+            this);
     renderer.generateMaze(TILE_SIZE, TILE_BORDER);
     renderer.centerMaze();
     player = new Player(renderer.getStartingX(), renderer.getStartingY(), TILE_SIZE);
@@ -283,8 +298,10 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
   private void handleLevelEnd() {
     if ("Level Failed".equalsIgnoreCase(stateChange)) {
+      audioManager.play(AudioManager.Sound.LEVEL_FAILED);
       menuManager.showGameOverScreen(levelCount);
     } else if ("Next Level".equalsIgnoreCase(stateChange)) {
+      audioManager.play(AudioManager.Sound.LEVEL_COMPLETE);
       double timeInMs = renderer.getTimeTaken();
       menuManager.showCompletionScreen(levelCount, timeInMs);
     } else if ("Restart".equalsIgnoreCase(stateChange)) {

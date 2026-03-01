@@ -22,8 +22,8 @@ import javax.swing.Timer;
  */
 public class AssetManager {
 
-  private static final String LEVEL_DATA_RESOURCE = "Assets/LevelData.txt";
-  private static final String RESET_DATA_RESOURCE = "Assets/ResetData.txt";
+  private static final String LEVEL_DATA_RESOURCE = "Assets/data/LevelData.txt";
+  private static final String RESET_DATA_RESOURCE = "Assets/data/ResetData.txt";
   private static final String LEVEL_DATA_FILE = "LevelData.txt";
 
   private static final int KEY_FRAME_COUNT = 20;
@@ -159,16 +159,16 @@ public class AssetManager {
 
     // Grass passage variants
     for (int i = 0; i < GRASS_VARIANT_COUNT; i++) {
-      loadImage("GrassPassage_" + i, "Assets/GrassPassage_" + i + ".png");
+      loadImage("GrassPassage_" + i, "Assets/tiles/passages/GrassPassage_" + i + ".png");
     }
 
     // Exit tiles
-    loadImage("Locked Exit", "Assets/ExitLocked.png");
-    loadImage("Open Exit", "Assets/ExitUnlocked.png");
+    loadImage("Locked Exit", "Assets/tiles/exits/ExitLocked.png");
+    loadImage("Open Exit", "Assets/tiles/exits/ExitUnlocked.png");
 
     // Key animation frames
     for (int i = 0; i < KEY_FRAME_COUNT; i++) {
-      loadImage("Key_" + i, "Assets/AnimationFrames/Key/Key_" + i + ".png");
+      loadImage("Key_" + i, "Assets/items/keys/Key_" + i + ".png");
     }
 
     // Dog animation frames (Sasso skin — original)
@@ -205,11 +205,14 @@ public class AssetManager {
         for (int s = 0; s <= 1; s++) {
           for (int w = 0; w <= 1; w++) {
             String id = "wall_" + n + e + s + w;
-            loadImage(id, "Assets/" + id + ".png");
+            loadImage(id, "Assets/tiles/walls/" + id + ".png");
           }
         }
       }
     }
+
+    // Wesley pixel art (used as menu decoration)
+    loadImage("wesleyPixel", "Assets/ui/wesley-pixel.png");
   }
 
   /**

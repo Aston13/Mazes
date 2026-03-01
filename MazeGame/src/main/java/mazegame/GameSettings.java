@@ -31,6 +31,7 @@ public class GameSettings {
   }
 
   private DogSkin activeSkin = DogSkin.WESLEY;
+  private boolean soundMuted;
 
   /** Returns the currently selected dog skin. */
   public DogSkin getActiveSkin() {
@@ -40,6 +41,16 @@ public class GameSettings {
   /** Sets the active dog skin. */
   public void setActiveSkin(DogSkin skin) {
     this.activeSkin = skin;
+  }
+
+  /** Returns whether sound effects are muted. */
+  public boolean isSoundMuted() {
+    return soundMuted;
+  }
+
+  /** Sets whether sound effects are muted. */
+  public void setSoundMuted(boolean muted) {
+    this.soundMuted = muted;
   }
 
   /**

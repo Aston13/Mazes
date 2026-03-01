@@ -1,0 +1,219 @@
+package mazegame;
+
+import java.util.HashMap;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+
+/**
+ * Manages synthesised sound effects and ambient audio for the game. Uses {@link
+ * javax.sound.sampled} to generate short tones — no external audio files required.
+ *
+ * <p>All playback is wrapped in try/catch so environments without audio support (e.g. CheerpJ)
+ * degrade silently.
+ */
+public class AudioManager {
+
+  /** Identifiers for the available sound effects. */
+  public enum Sound {
+    KEY_PICKUP,
+    KEY_VANISHED,
+    LOCKED_DOOR,
+    DOOR_OPEN,
+    LEVEL_COMPLETE,
+    LEVEL_FAILED,
+    LOW_TIME_WARNING
+  }
+
+  private static final float SAMPLE_RATE = 44100f;
+  private static final int BITS = 16;
+  private static final int CHANNELS = 1;
+  private static final AudioFormat FORMAT =
+      new AudioFormat(SAMPLE_RATE, BITS, CHANNELS, true, false);
+
+  private final HashMap<Sound, byte[]> soundData = new HashMap<>();
+  private boolean muted;
+  private boolean audioAvailable = true;
+
+  /** Creates a new AudioManager and pre-generates all sound effect samples. */
+  public AudioManager() {
+    try {
+      generateSounds();
+    } catch (Exception e) {
+      System.out.println("Audio not available: " + e.getMessage());
+      audioAvailable = false;
+    }
+  }
+
+  /** Returns whether audio is currently muted. */
+  public boolean isMuted() {
+    return muted;
+  }
+
+  /** Sets the muted state. When muted, {@link #play(Sound)} is a no-op. */
+  public void setMuted(boolean muted) {
+    this.muted = muted;
+  }
+
+  /** Toggles the muted state and returns the new value. */
+  public boolean toggleMute() {
+    muted = !muted;
+    return muted;
+  }
+
+  /**
+   * Plays a sound effect asynchronously. Does nothing if muted or if audio is unavailable.
+   *
+   * @param sound the sound to play
+   */
+  public void play(Sound sound) {
+    if (muted || !audioAvailable) return;
+    byte[] data = soundData.get(sound);
+    if (data == null) return;
+
+    // Play on a daemon thread to avoid blocking the game loop
+    Thread playThread =
+        new Thread(
+            () -> {
+              try {
+                Clip clip = AudioSystem.getClip();
+                clip.open(FORMAT, data, 0, data.length);
+                clip.start();
+                // Close clip when done
+                clip.addLineListener(
+                    event -> {
+                      if (event.getType() == javax.sound.sampled.LineEvent.Type.STOP) {
+                        clip.close();
+                      }
+                    });
+              } catch (LineUnavailableException | IllegalArgumentException e) {
+                // Silently degrade — audio not supported in this environment
+              }
+            });
+    playThread.setDaemon(true);
+    playThread.start();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sound synthesis
+  // ---------------------------------------------------------------------------
+
+  private void generateSounds() {
+    // Key pickup: bright ascending two-note chime (C5 → E5)
+    soundData.put(Sound.KEY_PICKUP, twoTone(523.25, 659.25, 0.08, 0.08, 0.6));
+
+    // Key vanished: descending minor tone (E5 → C5)
+    soundData.put(Sound.KEY_VANISHED, twoTone(659.25, 440.0, 0.12, 0.12, 0.4));
+
+    // Locked door: short low buzz (100 Hz square-ish wave)
+    soundData.put(Sound.LOCKED_DOOR, buzz(150, 0.15, 0.5));
+
+    // Door open: ascending chime (C4 → G4 → C5)
+    soundData.put(Sound.DOOR_OPEN, threeTone(261.63, 392.0, 523.25, 0.08, 0.5));
+
+    // Level complete: happy ascending arpeggio (C5 → E5 → G5 → C6)
+    soundData.put(Sound.LEVEL_COMPLETE, arpeggio(new double[] {523, 659, 784, 1047}, 0.12, 0.5));
+
+    // Level failed: descending minor (E4 → C4 → A3)
+    soundData.put(Sound.LEVEL_FAILED, arpeggio(new double[] {330, 262, 220}, 0.15, 0.45));
+
+    // Low time warning: short tick
+    soundData.put(Sound.LOW_TIME_WARNING, sine(880, 0.05, 0.3));
+  }
+
+  /**
+   * Generates a sine-wave tone.
+   *
+   * @param freq frequency in Hz
+   * @param durationSec length in seconds
+   * @param volume volume from 0.0 to 1.0
+   */
+  private byte[] sine(double freq, double durationSec, double volume) {
+    int samples = (int) (SAMPLE_RATE * durationSec);
+    byte[] buf = new byte[samples * 2]; // 16-bit = 2 bytes per sample
+    for (int i = 0; i < samples; i++) {
+      double t = i / (double) SAMPLE_RATE;
+      double envelope = fadeEnvelope(i, samples);
+      double val = Math.sin(2 * Math.PI * freq * t) * volume * envelope;
+      short sample = (short) (val * Short.MAX_VALUE);
+      buf[i * 2] = (byte) (sample & 0xFF);
+      buf[i * 2 + 1] = (byte) ((sample >> 8) & 0xFF);
+    }
+    return buf;
+  }
+
+  /** Generates a two-note tone (note1 then note2). */
+  private byte[] twoTone(double freq1, double freq2, double dur1, double dur2, double volume) {
+    byte[] a = sine(freq1, dur1, volume);
+    byte[] b = sine(freq2, dur2, volume);
+    byte[] result = new byte[a.length + b.length];
+    System.arraycopy(a, 0, result, 0, a.length);
+    System.arraycopy(b, 0, result, a.length, b.length);
+    return result;
+  }
+
+  /** Generates a three-note tone. */
+  private byte[] threeTone(double freq1, double freq2, double freq3, double dur, double volume) {
+    byte[] a = sine(freq1, dur, volume);
+    byte[] b = sine(freq2, dur, volume);
+    byte[] c = sine(freq3, dur, volume);
+    byte[] result = new byte[a.length + b.length + c.length];
+    System.arraycopy(a, 0, result, 0, a.length);
+    System.arraycopy(b, 0, result, a.length, b.length);
+    System.arraycopy(c, 0, result, a.length + b.length, c.length);
+    return result;
+  }
+
+  /** Generates an arpeggio from an array of frequencies. */
+  private byte[] arpeggio(double[] freqs, double noteDur, double volume) {
+    byte[][] notes = new byte[freqs.length][];
+    int total = 0;
+    for (int i = 0; i < freqs.length; i++) {
+      notes[i] = sine(freqs[i], noteDur, volume);
+      total += notes[i].length;
+    }
+    byte[] result = new byte[total];
+    int offset = 0;
+    for (byte[] note : notes) {
+      System.arraycopy(note, 0, result, offset, note.length);
+      offset += note.length;
+    }
+    return result;
+  }
+
+  /** Generates a buzzy/harsh tone using clipped sine (pseudo-square wave). */
+  private byte[] buzz(double freq, double durationSec, double volume) {
+    int samples = (int) (SAMPLE_RATE * durationSec);
+    byte[] buf = new byte[samples * 2];
+    for (int i = 0; i < samples; i++) {
+      double t = i / (double) SAMPLE_RATE;
+      double envelope = fadeEnvelope(i, samples);
+      // Clipped sine for a harsher sound
+      double raw = Math.sin(2 * Math.PI * freq * t);
+      double val = Math.signum(raw) * Math.min(1.0, Math.abs(raw) * 2) * volume * envelope;
+      short sample = (short) (val * Short.MAX_VALUE);
+      buf[i * 2] = (byte) (sample & 0xFF);
+      buf[i * 2 + 1] = (byte) ((sample >> 8) & 0xFF);
+    }
+    return buf;
+  }
+
+  /**
+   * Simple fade-in/fade-out envelope to avoid clicks.
+   *
+   * @param sampleIdx current sample index
+   * @param totalSamples total number of samples
+   * @return amplitude multiplier (0.0..1.0)
+   */
+  private double fadeEnvelope(int sampleIdx, int totalSamples) {
+    int fadeLen = Math.min(totalSamples / 8, (int) (SAMPLE_RATE * 0.005));
+    if (fadeLen == 0) return 1.0;
+    if (sampleIdx < fadeLen) {
+      return sampleIdx / (double) fadeLen;
+    } else if (sampleIdx > totalSamples - fadeLen) {
+      return (totalSamples - sampleIdx) / (double) fadeLen;
+    }
+    return 1.0;
+  }
+}

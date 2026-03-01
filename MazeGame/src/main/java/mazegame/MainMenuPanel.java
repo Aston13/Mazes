@@ -178,7 +178,7 @@ public class MainMenuPanel extends JPanel {
     Font subtitleFont = new Font("Dialog", Font.PLAIN, SUBTITLE_FONT_SIZE);
     g.setFont(subtitleFont);
     FontMetrics subFm = g.getFontMetrics();
-    String subtitle = "A maze adventure";
+    String subtitle = "A procedurally generated maze adventure";
     g.setColor(SUBTITLE_COLOR);
     g.drawString(subtitle, (w - subFm.stringWidth(subtitle)) / 2, titleY + 30);
 

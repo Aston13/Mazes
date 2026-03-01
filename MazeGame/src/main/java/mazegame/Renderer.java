@@ -36,6 +36,7 @@ public class Renderer {
   private final int rowColAmount;
   private final int keysRequired;
   private final AssetManager assetManager;
+  private final AudioManager audioManager;
   private final String skinPrefix;
 
   private Tile[][] tileArr;
@@ -53,6 +54,16 @@ public class Renderer {
   private long activatedAt = Long.MAX_VALUE;
   private int keyCount;
 
+  // Key-collection visual feedback
+  private long keyCollectFlashStart = Long.MIN_VALUE;
+  private static final int KEY_FLASH_DURATION_MS = 400;
+  private static final Color KEY_FLASH_COLOR = new Color(196, 149, 106, 60);
+
+  // Locked-door visual feedback
+  private long lockedDoorFlashStart = Long.MIN_VALUE;
+  private static final int LOCKED_FLASH_DURATION_MS = 300;
+  private static final Color LOCKED_FLASH_COLOR = new Color(255, 80, 80, 50);
+
   private double timeTaken;
   private double timeUntilKeyRemoval = KEY_REMOVAL_INTERVAL;
   private long wallClockAtResumeMs;
@@ -69,6 +80,7 @@ public class Renderer {
    * @param rowColAmount the maze grid size (rows and columns)
    * @param tileWH the pixel size of each tile
    * @param assetManager the shared asset manager for image lookup
+   * @param audioManager the audio manager for sound effects
    * @param settings the game settings (used for skin prefix)
    * @param game the game instance for state callbacks
    */
@@ -78,6 +90,7 @@ public class Renderer {
       int rowColAmount,
       int tileWH,
       AssetManager assetManager,
+      AudioManager audioManager,
       GameSettings settings,
       MazeGame game) {
     this.screenWidth = screenWidth;
@@ -85,6 +98,7 @@ public class Renderer {
     this.tileWidth = tileWH;
     this.rowColAmount = rowColAmount;
     this.assetManager = assetManager;
+    this.audioManager = audioManager;
     this.skinPrefix = settings.getSpritePrefix();
 
     screenWidthHalf = screenWidth / 2;
@@ -119,11 +133,15 @@ public class Renderer {
                 keyRemovalTimer--;
                 TilePassage removedKey = (TilePassage) keysOnMap.pop();
                 removedKey.setItem(false);
+                audioManager.play(AudioManager.Sound.KEY_VANISHED);
 
                 if (keysOnMap.size() < (keysRequired - keyCount)) {
+                  audioManager.play(AudioManager.Sound.LEVEL_FAILED);
                   game.setGameState(false, "Level Failed");
                   gameTimer.stop();
                 }
+              } else if (timeUntilKeyRemoval <= 1.5 && timeUntilKeyRemoval > 1.3) {
+                audioManager.play(AudioManager.Sound.LOW_TIME_WARNING);
               }
             });
   }
@@ -439,18 +457,23 @@ public class Renderer {
       return false;
     } else if (tile instanceof TileExit) {
       if (((TileExit) tile).getAccessible()) {
+        audioManager.play(AudioManager.Sound.DOOR_OPEN);
         game.setGameState(false, "Next Level");
       } else {
         int remaining = keysRequired - keyCount;
         playerMessage = "The door is locked. Find " + remaining + " more keys.";
         activatedAt = System.currentTimeMillis();
         setPlayerMessage(true);
+        lockedDoorFlashStart = System.currentTimeMillis();
+        audioManager.play(AudioManager.Sound.LOCKED_DOOR);
       }
     } else {
       TilePassage passage = (TilePassage) tile;
       if (passage.hasItem()) {
         passage.setItem(false);
         keyCount++;
+        keyCollectFlashStart = System.currentTimeMillis();
+        audioManager.play(AudioManager.Sound.KEY_PICKUP);
       }
     }
     return true;
@@ -473,6 +496,8 @@ public class Renderer {
   public void renderPlayer(Graphics g, Player player, int spriteSize) {
     g.drawImage(playerImg, screenWidthHalf, screenHeightHalf, spriteSize, spriteSize, null);
 
+    renderActionFeedback(g);
+
     if (isMessageVisible()) {
       g.setColor(Color.WHITE);
       g.setFont(new Font("Serif", Font.PLAIN, MESSAGE_FONT_SIZE));
@@ -480,6 +505,57 @@ public class Renderer {
       int halfTextWidth = fm.stringWidth(playerMessage) / 2;
       g.drawString(
           playerMessage, (screenWidthHalf - halfTextWidth) + tileWidth / 2, screenHeightHalf);
+    }
+  }
+
+  /**
+   * Renders visual feedback overlays for key collection (golden flash + floating "+1") and locked
+   * door attempts (red flash).
+   */
+  private void renderActionFeedback(Graphics g) {
+    long now = System.currentTimeMillis();
+    Graphics2D g2 = (Graphics2D) g;
+
+    // Key collection: golden flash overlay + floating "+1 Key" text
+    long keyElapsed = now - keyCollectFlashStart;
+    if (keyElapsed >= 0 && keyElapsed < KEY_FLASH_DURATION_MS) {
+      float progress = (float) keyElapsed / KEY_FLASH_DURATION_MS;
+      float alpha = 1.0f - progress; // fade out
+
+      // Screen flash
+      g2.setColor(
+          new Color(
+              KEY_FLASH_COLOR.getRed() / 255f,
+              KEY_FLASH_COLOR.getGreen() / 255f,
+              KEY_FLASH_COLOR.getBlue() / 255f,
+              alpha * 0.25f));
+      g2.fillRect(0, 0, screenWidth, screenHeight);
+
+      // Floating "+1 Key" text rising upward
+      int floatOffset = (int) (progress * 30);
+      int textAlpha = (int) (alpha * 255);
+      g2.setFont(new Font("Dialog", Font.BOLD, 16));
+      g2.setColor(new Color(196, 149, 106, Math.max(0, Math.min(255, textAlpha))));
+      String collectText = "+1 Key";
+      FontMetrics fm = g2.getFontMetrics();
+      int textX = screenWidthHalf + tileWidth / 2 - fm.stringWidth(collectText) / 2;
+      int textY = screenHeightHalf - 10 - floatOffset;
+      g2.drawString(collectText, textX, textY);
+    }
+
+    // Locked door: red flash overlay
+    long lockElapsed = now - lockedDoorFlashStart;
+    if (lockElapsed >= 0 && lockElapsed < LOCKED_FLASH_DURATION_MS) {
+      float progress = (float) lockElapsed / LOCKED_FLASH_DURATION_MS;
+      float alpha = 1.0f - progress;
+
+      g2.setColor(
+          new Color(
+              LOCKED_FLASH_COLOR.getRed() / 255f,
+              LOCKED_FLASH_COLOR.getGreen() / 255f,
+              LOCKED_FLASH_COLOR.getBlue() / 255f,
+              alpha * 0.3f));
+      g2.fillRect(0, 0, screenWidth, screenHeight);
     }
   }
 

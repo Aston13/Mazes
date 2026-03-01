@@ -213,6 +213,7 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
 
     pane.add(gameView);
     gameView.setFocusable(true);
+    validate(); // Force layout so gameView has non-zero dimensions before first render
 
     renderer = new Renderer(windowWidth, windowHeight, rowColAmount, TILE_SIZE, assetManager, this);
     renderer.generateMaze(TILE_SIZE, TILE_BORDER);
@@ -226,20 +227,13 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     inputHandler.bindPauseMouseClicks(gameView);
 
     gameLoop = new GameLoop(this);
+    gameLoop.setOnComplete(
+        () -> {
+          inputHandler.removeGlobalDispatcher();
+          cleanUpGameView();
+          handleLevelEnd();
+        });
     gameLoop.start();
-
-    // When the loop finishes, handle the result
-    Thread endHandler =
-        new Thread(
-            () -> {
-              gameLoop.join();
-              inputHandler.removeGlobalDispatcher();
-              cleanUpGameView();
-              javax.swing.SwingUtilities.invokeLater(this::handleLevelEnd);
-            },
-            "LevelEndHandler");
-    endHandler.setDaemon(true);
-    endHandler.start();
   }
 
   /** Starts a specific level from the level-selection screen. */
@@ -417,11 +411,19 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
     return offscreenBuffer.getGraphics();
   }
 
-  /** Triggers a repaint of the game panel, which draws the offscreen buffer in paintComponent. */
+  /**
+   * Pushes the offscreen buffer to the game panel and triggers an immediate repaint. Since the game
+   * loop now runs on the EDT via {@link javax.swing.Timer}, we can call {@code paintImmediately}
+   * directly for reliable rendering in CheerpJ.
+   */
   private void showBuffer() {
     if (offscreenBuffer == null) return;
     gameView.setBuffer(offscreenBuffer);
-    gameView.repaint();
+    int w = gameView.getWidth();
+    int h = gameView.getHeight();
+    if (w > 0 && h > 0) {
+      gameView.paintImmediately(0, 0, w, h);
+    }
   }
 
   /**
@@ -505,7 +507,6 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   public void render() {
     Graphics g = getGameGraphics();
     if (g == null) return;
-    super.paint(g);
     renderer.renderBackground(g);
     renderer.renderMaze(g, TILE_SIZE);
     renderer.renderPlayer(g, player, TILE_SIZE);
@@ -517,7 +518,6 @@ public class MazeGame extends JFrame implements GameLoop.Callbacks, InputHandler
   public void renderBackground() {
     Graphics g = getGameGraphics();
     if (g == null) return;
-    super.paint(g);
     renderer.renderBackground(g);
     g.dispose();
     showBuffer();

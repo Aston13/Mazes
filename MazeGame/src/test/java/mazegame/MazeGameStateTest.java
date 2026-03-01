@@ -75,4 +75,18 @@ class MazeGameStateTest {
   void loadWithoutReset() {
     assertDoesNotThrow(() -> game.load(false));
   }
+
+  @Test
+  @DisplayName("getBestTime returns -1 for uncompleted level")
+  void getBestTimeUncompletedLevel() {
+    // Level 1 starts as incomplete with time -1
+    assertEquals(-1.0, game.getBestTime(1), 0.001);
+  }
+
+  @Test
+  @DisplayName("getBestTime returns -1 for out-of-range level")
+  void getBestTimeOutOfRange() {
+    assertEquals(-1.0, game.getBestTime(0));
+    assertEquals(-1.0, game.getBestTime(999));
+  }
 }
